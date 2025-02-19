@@ -42,7 +42,6 @@ jobs:
 
     - name: Build the extension
       run: |
-# CIBW_BEFORE_ALL_LINUX="yum install -y gsl-devel boost-devel" 
         python -m cibuildwheel --output-dir dist
 
     - name: Upload to PyPI

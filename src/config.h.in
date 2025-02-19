@@ -1,0 +1,65 @@
+/* Fesslix - Stochastic Analysis
+ * Copyright (C) 2010-2025 Wolfgang Betz
+ *
+ * Fesslix is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fesslix is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+ */
+ 
+#pragma once
+
+#define FLX_VERSION "@FLX_VERSIONb@"
+
+#define FLX_DEBUG @FLX_DEBUGb@
+#define FLX_DEBUG_COUT @FLX_DEBUG_COUTb@
+
+#define FLX_KAHAN_MCI @FLX_KAHAN_MCIb@
+#define FLX_KAHAN_KDE @FLX_KAHAN_KDEb@
+#define FLX_KAHAN_DOT @FLX_KAHAN_DOTb@
+#define FLX_KAHAN_2NORM @FLX_KAHAN_2NORMb@
+#define FLX_KAHAN_MTX_FULL @FLX_KAHAN_MTX_FULLb@
+#define FLX_KAHAN_MTX_LTRI @FLX_KAHAN_MTX_LTRIb@
+#define FLX_KAHAN_MTX_SLTRI @FLX_KAHAN_MTX_SLTRIb@
+#define FLX_KAHAN_MTX_SSILU @FLX_KAHAN_MTX_SSILUb@
+#define FLX_KAHAN_MTX_SYM @FLX_KAHAN_MTX_SYMb@
+#define FLX_KAHAN_MTX_SSYM @FLX_KAHAN_MTX_SSYMb@
+#define FLX_KAHAN_MTX_SSFEM @FLX_KAHAN_MTX_SSFEMb@
+#define FLX_KAHAN_PFEM @FLX_KAHAN_PFEMb@
+
+#define FLX_KAHAN_CG_STAGE @FLX_KAHAN_CG_STAGE@
+#define FLX_KAHAN_CG_STAGE_1	0
+#define FLX_KAHAN_CG_STAGE_2	0
+#define FLX_KAHAN_CG_STAGE_3	0
+#define FLX_KAHAN_CG_STAGE_4	0
+
+#if FLX_KAHAN_CG_STAGE==1
+  #undef FLX_KAHAN_CG_STAGE_1
+  #define FLX_KAHAN_CG_STAGE_1	1
+#elif FLX_KAHAN_CG_STAGE==2
+  #undef FLX_KAHAN_CG_STAGE_2
+  #define FLX_KAHAN_CG_STAGE_2	1
+#elif FLX_KAHAN_CG_STAGE==3
+  #undef FLX_KAHAN_CG_STAGE_3
+  #define FLX_KAHAN_CG_STAGE_3	1
+#elif FLX_KAHAN_CG_STAGE==4
+  #undef FLX_KAHAN_CG_STAGE_4
+  #define FLX_KAHAN_CG_STAGE_4	1
+#else
+  #undef FLX_KAHAN_CG_STAGE
+  #define FLX_KAHAN_CG_STAGE 0
+#endif
+
+#ifdef _MSC_VER
+  #define FLX_CV_1	// compiler variant (allocation of arrays)
+  //#define BOOST_ALL_DYN_LINK
+  //#define BOOST_PROGRAM_OPTIONS_DYN_LINK
+#endif

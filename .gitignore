@@ -1,0 +1,32 @@
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+venv/
+env/
+*.env
+*.venv
+*.idea/
+*.vscode/
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.swp
+*.bak
+*.tmp
+
+# IDE
+*.kdev4
+
+# Build files
+build/
+dist/
+tmp/
+.kdev4/

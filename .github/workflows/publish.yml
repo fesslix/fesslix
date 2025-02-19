@@ -1,0 +1,54 @@
+name: Python package CI
+
+# Trigger the workflow on push and pull request events to the main branch
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    # Run this job on multiple operating systems (Linux, Windows, macOS)
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]  # List of OS to build on
+        python-version: [3.12, 3.13]  # List of Python versions to test
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2  # Get the code from the repository
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}  # Use Python version from the matrix
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt  # Install Python dependencies
+        pip install scikit-build-core pybind11 cmake build 
+        pip install twine cibuildwheel
+
+    - name: Install GSL (for Linux only)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgsl-dev  # Install GSL on Linux
+
+    - name: Build the extension
+      run: |
+        python -m cibuildwheel --output-dir dist
+
+    - name: Upload to PyPI
+      uses: pypa/gh-action-pypi-publish@v1.6.4
+      with:
+        user: ${{ secrets.PYPI_USERNAME }}  # PyPI username secret
+        password: ${{ secrets.PYPI_PASSWORD }}  # PyPI password secret
+        packages: dist/*.whl
+        

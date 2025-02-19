@@ -34,15 +34,15 @@ jobs:
         pip install scikit-build-core pybind11 cmake build 
         pip install twine cibuildwheel
 
-    - name: Install GSL (for Linux only)
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libgsl-dev  # Install GSL on Linux
+#    - name: Install GSL (for Linux only)
+#      if: runner.os == 'Linux'
+#      run: |
+#        sudo apt-get update
+#        sudo apt-get install -y libgsl-dev  # Install GSL on Linux
 
     - name: Build the extension
       run: |
-        python -m cibuildwheel --output-dir dist
+        CIBW_BEFORE_ALL_LINUX="yum install -y gsl-devel" python -m cibuildwheel --output-dir dist
 
     - name: Upload to PyPI
       uses: pypa/gh-action-pypi-publish@v1.6.4

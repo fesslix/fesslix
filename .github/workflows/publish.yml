@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]  # List of OS to build on
+        os: [ubuntu-latest]  # List of OS to build on   , windows-latest, macos-latest
         python-version: [3.12, 3.13]  # List of Python versions to test
 
     steps:
@@ -31,7 +31,6 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt  # Install Python dependencies
         pip install scikit-build-core pybind11 cmake build 
         pip install twine cibuildwheel
 

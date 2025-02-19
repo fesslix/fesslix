@@ -39,10 +39,19 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y libgsl-dev libboost-all-dev
-
+        
+    - name: Install dependencies (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        choco install -y gsl boost-msvc-14.3
+        
+    - name: Verify GSL installation
+      run: |
+        gsl --version || echo "GSL is not installed!"
+    
     - name: Build the extension
       run: |
-        python -m cibuildwheel --output-dir dist
+        CIBW_BEFORE_ALL_LINUX="sudo apt-get install -y libgsl-dev libboost-all-dev" python -m cibuildwheel --output-dir dist
 
     - name: Upload to PyPI
       uses: pypa/gh-action-pypi-publish@v1.6.4

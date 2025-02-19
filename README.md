@@ -1,5 +1,9 @@
 # General Information
 
+Fesslix is a Python module for stochastic analysis. 
+The source code is available free of charge under the Free Software GPL license. 
+Fesslix is developed by Dr.-Ing. Wolfgang Betz. 
+
 http://www.fesslix.org (offical website)
 
 
@@ -12,29 +16,6 @@ Fundations. See the file COPYING for details.
 
 # Installation
 
-http://www.fesslix.org/installation
+pip install fesslix
 
-
-# Building the package
-
-## Environment & Dependencies
-
-Install the package 'docker'.
-
-python -m venv .venv-fesslix
-source .venv-fesslix/bin/activate
-
-pip install build scikit-build-core pybind11
-pip install twine cibuildwheel
-
-## Local build
-
-python -m build
-pip install .
-
-## Precompiled Binaries
-https://pypi.org/account/register/
-
-python -m cibuildwheel --output-dir dist
-twine upload dist/*
 

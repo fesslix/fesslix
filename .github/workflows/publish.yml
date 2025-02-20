@@ -19,13 +19,13 @@ jobs:
         os: [ubuntu-latest]  # List of OS to build on   , windows-latest, macos-latest
         python-version: [3.13]  # List of Python versions to test   #3.12, 
 
+    permissions:
+      id-token: write
+      
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2  # Get the code from the repository
 
-    permissions:
-      id-token: write
-      
     - name: Set up Python
       uses: actions/setup-python@v2
       with:

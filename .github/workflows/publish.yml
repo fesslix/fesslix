@@ -44,9 +44,5 @@ jobs:
         python -m cibuildwheel --output-dir dist
 
     - name: Upload to PyPI
-      uses: pypa/gh-action-pypi-publish@v1.6.4
-      with:
-        user: ${{ secrets.PYPI_USERNAME }}  # PyPI username secret
-        password: ${{ secrets.PYPI_PASSWORD }}  # PyPI password secret
-        packages: dist/*.whl
+      uses: pypa/gh-action-pypi-publish@release/v1
         

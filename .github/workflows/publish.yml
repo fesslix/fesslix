@@ -45,6 +45,8 @@ jobs:
       uses: lukka/run-vcpkg@v11
       with:
         vcpkgJsonGlob: '**/vcpkg.json'
+      run: vcpkg install --triplet x64-windows
+      shell: pwsh
         
     - name: Build the extension
       run: |

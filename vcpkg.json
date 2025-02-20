@@ -1,6 +1,5 @@
 {
-  "name": "main",
-  "version-string": "latest",
+  "name": "fesslix",
   "dependencies": [
     "boost",
     "gsl"

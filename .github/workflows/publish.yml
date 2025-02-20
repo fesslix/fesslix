@@ -43,6 +43,8 @@ jobs:
     - name: Run vcpkg
       if: runner.os == 'Windows'
       uses: lukka/run-vcpkg@v11
+      with:
+        vcpkgJsonGlob: '**/vcpkg.json'
         
     - name: Build the extension
       run: |

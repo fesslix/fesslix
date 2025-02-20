@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest]  # List of OS to build on   , windows-latest, macos-latest
+        os: [ubuntu-latest, windows-latest]  # List of OS to build on   , windows-latest, macos-latest
 
     permissions:
       id-token: write
@@ -35,11 +35,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install scikit-build-core pybind11 cmake build 
         pip install twine cibuildwheel
-
-    - name: Install dependencies (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        choco install -y gsl boost-msvc-14.3
         
     - name: Build the extension
       run: |

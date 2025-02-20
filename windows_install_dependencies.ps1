@@ -9,7 +9,7 @@
 #[System.Environment]::SetEnvironmentVariable('CMAKE_TOOLCHAIN_FILE', "$PWD\vcpkg\scripts\buildsystems\vcpkg.cmake", [System.EnvironmentVariableTarget]::Process)
 #Write-Output 'Setup completed successfully.'
 Write-Output 'Installing dependencies ...'
-vcpkg install
+vcpkg install --triplet x64-windows
 Write-Output 'Check if pkg-config Can Find GSL ...'
 vcpkg list | Select-String gsl
 vcpkg integrate install

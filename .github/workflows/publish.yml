@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]  # List of OS to build on   , windows-latest, macos-latest
+        os: [windows-latest]  # List of OS to build on   , windows-latest, macos-latest ubuntu-latest, 
 
     permissions:
       id-token: write
@@ -39,6 +39,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install scikit-build-core pybind11 cmake build 
         pip install twine cibuildwheel
+        
+    - name: Run vcpkg
+      if: runner.os == 'Windows'
+      uses: lukka/run-vcpkg@v11
         
     - name: Build the extension
       run: |

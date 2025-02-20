@@ -10,26 +10,23 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-publish:
     # Run this job on multiple operating systems (Linux, Windows, macOS)
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
         os: [ubuntu-latest]  # List of OS to build on   , windows-latest, macos-latest
-        python-version: [3.13]  # List of Python versions to test   #3.12, 
 
     permissions:
       id-token: write
       
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2  # Get the code from the repository
+      uses: actions/checkout@v4  # Get the code from the repository
 
     - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}  # Use Python version from the matrix
+      uses: actions/setup-python@v5
 
     - name: Install dependencies
       run: |

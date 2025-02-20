@@ -5,16 +5,23 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "fesslix"
 version = "0.1.0"
-description = "A simple C++ extension for Python"
+description = "stochastic analysis"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [{ name = "Wolfgang Betz", email = "w.betz@fesslix.org" }]
+maintainers = [{ name = "Wolfgang Betz", email = "w.betz@fesslix.org" }]
 dependencies = []
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: C++",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
 ]
+
+[project.urls]
+Homepage = "http://fesslix.org"
+#Documentation = "https://readthedocs.org"
+Repository = "https://github.com/fesslix/fesslix.git"
+Issues = "https://github.com/fesslix/fesslix/issues"
 
 [tool.scikit-build]
 wheel.expand-macos-universal-tags = true

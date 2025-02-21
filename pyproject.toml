@@ -46,20 +46,15 @@ before-build = "powershell -ExecutionPolicy Bypass -File windows_install_depende
 #GSL_LIBRARY=C:/vcpkg/installed/x64-windows/lib/gsl.lib
 #GSL_CBLAS_LIBRARY=C:/vcpkg/installed/x64-windows/lib/gslcblas.lib
 
-[tool.cibuildwheel.windows.x86]
+[[tool.cibuildwheel.overrides]]
+select ="*-win32*"
+inherit.environment="append"
 environment = "VCPKG_ROOT=C:/vcpkg CMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake PKG_CONFIG_PATH=C:/vcpkg/installed/x64-windows/lib/pkgconfig GSL_INCLUDE_DIR=C:/vcpkg/installed/x86-windows/include GSL_LIBRARY=C:/vcpkg/installed/x86-windows/lib/gsl.lib GSL_CBLAS_LIBRARY=C:/vcpkg/installed/x86-windows/lib/gslcblas.lib"
 
-[tool.cibuildwheel.windows.x64]
+[[tool.cibuildwheel.overrides]]
+select ="*-win_amd64*"
+inherit.environment="append"
 environment = "VCPKG_ROOT=C:/vcpkg CMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake PKG_CONFIG_PATH=C:/vcpkg/installed/x64-windows/lib/pkgconfig GSL_INCLUDE_DIR=C:/vcpkg/installed/x64-windows/include GSL_LIBRARY=C:/vcpkg/installed/x64-windows/lib/gsl.lib GSL_CBLAS_LIBRARY=C:/vcpkg/installed/x64-windows/lib/gslcblas.lib"
-
-#[[tool.cibuildwheel.overrides]]
-## overrides for X86
-#select ="*-win_amd64*"
-## use nuget to install gsl on Windows, and manually supply paths
-#before-build = "nuget install gsl-msvc14-x64 -Version 2.3.0.2779"
-#inherit.environment="append"
-#environment = { CPATH="gsl-msvc14-x64.2.3.0.2779\\\\build\\\\native", LIBRARY_PATH="gsl-msvc14-x64.2.3.0.2779\\\\build\\\\native\\\\static" }
-
 
 #[[tool.cibuildwheel.overrides]]
 ## overrides for ARM64

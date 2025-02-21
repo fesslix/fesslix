@@ -138,6 +138,9 @@ MARK_AS_ADVANCED(
 find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
 find_package(pybind11 CONFIG REQUIRED)
 
+set(GSL_INCLUDE_DIR "$ENV{GSL_INCLUDE_DIR}")
+set(GSL_LIBRARY "$ENV{GSL_LIBRARY}")
+set(GSL_CBLAS_LIBRARY "$ENV{GSL_CBLAS_LIBRARY}")
 FIND_PACKAGE(GSL REQUIRED)
 
 # Add a library using FindPython's tooling (pybind11 also provides a helper like this)

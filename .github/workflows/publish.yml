@@ -46,10 +46,10 @@ jobs:
 #      with:
 #        vcpkgJsonGlob: '**/vcpkg.json'
         
-    - name: Install dependencies (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        choco install -y gsl
+#    - name: Install dependencies (Windows)
+#      if: runner.os == 'Windows'
+#      run: |
+#        choco install -y gsl
         
     - name: Build the extension
       run: |

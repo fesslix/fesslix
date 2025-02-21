@@ -1,4 +1,13 @@
-#Write-Output 'Cloning vcpkg repository...'
+Write-Output 'Cloning vcpkg repository...'
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+./bootstrap-vcpkg.sh
+./vcpkg integrate install
+
+Write-Output 'Installing dependencies ...'
+vcpkg install gsl
+
+
 #git clone https://github.com/microsoft/vcpkg.git
 #Write-Output 'Bootstrapping vcpkg...'
 #.\vcpkg\bootstrap-vcpkg.bat

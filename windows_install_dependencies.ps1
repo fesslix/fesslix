@@ -6,6 +6,7 @@ vcpkg integrate install
 Write-Output 'Installing dependencies ...'
 vcpkg install gsl
 
+vcpkg integrate install
 
 #git clone https://github.com/microsoft/vcpkg.git
 #Write-Output 'Bootstrapping vcpkg...'
@@ -23,11 +24,11 @@ vcpkg install gsl
 #Write-Output 'Installing dependencies ...'
 #vcpkg install --triplet x64-windows
 
-#Write-Output 'Check if pkg-config Can Find GSL ...'
-#vcpkg list | Select-String gsl
+Write-Output 'Check if pkg-config Can Find GSL ...'
+vcpkg list | Select-String gsl
 #vcpkg integrate install
-#pkg-config --cflags gsl
-#pkg-config --libs gsl
+pkg-config --cflags gsl
+pkg-config --libs gsl
 
 #Write-Output 'Setting environment variables...'
 #[System.Environment]::SetEnvironmentVariable('VCPKG_ROOT', "$PWD\vcpkg", [System.EnvironmentVariableTarget]::Process)

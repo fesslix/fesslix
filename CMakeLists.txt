@@ -158,6 +158,7 @@ if(DEFINED ENV{Boost_INCLUDE_DIR})
   message("202502212017 ${Boost_DIR}")
 endif()
 find_package(Boost 1.48.0 REQUIRED NO_MODULE)
+include_directories(${Boost_INCLUDE_DIR})
 
 
 ###################################################################################

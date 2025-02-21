@@ -8,9 +8,12 @@
 #[System.Environment]::SetEnvironmentVariable('VCPKG_ROOT', "$PWD\vcpkg", [System.EnvironmentVariableTarget]::Process)
 #[System.Environment]::SetEnvironmentVariable('CMAKE_TOOLCHAIN_FILE', "$PWD\vcpkg\scripts\buildsystems\vcpkg.cmake", [System.EnvironmentVariableTarget]::Process)
 #Write-Output 'Setup completed successfully.'
-Write-Output 'Installing dependencies ...'
+Write-Output 'VCPKG update an version'
+vcpkg version
 vcpkg update
 vcpkg upgrade --no-dry-run
+vcpkg version
+Write-Output 'Installing dependencies ...'
 vcpkg install --triplet x64-windows
 Write-Output 'Check if pkg-config Can Find GSL ...'
 vcpkg list | Select-String gsl

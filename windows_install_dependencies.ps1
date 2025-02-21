@@ -37,4 +37,5 @@ pkg-config --modversion gsl
 #Write-Output "20250221: $CMAKE_TOOLCHAIN_FILE"
 
 Write-Output 'List files in directory'
-Get-ChildItem -Path "C:\vcpkg" -Recurse
+#Get-ChildItem -Path "C:\vcpkg" -Recurse
+Get-ChildItem -Path "C:\vcpkg" -Recurse -File | Select-Object -ExpandProperty FullName

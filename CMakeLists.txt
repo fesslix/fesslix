@@ -11,9 +11,6 @@ project(
 
 set( FLX_VERSIONb ${PROJECT_VERSION} )
 
-message(CMAKE_TOOLCHAIN_FILE="$ENV{CMAKE_TOOLCHAIN_FILE}")
-message(GSL_INCLUDE_DIR="$ENV{GSL_INCLUDE_DIR}")
-
 
 ###################################################################################
 # Configuration Options
@@ -131,17 +128,26 @@ MARK_AS_ADVANCED(
   FLX_KAHAN_CG_STAGE
 )
 
+
 ###################################################################################
-#
+# find dependencies
 ###################################################################################
 
 find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
 find_package(pybind11 CONFIG REQUIRED)
 
-set(GSL_INCLUDE_DIR "$ENV{GSL_INCLUDE_DIR}")
-set(GSL_LIBRARY "$ENV{GSL_LIBRARY}")
-set(GSL_CBLAS_LIBRARY "$ENV{GSL_CBLAS_LIBRARY}")
+
+if(DEFINED ENV{GSL_INCLUDE_DIR})
+    set(GSL_INCLUDE_DIR "$ENV{GSL_INCLUDE_DIR}")
+    set(GSL_LIBRARY "$ENV{GSL_LIBRARY}")
+    set(GSL_CBLAS_LIBRARY "$ENV{GSL_CBLAS_LIBRARY}")
+endif()
 FIND_PACKAGE(GSL REQUIRED)
+
+
+###################################################################################
+# compile
+###################################################################################
 
 # Add a library using FindPython's tooling (pybind11 also provides a helper like this)
 python_add_library(fesslix MODULE

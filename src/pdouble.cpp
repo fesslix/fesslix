@@ -47,7 +47,7 @@ void vdouble::correct_p_ref() {
     if (!corrected) {
         if (std::isinf(s_p1.cast2double())) {
             s_p_ref = s_p1;
-            s_p2 = ONE/ZERO;
+            s_p2 = std::numeric_limits<double>::infinity();
         } else {
             // determin the corrected mean value
                 const pdouble b(s_p1/Np + s_p_ref);
@@ -127,7 +127,7 @@ vdouble& vdouble::operator+=(const tdouble& right) {
         s_p1 -= p;
         // update the sum of squares
         if (std::isinf(right)) {
-            s_p2 = ONE/ZERO;
+            s_p2 = std::numeric_limits<double>::infinity();
         } else {
             p *= p;
             #if FLX_DEBUG
@@ -138,7 +138,7 @@ vdouble& vdouble::operator+=(const tdouble& right) {
             if (std::isfinite(p.cast2double())) {
                 s_p2 += p;
             } else {
-                s_p2 = ONE/ZERO;
+                s_p2 = std::numeric_limits<double>::infinity();
             }
         }
     }

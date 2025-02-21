@@ -42,10 +42,15 @@ before-all = "apk add --no-cache gsl gsl-dev boost-dev"
 [tool.cibuildwheel.windows]
 archs = ["auto", "ARM64"]
 before-build = "powershell -ExecutionPolicy Bypass -File windows_install_dependencies.ps1 & vcpkg integrate install"
-environment = "VCPKG_ROOT=C:/vcpkg CMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake PKG_CONFIG_PATH=C:/vcpkg/installed/x64-windows/lib/pkgconfig GSL_INCLUDE_DIR=C:/vcpkg/installed/x64-windows/include GSL_LIBRARY=C:/vcpkg/installed/x64-windows/lib/gsl.lib GSL_CBLAS_LIBRARY=C:/vcpkg/installed/x64-windows/lib/gslcblas.lib"
 #GSL_INCLUDE_DIR=C:/vcpkg/installed/x64-windows/include
 #GSL_LIBRARY=C:/vcpkg/installed/x64-windows/lib/gsl.lib
 #GSL_CBLAS_LIBRARY=C:/vcpkg/installed/x64-windows/lib/gslcblas.lib
+
+[tool.cibuildwheel.windows.x86]
+environment = "VCPKG_ROOT=C:/vcpkg CMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake PKG_CONFIG_PATH=C:/vcpkg/installed/x64-windows/lib/pkgconfig GSL_INCLUDE_DIR=C:/vcpkg/installed/x86-windows/include GSL_LIBRARY=C:/vcpkg/installed/x86-windows/lib/gsl.lib GSL_CBLAS_LIBRARY=C:/vcpkg/installed/x86-windows/lib/gslcblas.lib"
+
+[tool.cibuildwheel.windows.x64]
+environment = "VCPKG_ROOT=C:/vcpkg CMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake PKG_CONFIG_PATH=C:/vcpkg/installed/x64-windows/lib/pkgconfig GSL_INCLUDE_DIR=C:/vcpkg/installed/x64-windows/include GSL_LIBRARY=C:/vcpkg/installed/x64-windows/lib/gsl.lib GSL_CBLAS_LIBRARY=C:/vcpkg/installed/x64-windows/lib/gslcblas.lib"
 
 #[[tool.cibuildwheel.overrides]]
 ## overrides for X86

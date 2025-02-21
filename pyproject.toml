@@ -47,7 +47,7 @@ archs = ["auto", "ARM64"]
 # overrides for X86
 select ="*-win_amd64*"
 # use nuget to install gsl on Windows, and manually supply paths
-before-all = "nuget install gsl-msvc14-x64 -Version 2.3.0.2779"
+before-build = "nuget install gsl-msvc14-x64 -Version 2.3.0.2779"
 inherit.environment="append"
 environment = { CPATH="gsl-msvc14-x64.2.3.0.2779\\\\build\\\\native", LIBRARY_PATH="gsl-msvc14-x64.2.3.0.2779\\\\build\\\\native\\\\static" }
 
@@ -55,7 +55,7 @@ environment = { CPATH="gsl-msvc14-x64.2.3.0.2779\\\\build\\\\native", LIBRARY_PA
 [[tool.cibuildwheel.overrides]]
 # overrides for ARM64
 select ="*-win_arm64*"
-before-all = 'nuget install gsl-msvc14-arm64 -Source "%CD%\\vendor-binaries"'
+before-build = 'nuget install gsl-msvc14-arm64 -Source "%CD%\\vendor-binaries"'
 # use local nuget package to install gsl on Windows ARM64, and manually supply paths
 inherit.environment = "append"
 environment = { CPATH="gsl-msvc14-arm64.2.3.0.2779\\\\build\\\\native\\\\include", LIBRARY_PATH="gsl-msvc14-arm64.2.3.0.2779\\\\build\\\\native\\\\lib" }

@@ -11,7 +11,7 @@ project(
 
 set( FLX_VERSIONb ${PROJECT_VERSION} )
 
-message(CMAKE_TOOLCHAIN_FILE="${CMAKE_TOOLCHAIN_FILE}")
+message(CMAKE_TOOLCHAIN_FILE="$ENV{CMAKE_TOOLCHAIN_FILE}")
 
 ###################################################################################
 # Configuration Options

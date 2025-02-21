@@ -4,7 +4,7 @@ Write-Output 'Cloning vcpkg repository...'
 vcpkg integrate install
 
 Write-Output 'Installing dependencies ...'
-vcpkg install gsl
+vcpkg install gsl boost-format boost-math boost-concept-check boost-random
 
 vcpkg integrate install
 

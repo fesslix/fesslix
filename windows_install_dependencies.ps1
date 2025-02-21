@@ -36,3 +36,5 @@ pkg-config --modversion gsl
 #[System.Environment]::SetEnvironmentVariable('CMAKE_TOOLCHAIN_FILE', "$PWD\vcpkg\scripts\buildsystems\vcpkg.cmake", [System.EnvironmentVariableTarget]::Process)
 #Write-Output "20250221: $CMAKE_TOOLCHAIN_FILE"
 
+Write-Output 'List files in directory'
+Get-ChildItem -Path "C:\vcpkg" -Recurse

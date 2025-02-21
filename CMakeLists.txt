@@ -12,6 +12,8 @@ project(
 set( FLX_VERSIONb ${PROJECT_VERSION} )
 
 message(CMAKE_TOOLCHAIN_FILE="$ENV{CMAKE_TOOLCHAIN_FILE}")
+message(GSL_INCLUDE_DIR="$ENV{GSL_INCLUDE_DIR}")
+
 
 ###################################################################################
 # Configuration Options

@@ -41,7 +41,7 @@ before-all = "apk add --no-cache gsl gsl-dev boost-dev"
 
 [tool.cibuildwheel.windows]
 archs = ["auto", "ARM64"]
-before-build = "powershell -ExecutionPolicy Bypass -File windows_install_dependencies.ps1"
+before-build = "powershell -ExecutionPolicy Bypass -File windows_install_dependencies.ps1 & vcpkg integrate install"
 environment = "VCPKG_ROOT=C:/vcpkg CMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake PKG_CONFIG_PATH=C:/vcpkg/installed/x64-windows/lib/pkgconfig GSL_INCLUDE_DIR=C:/vcpkg/packages/gsl_x64-windows/include"
 
 #[[tool.cibuildwheel.overrides]]

@@ -11,6 +11,10 @@ project(
 
 set( FLX_VERSIONb ${PROJECT_VERSION} )
 
+set(CMAKE_TOOLCHAIN_FILE "$ENV{CMAKE_TOOLCHAIN_FILE}")
+set(VCPKG_ROOT "$ENV{VCPKG_ROOT}")
+set(PKG_CONFIG_PATH "$ENV{PKG_CONFIG_PATH}")
+
 
 ###################################################################################
 # Configuration Options

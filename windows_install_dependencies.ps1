@@ -27,6 +27,7 @@ vcpkg integrate install
 Write-Output 'Check if pkg-config Can Find GSL ...'
 vcpkg list | Select-String gsl
 $env:PKG_CONFIG_PATH="C:\vcpkg\installed\x64-windows\lib\pkgconfig"
+Write-Output '   pkg-config ...'
 pkg-config --cflags gsl
 pkg-config --libs gsl
 pkg-config --modversion gsl
@@ -37,5 +38,4 @@ pkg-config --modversion gsl
 #Write-Output "20250221: $CMAKE_TOOLCHAIN_FILE"
 
 Write-Output 'List files in directory'
-#Get-ChildItem -Path "C:\vcpkg" -Recurse
-Get-ChildItem -Path "C:\vcpkg" -Recurse -File | Select-Object -ExpandProperty FullName
+#Get-ChildItem -Path "C:\vcpkg" -Recurse -File | Select-Object -ExpandProperty FullName

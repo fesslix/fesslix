@@ -41,22 +41,22 @@ before-all = "apk add --no-cache gsl gsl-dev boost-dev"
 
 [tool.cibuildwheel.windows]
 archs = ["auto", "ARM64"]
-#before-build = "powershell -ExecutionPolicy Bypass -File windows_install_dependencies.ps1"
+before-build = "powershell -ExecutionPolicy Bypass -File windows_install_dependencies.ps1"
 
-[[tool.cibuildwheel.overrides]]
-# overrides for X86
-select ="*-win_amd64*"
-# use nuget to install gsl on Windows, and manually supply paths
-before-build = "nuget install gsl-msvc14-x64 -Version 2.3.0.2779"
-inherit.environment="append"
-environment = { CPATH="gsl-msvc14-x64.2.3.0.2779\\\\build\\\\native", LIBRARY_PATH="gsl-msvc14-x64.2.3.0.2779\\\\build\\\\native\\\\static" }
+#[[tool.cibuildwheel.overrides]]
+## overrides for X86
+#select ="*-win_amd64*"
+## use nuget to install gsl on Windows, and manually supply paths
+#before-build = "nuget install gsl-msvc14-x64 -Version 2.3.0.2779"
+#inherit.environment="append"
+#environment = { CPATH="gsl-msvc14-x64.2.3.0.2779\\\\build\\\\native", LIBRARY_PATH="gsl-msvc14-x64.2.3.0.2779\\\\build\\\\native\\\\static" }
 
 
-[[tool.cibuildwheel.overrides]]
-# overrides for ARM64
-select ="*-win_arm64*"
-before-build = 'nuget install gsl-msvc14-arm64 -Source "%CD%\\vendor-binaries"'
-# use local nuget package to install gsl on Windows ARM64, and manually supply paths
-inherit.environment = "append"
-environment = { CPATH="gsl-msvc14-arm64.2.3.0.2779\\\\build\\\\native\\\\include", LIBRARY_PATH="gsl-msvc14-arm64.2.3.0.2779\\\\build\\\\native\\\\lib" }
+#[[tool.cibuildwheel.overrides]]
+## overrides for ARM64
+#select ="*-win_arm64*"
+#before-build = 'nuget install gsl-msvc14-arm64 -Source "%CD%\\vendor-binaries"'
+## use local nuget package to install gsl on Windows ARM64, and manually supply paths
+#inherit.environment = "append"
+#environment = { CPATH="gsl-msvc14-arm64.2.3.0.2779\\\\build\\\\native\\\\include", LIBRARY_PATH="gsl-msvc14-arm64.2.3.0.2779\\\\build\\\\native\\\\lib" }
 

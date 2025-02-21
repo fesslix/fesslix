@@ -29,8 +29,8 @@ vcpkg install gsl
 #pkg-config --cflags gsl
 #pkg-config --libs gsl
 
-Write-Output 'Setting environment variables...'
-[System.Environment]::SetEnvironmentVariable('VCPKG_ROOT', "$PWD\vcpkg", [System.EnvironmentVariableTarget]::Process)
-[System.Environment]::SetEnvironmentVariable('CMAKE_TOOLCHAIN_FILE', "$PWD\vcpkg\scripts\buildsystems\vcpkg.cmake", [System.EnvironmentVariableTarget]::Process)
-Write-Output "20250221: $CMAKE_TOOLCHAIN_FILE"
+#Write-Output 'Setting environment variables...'
+#[System.Environment]::SetEnvironmentVariable('VCPKG_ROOT', "$PWD\vcpkg", [System.EnvironmentVariableTarget]::Process)
+#[System.Environment]::SetEnvironmentVariable('CMAKE_TOOLCHAIN_FILE', "$PWD\vcpkg\scripts\buildsystems\vcpkg.cmake", [System.EnvironmentVariableTarget]::Process)
+#Write-Output "20250221: $CMAKE_TOOLCHAIN_FILE"
 

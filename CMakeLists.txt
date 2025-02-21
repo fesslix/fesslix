@@ -153,6 +153,7 @@ if(POLICY CMP0167)
 endif()
 if(DEFINED ENV{Boost_INCLUDE_DIR})
   set(Boost_INCLUDE_DIR $ENV{Boost_INCLUDE_DIR})
+  set(Boost_DIR $ENV{Boost_DIR})
 endif()
 find_package(Boost 1.48.0 REQUIRED NO_MODULE)
 

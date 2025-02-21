@@ -1,7 +1,7 @@
 Write-Output 'Cloning vcpkg repository...'
-git clone https://github.com/Microsoft/vcpkg.git
-.\vcpkg\bootstrap-vcpkg.bat
-.\vcpkg\vcpkg integrate install
+#git clone https://github.com/Microsoft/vcpkg.git
+#.\vcpkg\bootstrap-vcpkg.bat
+vcpkg integrate install
 
 Write-Output 'Installing dependencies ...'
 vcpkg install gsl
@@ -10,9 +10,9 @@ vcpkg install gsl
 #git clone https://github.com/microsoft/vcpkg.git
 #Write-Output 'Bootstrapping vcpkg...'
 #.\vcpkg\bootstrap-vcpkg.bat
-Write-Output 'Installing GSL and Boost...'
-.\vcpkg\vcpkg install gsl boost
-Write-Output 'Setup completed successfully.'
+#Write-Output 'Installing GSL and Boost...'
+#.\vcpkg\vcpkg install gsl boost
+#Write-Output 'Setup completed successfully.'
 
 #Write-Output 'VCPKG update an version'
 #vcpkg version

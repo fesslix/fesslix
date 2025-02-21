@@ -144,9 +144,12 @@ if(DEFINED ENV{GSL_INCLUDE_DIR})
 endif()
 FIND_PACKAGE(GSL REQUIRED)
 
-if(DEFINED ENV{Boost_INCLUDE_DIR})
-  set(Boost_INCLUDE_DIR $ENV{Boost_INCLUDE_DIR})
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
 endif()
+#if(DEFINED ENV{Boost_INCLUDE_DIR})
+#  set(Boost_INCLUDE_DIR $ENV{Boost_INCLUDE_DIR})
+#endif()
 find_package(Boost 1.48.0 REQUIRED)
 
 

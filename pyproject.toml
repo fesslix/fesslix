@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "fesslix"
-version = "0.1.2"
+version = "0.1.3"
 description = "stochastic analysis"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -72,6 +72,7 @@ environment = "VCPKG_ROOT=D:/a/fesslix/fesslix/vcpkg CMAKE_TOOLCHAIN_FILE=D:/a/f
 [tool.cibuildwheel.macos]
 before-all = ["brew install gsl boost",
               "brew --prefix boost"]
+archs = ["x86_64", "arm64"]
 
 [[tool.cibuildwheel.overrides]]
 select = "*-macosx_arm64"

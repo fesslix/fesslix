@@ -30,7 +30,6 @@ jobs:
       run: |
           sudo apt-get update
           sudo apt-get install -y qemu-system
-          qemu --version  # Check the installed QEMU version
           
 #    - name: Set up QEMU ## for aarch64
 #      if: runner.os == 'Linux'

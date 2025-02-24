@@ -38,6 +38,7 @@ archs = ["auto", "aarch64"]
 before-all = [ "yum install -y gsl-devel boost-devel",
                "find /usr/include -type d -name boost"]
 test-command = "echo 'installed gsl-devel boost-devel'"
+environment = "Boost_INCLUDE_DIR=/usr/include"
 
 [[tool.cibuildwheel.overrides]]
 select = "*-musllinux*"

@@ -71,4 +71,5 @@ environment = "VCPKG_ROOT=D:/a/fesslix/fesslix/vcpkg CMAKE_TOOLCHAIN_FILE=D:/a/f
 
 [tool.cibuildwheel.macos]
 before-all = ["brew install gsl boost",
-              "pkg-config --cflags boost"]
+              "brew list boost",
+              "brew --prefix boost"]

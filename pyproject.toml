@@ -37,7 +37,7 @@ CIBW_TEST_SKIP = "*-win_arm64"
 archs = ["auto", "aarch64"]
 before-all = [ "yum install -y gsl-devel boost-devel",
                "find /usr/include -type d -name boost",
-               "find /usr -type f -name "BoostConfig.cmake""]
+               "find /usr -type f -name \"BoostConfig.cmake\""]
 test-command = "echo 'installed gsl-devel boost-devel'"
 environment = "Boost_INCLUDE_DIR=/usr/include"
 

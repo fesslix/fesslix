@@ -264,11 +264,7 @@ inline const tdouble round_flx(tdouble r, const tuint n) {
 inline const tdouble round_flx_fb(tdouble r, const tuint n) {
   int p10 = std::log10(std::fabs(r));
   if (fabs(r)<ONE) --p10;
-  #if _MSC_VER
-    const tdouble p = pow(10,int(n)-p10);
-  #else
-    const tdouble p = exp10(int(n)-p10);
-  #endif
+  const tdouble p = pow(10,int(n)-p10);
   r *= p;
   return ((r >= ZERO) ? std::floor(r + ONE/2) : std::ceil(r - ONE/2))/p;
 }

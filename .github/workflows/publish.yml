@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest]  # List of OS to build on   , windows-latest, macos-latest ubuntu-latest, 
+        os: [ubuntu-latest, windows-latest, macos-latest]  # List of OS to build on   , windows-latest, macos-latest ubuntu-latest, 
 
     permissions:
       id-token: write
@@ -24,13 +24,7 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4  # Get the code from the repository
-      
-#    - name: Set up QEMU   ## for aarch64
-#      if: runner.os == 'Linux'
-#      run: |
-#          sudo apt-get update
-#          sudo apt-get install -y qemu-system
-          
+
     - name: Set up QEMU ## for aarch64
       if: runner.os == 'Linux'
       uses: docker/setup-qemu-action@v3

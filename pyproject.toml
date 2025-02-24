@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "fesslix"
-version = "0.1.4"
+version = "0.1.5"
 description = "stochastic analysis"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -60,6 +60,7 @@ before-all = [ "yum install -y gsl-devel",
                ]
 test-command = "echo 'installed gsl-devel boost-devel'"
 #environment = "Boost_INCLUDE_DIR=/project/vcpkg/installed/x64-linux/include Boost_DIR=/project/vcpkg/installed/x64-linux/share/boost/"
+environment = "Boost_skip_search=1"
 
 [[tool.cibuildwheel.overrides]]
 select = "*-musllinux*"

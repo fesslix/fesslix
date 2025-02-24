@@ -11,7 +11,7 @@ project(
 
 set( FLX_VERSIONb ${PROJECT_VERSION} )
 
-#set(CMAKE_CXX_STANDARD 20)
+#set(CMAKE_CXX_STANDARD 20)  ## does not compile with manylinux2014
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -162,7 +162,9 @@ endif()
 if(DEFINED ENV{Boost_DIR})
   set(Boost_DIR $ENV{Boost_DIR})
 endif()
-#find_package(Boost 1.48.0 REQUIRED NO_MODULE)
+#if(NOT DEFINED ENV{Boost_skip_search})
+  find_package(Boost 1.48.0 REQUIRED NO_MODULE)
+#endif()
 if(Boost_INCLUDE_DIR)
   include_directories(${Boost_INCLUDE_DIR})
 endif()
@@ -170,8 +172,6 @@ if(Boost_INCLUDE_DIRS)
   include_directories(${Boost_INCLUDE_DIRS})
 endif()
 
-message("202502240926 Boost_INCLUDE_DIR=${Boost_INCLUDE_DIR}")
-message("202502240930 Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}")
 
 ###################################################################################
 # compile

@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [windows-latest]  # List of OS to build on   , windows-latest, macos-latest ubuntu-latest, 
+        os: [ubuntu-latest]  # List of OS to build on   , windows-latest, macos-latest ubuntu-latest, 
 
     permissions:
       id-token: write
@@ -64,6 +64,4 @@ jobs:
                   
       - name: Upload to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          path: dist/*
         

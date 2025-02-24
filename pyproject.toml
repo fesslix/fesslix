@@ -49,7 +49,7 @@ before-all = [ "yum install -y gsl-devel",
                "echo 'Hello world 22502241155'",
                "find ./ -type f -name 'BoostConfig.cmake'"]
 test-command = "echo 'installed gsl-devel boost-devel'"
-environment = "Boost_INCLUDE_DIR=/usr/include"
+environment = "Boost_INCLUDE_DIR=/project/vcpkg/installed/x64-linux/include Boost_DIR=/project/vcpkg/installed/x64-linux/share/boost/"
 
 [[tool.cibuildwheel.overrides]]
 select = "*-musllinux*"

@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [windows-latest]  # List of OS to build on   , windows-latest, macos-latest ubuntu-latest, 
+        os: [macos-latest]  # List of OS to build on   , windows-latest, macos-latest ubuntu-latest, 
 
     permissions:
       id-token: write
@@ -39,18 +39,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install scikit-build-core pybind11 cmake build 
         pip install twine cibuildwheel
-        
-#    - name: Run vcpkg
-#      if: runner.os == 'Windows'
-#      uses: lukka/run-vcpkg@v11
-#      with:
-#        vcpkgJsonGlob: '**/vcpkg.json'
-        
-#    - name: Install dependencies (Windows)
-#      if: runner.os == 'Windows'
-#      run: |
-#        choco install -y gsl
-        
+
     - name: Build the extension
       run: |
         python -m cibuildwheel --output-dir dist
@@ -60,7 +49,6 @@ jobs:
       with:
         name: python-wheels
         path: dist/
-
 
   publish:
     needs: build  # This ensures the upload only runs after the build completes

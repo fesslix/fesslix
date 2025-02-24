@@ -37,6 +37,7 @@ CIBW_TEST_SKIP = "*-win_arm64"
 archs = ["auto", "aarch64"]
 #manylinux-x86_64-image = "manylinux_2_28"
 before-all = [ "yum install -y gsl-devel",
+               "yum install -y curl zip unzip tar",
                #"yum install -y boost-devel",
                "git clone https://github.com/microsoft/vcpkg.git",
                "cd vcpkg",

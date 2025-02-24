@@ -36,7 +36,7 @@ CIBW_TEST_SKIP = "*-win_arm64"
 [tool.cibuildwheel.linux]
 archs = ["auto", "aarch64"]
 before-all = [ "yum install -y gsl-devel boost-devel",
-               "pkg-config --libs --cflags boost"]
+               "find /usr/include -type d -name boost"]
 test-command = "echo 'installed gsl-devel boost-devel'"
 
 [[tool.cibuildwheel.overrides]]

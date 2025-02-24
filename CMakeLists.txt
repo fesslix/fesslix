@@ -157,7 +157,8 @@ if(DEFINED ENV{Boost_INCLUDE_DIR})
 endif()
 find_package(Boost 1.48.0 REQUIRED NO_MODULE)
 include_directories(${Boost_INCLUDE_DIR})
-
+message("202502240926 Boost_INCLUDE_DIR=${Boost_INCLUDE_DIR}")
+message("202502240930 Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}")
 
 ###################################################################################
 # compile

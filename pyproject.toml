@@ -43,10 +43,11 @@ before-all = [ "yum install -y gsl-devel",
                "cd vcpkg",
                "./bootstrap-vcpkg.sh",
                "./vcpkg install boost-format boost-math boost-concept-check boost-random",
-               "find ~ -type d -name boost",
-               "find ~ -type f -name 'special_functions.hpp'",
+               "./vcpkg integrate install",
+               "find ./ -type d -name boost",
+               "find ./ -type f -name 'special_functions.hpp'",
                "echo 'Hello world 22502241155'",
-               "find ~ -type f -name 'BoostConfig.cmake'"]
+               "find ./ -type f -name 'BoostConfig.cmake'"]
 test-command = "echo 'installed gsl-devel boost-devel'"
 environment = "Boost_INCLUDE_DIR=/usr/include"
 

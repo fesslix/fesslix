@@ -97,8 +97,10 @@ environment = "VCPKG_ROOT=D:/a/fesslix/fesslix/vcpkg CMAKE_TOOLCHAIN_FILE=D:/a/f
 #environment = { CPATH="gsl-msvc14-arm64.2.3.0.2779\\\\build\\\\native\\\\include", LIBRARY_PATH="gsl-msvc14-arm64.2.3.0.2779\\\\build\\\\native\\\\lib" }
 
 [tool.cibuildwheel.macos]
-before-all = ["arch -arm64 brew install gsl boost --force-bottle",
-              "arch -x86_64 brew install gsl boost --force-bottle",
+#before-all = ["arch -arm64 brew install gsl boost --force-bottle",
+#              "arch -x86_64 brew install gsl boost --force-bottle",
+#              "brew --prefix boost"]
+before-build= ["brew install gsl boost",
               "brew --prefix boost"]
 archs = ["x86_64", "arm64"]
 

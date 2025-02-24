@@ -177,8 +177,8 @@ endif()
 # compile
 ###################################################################################
 
-# Add a library using FindPython's tooling (pybind11 also provides a helper like this)
-python_add_library(core MODULE
+# Create a shared library for common functionality
+add_library(flxlib SHARED
   src/flxexception.cpp
   src/pdouble.cpp
   src/flxglobal.cpp
@@ -187,15 +187,21 @@ python_add_library(core MODULE
   src/flxmath.cpp
   src/flxVec.cpp
   src/flxio.cpp
+)
+target_link_libraries(flxlib PRIVATE GSL::gsl)
+
+# Add a library using FindPython's tooling (pybind11 also provides a helper like this)
+python_add_library(core MODULE
   src/python_interface_core.cpp
   WITH_SOABI)
-target_link_libraries(core PRIVATE pybind11::headers PRIVATE GSL::gsl)
+target_link_libraries(core PRIVATE flxlib PRIVATE pybind11::headers)  #  PRIVATE GSL::gsl
+set_target_properties(core PROPERTIES INSTALL_RPATH "$ORIGIN" )
 
 target_compile_definitions(core PRIVATE VERSION_INFO=${PROJECT_VERSION})
 
 # The install directory is the output (wheel) directory
 install(TARGETS core DESTINATION fesslix)
-
+install(TARGETS flxlib LIBRARY DESTINATION fesslix)
 
 
 

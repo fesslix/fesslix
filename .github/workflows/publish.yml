@@ -29,7 +29,7 @@ jobs:
       if: runner.os == 'Linux'
       run: |
           sudo apt-get update
-          sudo apt-get install -y qemu qemu-user-static
+          sudo apt-get install -y qemu-system
           qemu --version  # Check the installed QEMU version
           
 #    - name: Set up QEMU ## for aarch64

@@ -25,9 +25,16 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4  # Get the code from the repository
       
-    - name: Set up QEMU ## for aarch64
+    - name: Set up QEMU   ## for aarch64
       if: runner.os == 'Linux'
-      uses: docker/setup-qemu-action@v3
+      run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu qemu-user-static
+          qemu --version  # Check the installed QEMU version
+          
+#    - name: Set up QEMU ## for aarch64
+#      if: runner.os == 'Linux'
+#      uses: docker/setup-qemu-action@v3
 
     - name: Set up Python
       uses: actions/setup-python@v5

@@ -112,7 +112,7 @@ environment = { MACOSX_DEPLOYMENT_TARGET="14.0" }
 
 [[tool.cibuildwheel.overrides]]
 select = "*-macosx_x86_64"
-before-build= ["arch -x86_64 /bin/bash -c '$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)'",
+before-build= ["arch -x86_64 /bin/zsh -c '$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)'",
                "export HOMEBREW_PREFIX='/usr/local'",
                "arch -x86_64 brew install gsl boost",
                "arch -x86_64 brew --prefix boost"]

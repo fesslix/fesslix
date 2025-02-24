@@ -38,27 +38,28 @@ archs = ["auto", "aarch64"]
 #manylinux-x86_64-image = "manylinux_2_28"
 before-all = [ "yum install -y gsl-devel",
                "yum install -y curl zip unzip tar wget",
+               "yum install -y boost-devel",
                #"yum install -y curl epel-release",
                #"yum install -y curl ninja-build cmake",
-               #"yum install -y boost-devel",
                #"git clone https://github.com/microsoft/vcpkg.git",
                #"cd vcpkg",
                #"./bootstrap-vcpkg.sh",
                #"./vcpkg install boost-format boost-math boost-concept-check boost-random",
                #"./vcpkg integrate install",
-               "wget https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.gz",
-               "tar -xvzf boost_1_87_0.tar.gz",
-               "cd boost_1_87_0",
-               "./bootstrap.sh",
-               "./b2 install",
-               "echo 'Hello world 202502241449'",
-               "pwd",
-               "find ./ -type d -name boost",
-               "find ./ -type f -name 'special_functions.hpp'",
-               "echo 'Hello world 22502241155'",
-               "find ./ -type f -name 'BoostConfig.cmake'"]
+               #"wget https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.gz",
+               #"tar -xvzf boost_1_87_0.tar.gz",
+               #"cd boost_1_87_0",
+               #"./bootstrap.sh",
+               #"./b2 install",
+               #"echo 'Hello world 202502241449'",
+               #"pwd",
+               #"find ./ -type d -name boost",
+               #"find ./ -type f -name 'special_functions.hpp'",
+               #"echo 'Hello world 22502241155'",
+               #"find ./ -type f -name 'BoostConfig.cmake'"
+               ]
 test-command = "echo 'installed gsl-devel boost-devel'"
-environment = "Boost_INCLUDE_DIR=/project/vcpkg/installed/x64-linux/include Boost_DIR=/project/vcpkg/installed/x64-linux/share/boost/"
+#environment = "Boost_INCLUDE_DIR=/project/vcpkg/installed/x64-linux/include Boost_DIR=/project/vcpkg/installed/x64-linux/share/boost/"
 
 [[tool.cibuildwheel.overrides]]
 select = "*-musllinux*"

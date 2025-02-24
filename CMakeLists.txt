@@ -178,7 +178,7 @@ endif()
 ###################################################################################
 
 # Add a library using FindPython's tooling (pybind11 also provides a helper like this)
-python_add_library(fesslix MODULE
+python_add_library(core MODULE
   src/flxexception.cpp
   src/pdouble.cpp
   src/flxglobal.cpp
@@ -187,14 +187,14 @@ python_add_library(fesslix MODULE
   src/flxmath.cpp
   src/flxVec.cpp
   src/flxio.cpp
-  src/python_interface.cpp
+  src/python_interface_core.cpp
   WITH_SOABI)
-target_link_libraries(fesslix PRIVATE pybind11::headers PRIVATE GSL::gsl)
+target_link_libraries(core PRIVATE pybind11::headers PRIVATE GSL::gsl)
 
-target_compile_definitions(fesslix PRIVATE VERSION_INFO=${PROJECT_VERSION})
+target_compile_definitions(core PRIVATE VERSION_INFO=${PROJECT_VERSION})
 
 # The install directory is the output (wheel) directory
-install(TARGETS fesslix DESTINATION fesslix)
+install(TARGETS core DESTINATION fesslix)
 
 
 

@@ -26,7 +26,7 @@ double add(double a, double b) {
     return a + b;
 }
 
-PYBIND11_MODULE(fesslix, m) {
+PYBIND11_MODULE(core, m) {
     m.def("add", &add, "A function that adds two numbers");
     m.attr("the_answer") = 42;
 }

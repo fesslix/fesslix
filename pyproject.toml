@@ -72,3 +72,8 @@ environment = "VCPKG_ROOT=D:/a/fesslix/fesslix/vcpkg CMAKE_TOOLCHAIN_FILE=D:/a/f
 [tool.cibuildwheel.macos]
 before-all = ["brew install gsl boost",
               "brew --prefix boost"]
+
+[[tool.cibuildwheel.overrides]]
+select = "*-macosx_arm64"
+inherit.environment="append"
+environment = { MACOSX_DEPLOYMENT_TARGET="14.0" }

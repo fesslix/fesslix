@@ -21,6 +21,51 @@ https://pypi.org/account/register/
 python -m cibuildwheel --output-dir dist
 twine upload dist/*
 
+## GitHub Actions
+
+### Trigger the workflow on push and pull request events to the main branch
+
+```
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+```
+
+### Trigger the workflow action whenever a new version tag is committed
+
+```
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger only on version tags
+```
+
+To create a tag:
+```
+git tag v1.0.0  # Create a new version tag
+
+```
+To transfer the tag to the server:
+```
+git push origin v1.5
+```
+To transfer all tags to the server:
+```
+git push origin --tags
+```
+
+## CMake
+Output messages in CMake:
+
+```
+message("202502240926 Boost_INCLUDE_DIR=${Boost_INCLUDE_DIR}")
+```
+
+
 
 # Commiting code
 

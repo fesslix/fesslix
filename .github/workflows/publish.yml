@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [macos-latest]  # List of OS to build on   , windows-latest, macos-latest ubuntu-latest, 
+        os: [windows-latest]  # List of OS to build on   , windows-latest, macos-latest ubuntu-latest, 
 
     permissions:
       id-token: write

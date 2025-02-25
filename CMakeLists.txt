@@ -123,13 +123,7 @@ option ( FLX_KAHAN_PFEM "use Kahan summation for pFEM-elements" OFF )
 
 SET( FLX_KAHAN_CG_STAGE 1 CACHE INTEGER "specify how to use Kahan summation in the conjugate gradient method")
 
-configure_file (
-  "${PROJECT_SOURCE_DIR}/src/config.h.in"
-  "${PROJECT_BINARY_DIR}/src/config.h"
-)
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-include_directories(${PROJECT_BINARY_DIR})
-include_directories("${PROJECT_BINARY_DIR}/src")
+
 
 MARK_AS_ADVANCED(
   FLX_DEBUG_COUT
@@ -200,6 +194,16 @@ endif()
 # prepare ...
 #==========================================================
 
+configure_file (
+  "${PROJECT_SOURCE_DIR}/src/config.h.in"
+  "${PROJECT_BINARY_DIR}/src/config.h"
+)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${PROJECT_BINARY_DIR})
+include_directories("${PROJECT_BINARY_DIR}/src")
+include_directories("${PROJECT_SOURCE_DIR}/src/flxlib")
+include_directories("${PROJECT_SOURCE_DIR}/src/core")
+
 # Determine platform-specific RPATH
 if(APPLE)
     set(RPATH_STRING "@loader_path")  # macOS
@@ -218,19 +222,18 @@ endif(MSVC)
 
 # Create a shared library for common functionality
 add_library(flxlib SHARED
-  src/flxexception.cpp
-  src/pdouble.cpp
-  src/flxglobal.cpp
-  src/flxmath_rnd.cpp
-  src/flxmath_interp.cpp
-  src/flxmath.cpp
-  src/flxVec.cpp
-  src/flxio.cpp
+  src/flxlib/flxexception.cpp
+  src/flxlib/pdouble.cpp
+  src/flxlib/flxglobal.cpp
+  src/flxlib/flxmath_rnd.cpp
+  src/flxlib/flxmath_interp.cpp
+  src/flxlib/flxmath.cpp
+  src/flxlib/flxVec.cpp
+  src/flxlib/flxio.cpp
 )
 if(MSVC)
   generate_export_header(flxlib)
 endif(MSVC)
-message("202502251156 ${CMAKE_BINARY_DIR}")
 target_link_libraries(flxlib PRIVATE GSL::gsl)
 
 
@@ -240,7 +243,7 @@ target_link_libraries(flxlib PRIVATE GSL::gsl)
 
 # Add a library using FindPython's tooling (pybind11 also provides a helper like this)
 python_add_library(core MODULE
-  src/python_interface_core.cpp
+  src/core/python_interface_core.cpp
   WITH_SOABI)
 target_link_libraries(core PRIVATE flxlib PRIVATE pybind11::headers)  #  PRIVATE GSL::gsl
 if(DEFINED RPATH_STRING)

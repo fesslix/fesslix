@@ -23,6 +23,10 @@ twine upload dist/*
 
 ## GitHub Actions
 
+### cibuildwheel 
+https://cibuildwheel.pypa.io/en/stable/faq/
+https://cibuildwheel.pypa.io/en/stable/working-examples/
+
 ### Trigger the workflow on push and pull request events to the main branch
 
 ```

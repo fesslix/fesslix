@@ -20,6 +20,7 @@
 #include "pdouble.h"
 #include "flxplatform.h"
 #include "flxexception.h"
+#include "flxMemoryManager.h"
 
 #include "boost/format.hpp"
 using boost::format;
@@ -43,8 +44,8 @@ FLXLIB_EXPORT void FlxError(bool errSerious, std::string errnumber, std::string 
 
 class FLXLIB_EXPORT strGlobalVar {
   private:
-    const ostreamp true_stdcout;        // this pointer will always point to std::cout
-    const ostreamp true_cerr;                // this pointer will always point to std::cerr
+    const ostreamp true_stdcout;              // this pointer will always point to std::cout
+    const ostreamp true_cerr;                 // this pointer will always point to std::cerr
     ostreamp sdummy;
     ostreamp slogP;
     /**
@@ -92,6 +93,7 @@ class FLXLIB_EXPORT strGlobalVar {
     
   public:
     tuint logLev_counter;
+    FlxMemoryManager MemMngr;
     
     /**
     * @brief this is the temporary loglevel - can be reset by objects

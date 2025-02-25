@@ -240,12 +240,20 @@ endif(MSVC)
 add_library(flxlib SHARED
   src/flxlib/flxexception.cpp
   src/flxlib/pdouble.cpp
+  src/flxlib/flxMemoryManager.cpp
   src/flxlib/flxglobal.cpp
   src/flxlib/flxmath_rnd.cpp
   src/flxlib/flxmath_interp.cpp
   src/flxlib/flxmath.cpp
   src/flxlib/flxVec.cpp
   src/flxlib/flxio.cpp
+  src/flxlib/flxfunction_data.cpp
+  src/flxlib/flxfunction_ext.cpp
+  src/flxlib/flxfunction_fun.cpp
+  src/flxlib/flxfunction_ope.cpp
+  src/flxlib/flxfunction.cpp
+  src/flxlib/flxrandom_base.cpp
+  src/flxlib/flxMtx
 )
 if(MSVC)
   generate_export_header(flxlib)

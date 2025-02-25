@@ -15,25 +15,16 @@
  * along with Fesslix.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#include "flxmath.h"
+#ifndef fesslix_flxfunction_ope_H
+#define fesslix_flxfunction_ope_H
 
-#include <pybind11/pybind11.h>
-
-namespace py = pybind11;
-
-double add(double a, double b) {
-    return a + b;
-}
-
-std::string Double2String(double a) {
-    return GlobalVar.Double2String(a);
-}
-
-PYBIND11_MODULE(core, m) {
-    GlobalVar.slogcout(1) << "Fesslix::core » loaded" << std::endl;
-    m.def("add", &add, "A function that adds two numbers");
-    m.def("Double2String", &Double2String, "Convert a double into a string");
-    m.attr("the_answer") = 42;
-}
+void flxfunction_ope_insert(FunReadSTART* FunList);
 
 
+
+
+
+
+
+
+#endif // fesslix_flxfunction_ope_H

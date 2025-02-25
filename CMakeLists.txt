@@ -127,6 +127,8 @@ configure_file (
   "${PROJECT_SOURCE_DIR}/src/config.h.in"
   "${PROJECT_BINARY_DIR}/src/config.h"
 )
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${PROJECT_BINARY_DIR})
 include_directories("${PROJECT_BINARY_DIR}/src")
 
 MARK_AS_ADVANCED(

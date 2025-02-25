@@ -181,8 +181,6 @@ if(APPLE)
     set(RPATH_STRING "@loader_path")  # macOS
 elseif(UNIX)
     set(RPATH_STRING "$ORIGIN")       # Linux
-else()
-    set(RPATH_STRING "")              # Windows does not use RPATH
 endif()
 
 # Create a shared library for common functionality
@@ -203,7 +201,9 @@ python_add_library(core MODULE
   src/python_interface_core.cpp
   WITH_SOABI)
 target_link_libraries(core PRIVATE flxlib PRIVATE pybind11::headers)  #  PRIVATE GSL::gsl
-set_target_properties(core PROPERTIES INSTALL_RPATH ${RPATH_STRING} )
+if(DEFINED RPATH_STRING)
+  set_target_properties(core PROPERTIES INSTALL_RPATH ${RPATH_STRING} )
+endif()
 
 target_compile_definitions(core PRIVATE VERSION_INFO=${PROJECT_VERSION})
 

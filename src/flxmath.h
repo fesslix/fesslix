@@ -148,11 +148,11 @@ inline T pow_b2(T n)
 * @brief calculate the Logarithm of the Gamma Function
 * @brief returns the value ln(GAMMA(xx)] for xx > 0
 */
-const tdouble GammaLn(const tdouble &xx);
+FLXLIB_EXPORT const tdouble GammaLn(const tdouble &xx);
 /**
 * @brief solves GammaLn(alpha+beta)-GammaLn(beta)
 */
-const tdouble GammaLn_diff(const tdouble alpha, const tdouble beta);
+FLXLIB_EXPORT const tdouble GammaLn_diff(const tdouble alpha, const tdouble beta);
 
 const tdouble BetaFunLn(const tdouble &z, const tdouble &w);
 
@@ -167,64 +167,64 @@ inline const tdouble flxerf(const tdouble x) { return erf(x); }
 /**
 * @brief inverse error function
 */
-const tdouble flxerf_inv(const tdouble p);
+FLXLIB_EXPORT const tdouble flxerf_inv(const tdouble p);
 
 /**
 * @brief gamma function
 */
-const tdouble flxgamma(const tdouble x);
+FLXLIB_EXPORT const tdouble flxgamma(const tdouble x);
 /**
 * @brief incomplete upper gamma function
 */
-const tdouble flxgamma(const tdouble a, const tdouble z);
+FLXLIB_EXPORT const tdouble flxgamma(const tdouble a, const tdouble z);
 /**
 * @brief incomplete lower gamma function
 */
-const tdouble flxgamma_l(const tdouble a, const tdouble z);
+FLXLIB_EXPORT const tdouble flxgamma_l(const tdouble a, const tdouble z);
 /**
 * @brief regularized incomplete upper gamma function
 */
-const tdouble flxgamma_ru(const tdouble a, const tdouble z);
+FLXLIB_EXPORT const tdouble flxgamma_ru(const tdouble a, const tdouble z);
 /**
 * @brief regularized incomplete lower gamma function
 */
-const tdouble flxgamma_rl(const tdouble a, const tdouble z);
+FLXLIB_EXPORT const tdouble flxgamma_rl(const tdouble a, const tdouble z);
 /**
 * @brief inverse regularized incomplete upper gamma function
 */
-const tdouble flxgamma_ru_inv(const tdouble a, const tdouble q);
+FLXLIB_EXPORT const tdouble flxgamma_ru_inv(const tdouble a, const tdouble q);
 /**
 * @brief inverse regularized incomplete lower gamma function
 */
-const tdouble flxgamma_rl_inv(const tdouble a, const tdouble p);
+FLXLIB_EXPORT const tdouble flxgamma_rl_inv(const tdouble a, const tdouble p);
 /**
 * @brief regularized incomplete Beta function
 */
-const tdouble iBeta_reg(const tdouble alpha, const tdouble beta, const tdouble x);
+FLXLIB_EXPORT const tdouble iBeta_reg(const tdouble alpha, const tdouble beta, const tdouble x);
 /**
 * @brief complement of regularized incomplete Beta function
 */
-const tdouble iBeta_regc(const tdouble alpha, const tdouble beta, const tdouble x);
+FLXLIB_EXPORT const tdouble iBeta_regc(const tdouble alpha, const tdouble beta, const tdouble x);
 /**
 * @brief inverse of the regularized incomplete Beta function
 */
-const tdouble iBeta_reg_inv(const tdouble alpha, const tdouble beta, const tdouble p);
+FLXLIB_EXPORT const tdouble iBeta_reg_inv(const tdouble alpha, const tdouble beta, const tdouble p);
 /**
 * @brief inverse of the complement of the regularized incomplete Beta function
 */
-const tdouble iBetac_reg_inv(const tdouble alpha, const tdouble beta, const tdouble p);
+FLXLIB_EXPORT const tdouble iBetac_reg_inv(const tdouble alpha, const tdouble beta, const tdouble p);
 /**
 * @brief Digamma function
 */
-const tdouble flxdigamma(const tdouble x);
+FLXLIB_EXPORT const tdouble flxdigamma(const tdouble x);
 
 
 /**
 * @brief Factorial Function
 */
-const tdouble Factorial(const int n);
-const tdouble DoubleFactorial(const int n);
-const tdouble FactorialLn(const int n);
+FLXLIB_EXPORT const tdouble Factorial(const int n);
+FLXLIB_EXPORT const tdouble DoubleFactorial(const int n);
+FLXLIB_EXPORT const tdouble FactorialLn(const int n);
 
 /**
 * @brief calculate the log of the Binomial Coefficient (n, m)
@@ -288,7 +288,7 @@ inline const tdouble round_flx_fb(tdouble r, const tuint n) {
 * @param osp a pointer to a output-stream (can be NULL)
 * @returns parameter x_min: the location of the minimum
 */
-void flx_optim(tdouble x_lb, tdouble x_ub, tdouble &x_min, flx_math_fun_ptr fun, void* dp, const bool use_brent, const bool use_initial, const tuint NITER=1000, const tuint NEX=100, const tdouble eps1=1e-6, const tdouble eps2=1e-6, ostreamp osp=NULL);
+FLXLIB_EXPORT void flx_optim(tdouble x_lb, tdouble x_ub, tdouble &x_min, flx_math_fun_ptr fun, void* dp, const bool use_brent, const bool use_initial, const tuint NITER=1000, const tuint NEX=100, const tdouble eps1=1e-6, const tdouble eps2=1e-6, ostreamp osp=NULL);
 
 
 // ------------------------------------ root search routines ----------------------------------
@@ -304,8 +304,8 @@ void flx_optim(tdouble x_lb, tdouble x_ub, tdouble &x_min, flx_math_fun_ptr fun,
 * @param dx epsilon for interval size
 * @param dy epsilon for function-value
 */
-const tdouble flx_RootSearch_Bisec(flx_math_fun_ptr fun, void* dp, tdouble start, tdouble end, const tdouble dx=1e-6, const tdouble dy=1e-8, ostreamp streamp=NULL);
-const tdouble flx_RootSearch_RegulaFalsi(flx_math_fun_ptr fun, void* dp, tdouble start, tdouble end, const tdouble dx=1e-6, const tdouble dy=1e-8, ostreamp streamp=NULL);
+FLXLIB_EXPORT const tdouble flx_RootSearch_Bisec(flx_math_fun_ptr fun, void* dp, tdouble start, tdouble end, const tdouble dx=1e-6, const tdouble dy=1e-8, ostreamp streamp=NULL);
+FLXLIB_EXPORT const tdouble flx_RootSearch_RegulaFalsi(flx_math_fun_ptr fun, void* dp, tdouble start, tdouble end, const tdouble dx=1e-6, const tdouble dy=1e-8, ostreamp streamp=NULL);
 
 
 

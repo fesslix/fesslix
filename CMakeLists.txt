@@ -20,10 +20,19 @@ set(CMAKE_TOOLCHAIN_FILE "$ENV{CMAKE_TOOLCHAIN_FILE}")
 set(VCPKG_ROOT "$ENV{VCPKG_ROOT}")
 set(PKG_CONFIG_PATH "$ENV{PKG_CONFIG_PATH}")
 
+# add the automatically determined parts of the RPATH
+# which point to directories outside the build tree to the install RPATH
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 ###################################################################################
 # Configuration Options
 ###################################################################################
+
+if (NOT CMAKE_BUILD_TYPE)
+  set (CMAKE_BUILD_TYPE Release CACHE STRING
+      "Choose the type of build, options are: None Debug Release."
+      FORCE)
+endif (NOT CMAKE_BUILD_TYPE)
 
 option ( FLX_DEBUG "with debugging stuff .. but maybe more stable" OFF )
 option ( FLX_DEBUG_COUT "use std::cout for debugging in your code" OFF )
@@ -142,10 +151,15 @@ MARK_AS_ADVANCED(
 # find dependencies
 ###################################################################################
 
+#==========================================================
+# pybind11
+#==========================================================
 find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
 find_package(pybind11 CONFIG REQUIRED)
 
-
+#==========================================================
+# GSL
+#==========================================================
 if(DEFINED ENV{GSL_INCLUDE_DIR})
     set(GSL_INCLUDE_DIR "$ENV{GSL_INCLUDE_DIR}")
     set(GSL_LIBRARY "$ENV{GSL_LIBRARY}")
@@ -153,6 +167,9 @@ if(DEFINED ENV{GSL_INCLUDE_DIR})
 endif()
 FIND_PACKAGE(GSL REQUIRED)
 
+#==========================================================
+# Boost
+#==========================================================
 if(POLICY CMP0167)
   cmake_policy(SET CMP0167 NEW)
 endif()
@@ -176,12 +193,26 @@ endif()
 ###################################################################################
 # compile
 ###################################################################################
+
+#==========================================================
+# prepare ...
+#==========================================================
+
 # Determine platform-specific RPATH
 if(APPLE)
     set(RPATH_STRING "@loader_path")  # macOS
 elseif(UNIX)
     set(RPATH_STRING "$ORIGIN")       # Linux
 endif()
+
+if(MSVC)
+  include (GenerateExportHeader)
+  add_compiler_export_flags()
+endif(MSVC)
+
+#==========================================================
+# flxlib » base library
+#==========================================================
 
 # Create a shared library for common functionality
 add_library(flxlib SHARED
@@ -194,7 +225,16 @@ add_library(flxlib SHARED
   src/flxVec.cpp
   src/flxio.cpp
 )
+if(MSVC)
+  generate_export_header(flxlib)
+endif(MSVC)
+message("202502251156 ${CMAKE_BINARY_DIR}")
 target_link_libraries(flxlib PRIVATE GSL::gsl)
+
+
+#==========================================================
+# core » main interface of Fesslix
+#==========================================================
 
 # Add a library using FindPython's tooling (pybind11 also provides a helper like this)
 python_add_library(core MODULE
@@ -207,18 +247,14 @@ endif()
 
 target_compile_definitions(core PRIVATE VERSION_INFO=${PROJECT_VERSION})
 
+
+#==========================================================
+# install
+#==========================================================
+
 # The install directory is the output (wheel) directory
 install(TARGETS core DESTINATION fesslix)
 install(TARGETS flxlib LIBRARY DESTINATION fesslix)
 
 
-
-
-#find_package(pybind11 REQUIRED)
-
-#find_package (Python3 COMPONENTS Interpreter Development REQUIRED)   # Development
-#find_package(Python COMPONENTS Interpreter Development REQUIRED)
-
-
-#pybind11_add_module(fesslix src/fesslix.cpp)
 

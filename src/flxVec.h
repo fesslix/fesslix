@@ -23,7 +23,7 @@
 
 class flxpVec;
 
-class flxVec {
+class FLXLIB_EXPORT flxVec {
   private:
     const tuint N;
     tdouble* vptr;
@@ -279,7 +279,7 @@ class flxVec {
 typedef flxVec* flxVec_ptr;
 
 
-class flxpVec {
+class FLXLIB_EXPORT flxpVec {
   private:
     const tuint N;
     pdouble* vptr;
@@ -351,7 +351,7 @@ class flxpVec {
 * @param p the percentile to return
 * 
 */
-const tdouble flx_percentile(const tdouble* const vp, const tuint N, const tdouble p, const bool inverse=false);
+FLXLIB_EXPORT const tdouble flx_percentile(const tdouble* const vp, const tuint N, const tdouble p, const bool inverse=false);
 
 /**
 * @brief finds the smallest index in smpl_ref_list which is larger than e
@@ -360,7 +360,7 @@ const tdouble flx_percentile(const tdouble* const vp, const tuint N, const tdoub
 * @param e the value to search for
 * @returns N if g>=largest entry
 */
-const tuint flx_find_pos(const tdouble* const vp, const tuint N, const tdouble e);
+FLXLIB_EXPORT const tuint flx_find_pos(const tdouble* const vp, const tuint N, const tdouble e);
 
 /**
 * @brief finds the smallest index in smpl_ref_list which is larger or equal than e
@@ -369,9 +369,9 @@ const tuint flx_find_pos(const tdouble* const vp, const tuint N, const tdouble e
 * @param e the value to search for
 * @returns N if g>=largest entry
 */
-const tuint flx_find_pos2(const tdouble* const vp, const tuint N, const tdouble e);
+FLXLIB_EXPORT const tuint flx_find_pos2(const tdouble* const vp, const tuint N, const tdouble e);
 
-const tdouble calc_distance(const tdouble* const v1, const tdouble* const v2, const tuint N);
+FLXLIB_EXPORT const tdouble calc_distance(const tdouble* const v1, const tdouble* const v2, const tuint N);
 
 
 // -------------------------- VECTOR - tVec ----------------------------------------------------------------------
@@ -394,13 +394,13 @@ inline const tdouble Norm2(const tdouble* v, const tuint N) {
 
 
 
-void flxVec_simple_plot(std::ostream& os, const flxVec& V, const bool checkTOL, const int prec, const int fixW, const bool brackets=false);
-void flxVec_totalPrec_plot(std::ostream& os, const flxVec& V);
-std::ostream& operator<<(std::ostream& os, const flxVec& V);
-std::ostream& operator<<(std::ostream& os, const bVec& V);
-std::ostream& operator<<(std::ostream&os, const std::vector< tuint >& V);
+FLXLIB_EXPORT void flxVec_simple_plot(std::ostream& os, const flxVec& V, const bool checkTOL, const int prec, const int fixW, const bool brackets=false);
+FLXLIB_EXPORT void flxVec_totalPrec_plot(std::ostream& os, const flxVec& V);
+FLXLIB_EXPORT std::ostream& operator<<(std::ostream& os, const flxVec& V);
+FLXLIB_EXPORT std::ostream& operator<<(std::ostream& os, const bVec& V);
+FLXLIB_EXPORT std::ostream& operator<<(std::ostream&os, const std::vector< tuint >& V);
 
-std::ostream& operator<<(std::ostream& os, const pdouble& p);
+FLXLIB_EXPORT std::ostream& operator<<(std::ostream& os, const pdouble& p);
 
 
 

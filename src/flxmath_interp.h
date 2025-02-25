@@ -20,7 +20,7 @@
 #include "flxglobal.h"
 
 
-class flx_interp {
+class FLXLIB_EXPORT flx_interp {
   private:
     size_t Nreserve;
     size_t Nsmpl;

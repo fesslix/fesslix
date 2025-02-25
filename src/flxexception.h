@@ -21,13 +21,19 @@
 #include <sstream>
 #include <ostream>
 
+#if defined(_MSC_VER)
+  #include "flxlib_export.h"
+#else
+  #define FLXLIB_EXPORT
+#endif
+
 typedef std::ostream* ostreamp;
 
 
 /**
 * @brief A class for exception handling.
 */
-class FlxException {
+class FLXLIB_EXPORT FlxException {
   private:
     std::string errNumber;
     std::string titel;
@@ -52,7 +58,7 @@ class FlxException {
 /**
 * @brief A class for exception handling.
 */
-class FlxException_NeglectInInteractive : public FlxException {
+class FLXLIB_EXPORT FlxException_NeglectInInteractive : public FlxException {
   public:
     /**
     * @brief Create a FlxException_NeglectInInteractive class.
@@ -68,7 +74,7 @@ class FlxException_NeglectInInteractive : public FlxException {
 /**
 * @brief A class for exception handling.
 */
-class FlxException_NotImplemented : public FlxException {
+class FLXLIB_EXPORT FlxException_NotImplemented : public FlxException {
   public:
     /**
     * @brief Create a FlxException_NotImplemented class.
@@ -82,7 +88,7 @@ class FlxException_NotImplemented : public FlxException {
 /**
 * @brief A class for exception handling.
 */
-class FlxException_Crude : public FlxException {
+class FLXLIB_EXPORT FlxException_Crude : public FlxException {
   public:
     /**
     * @brief Create a FlxException_Crude class.
@@ -96,7 +102,7 @@ class FlxException_Crude : public FlxException {
 /**
 * @brief A class for exception handling (internal errors - to be catched)
 */
-class FlxException_math : public FlxException {
+class FLXLIB_EXPORT FlxException_math : public FlxException {
   public:
     /**
     * @brief Create a FlxException_math class.

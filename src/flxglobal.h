@@ -31,9 +31,9 @@ typedef std::valarray<bool> bVec;
 typedef std::valarray<tuint> iVec;
 typedef std::valarray<tnlong> lVec;
 
-size_t bVec_NumbTrue(const bVec& bv);
+FLXLIB_EXPORT size_t bVec_NumbTrue(const bVec& bv);
 
-void FlxError(bool errSerious, std::string errnumber, std::string Titel = "", std::string Msg = "");
+FLXLIB_EXPORT void FlxError(bool errSerious, std::string errnumber, std::string Titel = "", std::string Msg = "");
 
 #if FLX_DEBUG
 #define FLXMSG(M,I) GlobalVar.slogcout(I) << M << std::endl;
@@ -41,7 +41,7 @@ void FlxError(bool errSerious, std::string errnumber, std::string Titel = "", st
   #define FLXMSG(M,I)
 #endif
 
-class strGlobalVar {
+class FLXLIB_EXPORT strGlobalVar {
   private:
     const ostreamp true_stdcout;        // this pointer will always point to std::cout
     const ostreamp true_cerr;                // this pointer will always point to std::cerr
@@ -243,13 +243,13 @@ class strGlobalVar {
     friend class FlxOstreamBox;
 };
 #ifdef fesslix_flxglobal_CPP
-  strGlobalVar GlobalVar;
+  FLXLIB_EXPORT strGlobalVar GlobalVar;
 #else
-  extern strGlobalVar GlobalVar;
+  FLXLIB_EXPORT extern strGlobalVar GlobalVar;
 #endif
 
 
-class FlxProgress {
+class FLXLIB_EXPORT FlxProgress {
   private:
     const bool active;
     std::ostream& op;
@@ -272,9 +272,9 @@ class FlxProgress {
 };
 
 
-const std::string bool2string(const bool b);
+FLXLIB_EXPORT const std::string bool2string(const bool b);
   
-void flxlib_logInfo(std::ostream& lout);
+FLXLIB_EXPORT void flxlib_logInfo(std::ostream& lout);
 
 
 

@@ -24,10 +24,10 @@
 #include <vector>
 #include <ostream>
 
-std::ofstream* open_stream(std::string filename);
+FLXLIB_EXPORT std::ofstream* open_stream(std::string filename);
 
-const std::string flx_date2str(time_t date);
-const std::string flx_time2str(time_t timevar);
+FLXLIB_EXPORT const std::string flx_date2str(time_t date);
+FLXLIB_EXPORT const std::string flx_time2str(time_t timevar);
 
 template<class T, class U>
 struct flx_is_same {
@@ -42,7 +42,7 @@ struct flx_is_same<T, T> {
 
 //------------------------------------------------------------
 
-class istream_warper {
+class FLXLIB_EXPORT istream_warper {
   private:
     /**
     * @brief The file stream
@@ -78,7 +78,7 @@ const std::string ReadStream_String_End = "\n            ";
 /**
 * @brief A class for extracting information out of a file.
 */
-class ReadStream {
+class FLXLIB_EXPORT ReadStream {
   public:
     /**
     * @brief Labeles the type of a character.
@@ -316,7 +316,7 @@ typedef ReadStream* ReadStream_ptr;
 //------------------------------------------------------------
 
 
-class FlxReaderBase {
+class FLXLIB_EXPORT FlxReaderBase {
   protected:
     static ReadStream *reader;
   public:
@@ -328,7 +328,7 @@ class FlxReaderBase {
 
 
 
-class FlxIstream {
+class FLXLIB_EXPORT FlxIstream {
   protected:
     /**
     * @brief the name of the inputReader
@@ -363,7 +363,7 @@ class FlxIstream {
     const bool get_vec(flxVec& v, tuint &lastIndex, const bool suppressErr = false);
 };
 
-class FlxIstream_file : public FlxIstream {
+class FLXLIB_EXPORT FlxIstream_file : public FlxIstream {
   protected:
     /**
     * @brief random sequence input: reader
@@ -424,7 +424,7 @@ class FlxIstream_file : public FlxIstream {
     virtual bool get_value(tdouble& v, bool suppressErr = false);
 };
 
-class FlxIstream_file_binary : public FlxIstream_file {
+class FLXLIB_EXPORT FlxIstream_file_binary : public FlxIstream_file {
   private:
     std::ifstream* file;
     std::streampos size;
@@ -443,7 +443,7 @@ class FlxIstream_file_binary : public FlxIstream_file {
     const size_t get_N_numbers();
 };
 
-class FlxIstream_file_combine : public FlxIstream_file {
+class FLXLIB_EXPORT FlxIstream_file_combine : public FlxIstream_file {
   private:
     std::vector<ReadStream*> iReader_vec;
     flxVec* weight_vecP;
@@ -459,7 +459,7 @@ class FlxIstream_file_combine : public FlxIstream_file {
     virtual void copyStream(FlxIstream* rhsB, bool errSerious=true, const bool err_check=true);
 };
 
-class FlxIstream_vector : public FlxIstream {
+class FLXLIB_EXPORT FlxIstream_vector : public FlxIstream {
   private:
     std::vector<tdouble> iVec;
     /**
@@ -513,7 +513,7 @@ class FlxIstream_vector : public FlxIstream {
 
 //------------------------------------------------------------
 
-class flxBufAlloc : public std::streambuf
+class FLXLIB_EXPORT flxBufAlloc : public std::streambuf
 {
   private:
     typedef std::streambuf base_type;
@@ -542,7 +542,7 @@ class flxBufAlloc : public std::streambuf
 
 };
 
-class flxDummyAlloc : public std::streambuf
+class FLXLIB_EXPORT flxDummyAlloc : public std::streambuf
 {
   private:
     typedef std::streambuf base_type;
@@ -561,7 +561,7 @@ class flxDummyAlloc : public std::streambuf
 
 };
 
-class flxStreamAlloc : public std::ostream {
+class FLXLIB_EXPORT flxStreamAlloc : public std::ostream {
   private:
     flxBufAlloc theBuf;
 
@@ -569,7 +569,7 @@ class flxStreamAlloc : public std::ostream {
     flxStreamAlloc ( const ostreamp& os1, const ostreamp& os2 ) : std::ostream(&theBuf), theBuf(os1, os2) { }
 };
 
-class flxDummyOstream : public std::ostream {
+class FLXLIB_EXPORT flxDummyOstream : public std::ostream {
   private:
     flxDummyAlloc theBuf;
 

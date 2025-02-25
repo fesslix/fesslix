@@ -1153,6 +1153,7 @@ void FlxMtxSym::assign_LTL(const FlxMtxLTri& L)
     inner_fun(i,j,dp);
   };
 
+  #ifdef __cpp_lib_parallel_algorithm
   if (N>1000) {
     std::for_each(
       std::execution::par_unseq,
@@ -1163,13 +1164,16 @@ void FlxMtxSym::assign_LTL(const FlxMtxLTri& L)
             outer_fun(n_,val);
       });
   } else {
+  #endif
     tnlong c = 0;
     for (tnlong i = 0; i < N; ++i) {
       for (tnlong j = 0; j <= i; ++j) {
         inner_fun(i,j,mtxp[c++]);
       }
     }
+  #ifdef __cpp_lib_parallel_algorithm
   }
+  #endif
 }
 
 FlxMtxSym::FlxMtxSym(const FlxMtx_baseS& S)

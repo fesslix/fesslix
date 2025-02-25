@@ -116,4 +116,6 @@ select = "*-macosx_x86_64"
 #               "export HOMEBREW_PREFIX='/usr/local'",
 #               "arch -x86_64 brew install gsl boost",
 #               "arch -x86_64 brew --prefix boost"]
+inherit.environment="append"
+environment = { MACOSX_DEPLOYMENT_TARGET="13.0" }
 archs = ["x86_64"]

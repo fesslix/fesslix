@@ -100,19 +100,20 @@ environment = "VCPKG_ROOT=D:/a/fesslix/fesslix/vcpkg CMAKE_TOOLCHAIN_FILE=D:/a/f
 #before-all = ["arch -arm64 brew install gsl boost --force-bottle",
 #              "arch -x86_64 brew install gsl boost --force-bottle",
 #              "brew --prefix boost"]
-before-all = ["brew install bash"]
 before-build= ["brew install gsl boost",
               "brew --prefix boost"]
-archs = ["x86_64", "arm64"]
+#archs = ["x86_64", "arm64"]
 
 [[tool.cibuildwheel.overrides]]
 select = "*-macosx_arm64"
 inherit.environment="append"
 environment = { MACOSX_DEPLOYMENT_TARGET="14.0" }
+archs = ["arm64"]
 
 [[tool.cibuildwheel.overrides]]
 select = "*-macosx_x86_64"
-before-build= ["arch -x86_64 /bin/zsh -c '$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)'",
+before-build= ["arch -x86_64 /bin/bash -c '$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)'",
                "export HOMEBREW_PREFIX='/usr/local'",
                "arch -x86_64 brew install gsl boost",
                "arch -x86_64 brew --prefix boost"]
+archs = ["x86_64"]

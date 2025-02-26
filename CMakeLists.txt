@@ -253,7 +253,7 @@ add_library(flxlib SHARED
   src/flxlib/flxfunction_ope.cpp
   src/flxlib/flxfunction.cpp
   src/flxlib/flxrandom_base.cpp
-  src/flxlib/flxMtx
+  src/flxlib/flxMtx.cpp
 )
 if(MSVC)
   generate_export_header(flxlib)

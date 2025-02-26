@@ -22,6 +22,26 @@
 #include <algorithm>
 #include <execution>
 
+
+//=================================================================
+// Do we want to activate '__cpp_lib_parallel_algorithm'
+//=================================================================
+// this section needs to be placed after "#include <execution>"
+#ifdef __WINDOWS__
+    // do not activate it under Windows, as compilation run into problems
+    #define FLX_parallel_algorithm 0
+#else
+    // otherwise, thrust the flag '__cpp_lib_parallel_algorithm'
+    #ifdef __cpp_lib_parallel_algorithm
+        #define FLX_parallel_algorithm 1
+    #else
+        #define FLX_parallel_algorithm 0
+    #endif
+#endif
+
+
+
+
 void MtxProd_BTKB_mtx(const FlxMtx& B, const FlxMtxSym& E, FlxMtxSym& K)
 {
   #if FLX_DEBUG
@@ -1153,7 +1173,7 @@ void FlxMtxSym::assign_LTL(const FlxMtxLTri& L)
     inner_fun(i,j,dp);
   };
 
-  #ifdef __cpp_lib_parallel_algorithm
+  #if FLX_parallel_algorithm
   if (N>1000) {
     std::for_each(
       std::execution::par_unseq,
@@ -1171,7 +1191,7 @@ void FlxMtxSym::assign_LTL(const FlxMtxLTri& L)
         inner_fun(i,j,mtxp[c++]);
       }
     }
-  #ifdef __cpp_lib_parallel_algorithm
+  #ifdef FLX_parallel_algorithm
   }
   #endif
 }

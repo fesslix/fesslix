@@ -15,9 +15,12 @@
  * along with Fesslix.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-#ifndef fesslix_flxplatform_H
-#define fesslix_flxplatform_H
+#pragma once
 
+
+//=================================================================
+// are we compiling on Windows?
+//=================================================================
 
 #if !defined( __WINDOWS__ ) && ( defined( _Windows ) || defined( _WINDOWS ) || defined( __Windows__ ) )
   #define __WINDOWS__
@@ -28,9 +31,8 @@
   #endif /* __WINDOWS__ */
   #define __WIN32__
 #endif /* !__WIN32__ && ( WIN32 || _WIN32 ) */
-  
-  
-  
+
+
+
 
   
-#endif // fesslix_flxplatform_H

@@ -51,15 +51,12 @@ before-all = [ "yum install -y gsl-devel",
                #"cd boost_1_87_0",
                #"./bootstrap.sh",
                #"./b2 install",
-               #"echo 'Hello world 202502241449'",
                #"pwd",
                #"find ./ -type d -name boost",
                #"find ./ -type f -name 'special_functions.hpp'",
-               #"echo 'Hello world 22502241155'",
                #"find ./ -type f -name 'BoostConfig.cmake'"
                ]
 test-command = "echo 'installed gsl-devel boost-devel'"
-#environment = "Boost_INCLUDE_DIR=/project/vcpkg/installed/x64-linux/include Boost_DIR=/project/vcpkg/installed/x64-linux/share/boost/"
 environment = "Boost_skip_search=1"
 
 [[tool.cibuildwheel.overrides]]
@@ -69,9 +66,6 @@ before-all = "apk add --no-cache gsl gsl-dev boost-dev"
 [tool.cibuildwheel.windows]
 archs = ["auto", "ARM64"]
 before-build = "powershell -ExecutionPolicy Bypass -File windows_install_dependencies.ps1 & vcpkg integrate install"
-#GSL_INCLUDE_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows/include
-#GSL_LIBRARY=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows/lib/gsl.lib
-#GSL_CBLAS_LIBRARY=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows/lib/gslcblas.lib
 
 [[tool.cibuildwheel.overrides]]
 select ="*-win32*"
@@ -88,18 +82,7 @@ select ="*-win_arm64*"
 inherit.environment="append"
 environment = "VCPKG_ROOT=D:/a/fesslix/fesslix/vcpkg CMAKE_TOOLCHAIN_FILE=D:/a/fesslix/fesslix/vcpkg/scripts/buildsystems/vcpkg.cmake PKG_CONFIG_PATH=D:/a/fesslix/fesslix/vcpkg/installed/arm64-windows/lib/pkgconfig GSL_INCLUDE_DIR=D:/a/fesslix/fesslix/vcpkg/installed/arm64-windows/include GSL_LIBRARY=D:/a/fesslix/fesslix/vcpkg/installed/arm64-windows/lib/gsl.lib GSL_CBLAS_LIBRARY=D:/a/fesslix/fesslix/vcpkg/installed/arm64-windows/lib/gslcblas.lib Boost_INCLUDE_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows/include Boost_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows/share/boost"
 
-#[[tool.cibuildwheel.overrides]]
-## overrides for ARM64
-#select ="*-win_arm64*"
-#before-build = 'nuget install gsl-msvc14-arm64 -Source "%CD%\\vendor-binaries"'
-## use local nuget package to install gsl on Windows ARM64, and manually supply paths
-#inherit.environment = "append"
-#environment = { CPATH="gsl-msvc14-arm64.2.3.0.2779\\\\build\\\\native\\\\include", LIBRARY_PATH="gsl-msvc14-arm64.2.3.0.2779\\\\build\\\\native\\\\lib" }
-
 [tool.cibuildwheel.macos]
-#before-all = ["arch -arm64 brew install gsl boost --force-bottle",
-#              "arch -x86_64 brew install gsl boost --force-bottle",
-#              "brew --prefix boost"]
 before-all= ["brew install gsl boost",
               "brew --prefix boost"]
 #archs = ["x86_64", "arm64"]
@@ -112,10 +95,6 @@ archs = ["arm64"]
 
 [[tool.cibuildwheel.overrides]]
 select = "*-macosx_x86_64"
-#before-build= ["arch -x86_64 /bin/bash -c '$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)'",
-#               "export HOMEBREW_PREFIX='/usr/local'",
-#               "arch -x86_64 brew install gsl boost",
-#               "arch -x86_64 brew --prefix boost"]
 inherit.environment="append"
 environment = { MACOSX_DEPLOYMENT_TARGET="13.0" }
 archs = ["x86_64"]

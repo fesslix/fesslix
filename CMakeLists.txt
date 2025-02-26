@@ -229,7 +229,6 @@ endif()
 
 if(MSVC)
   include (GenerateExportHeader)
-  add_compiler_export_flags()
 endif(MSVC)
 
 #==========================================================

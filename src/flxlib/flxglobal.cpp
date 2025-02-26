@@ -319,14 +319,22 @@ const boost::basic_format<char> strGlobalVar::D2S_totalPrec(const tdouble dv)
 
 std::ostream& strGlobalVar::slog(const int logLevel_)
 {
-  if (slogP == NULL || logLevel_ > logLevel) return *sdummy;
-  else return *slogP; 
+  if (Logger_ptr) {
+    return Logger_ptr->slog(logLevel_);
+  } else {
+    if (slogP == nullptr || logLevel_ > logLevel) return *sdummy;
+    else return *slogP;
+  }
 }
 
 std::ostream& strGlobalVar::slogcout(const int logLevel_)
 {
-  if (slogcoutP == NULL || logLevel_ > logLevel) return *sdummy;
-  else return *slogcoutP; 
+  if (Logger_ptr) {
+    return Logger_ptr->slog(logLevel_);
+  } else {
+    if (slogcoutP == nullptr || logLevel_ > logLevel) return *sdummy;
+    else return *slogcoutP;
+  }
 }
 
 void strGlobalVar::set_TOL(const tdouble tolV)
@@ -338,11 +346,11 @@ void strGlobalVar::set_TOL(const tdouble tolV)
 }
 
 strGlobalVar::strGlobalVar() 
-: true_stdcout(&std::cout),true_cerr(&std::cerr),sdummy(new flxDummyOstream),slogP(NULL),stdcout(true_stdcout),stdcerr(true_cerr),slogcoutP(NULL),
+: true_stdcout(&std::cout),true_cerr(&std::cerr),sdummy(new flxDummyOstream),slogP(nullptr),stdcout(true_stdcout),stdcerr(true_cerr),slogcoutP(nullptr),
   // NOTE this are not the default values - the default values are set in the settings of the configuration file
   D2S_Prec(DEFAULT_FPC_PREC), D2S_Type(DEFAULT_FPC_TYPE), D2S_BValU(DEFAULT_FPC_BVALU), D2S_BValL(DEFAULT_FPC_BVALL), D2S_Del0(DEFAULT_FPC_DEL0), D2S_DelP(DEFAULT_FPC_DELP),
   TOLval(DEFAULT_TOL),prelog_active(true),prelog_stream(""),
-  logLevel_strong(DEFAULT_LOG_LEVEL),leak_check(false),logLev_counter(0),
+  logLevel_strong(DEFAULT_LOG_LEVEL),leak_check(false),Logger_ptr(nullptr),logLev_counter(0),
   logLevel(DEFAULT_LOG_LEVEL),
   MT19937_init_calls(DEFAULT_MT19937_INIT_CALLS), MT19937_init_RAND(DEFAULT_MT19937_INIT_RAND), MT19937_init_seed(DEFAULT_MT19937_INIT_SEED), MT19937_init_seedvalue(DEFAULT_MT19937_INIT_SEEDVALUE),
   LegendrePolyH_init_numb(DEFAULT_LEGENDRE_NUMB), allowInteractiveMode(true), prgBar(DEFAULT_FLX_PRGBAR), configDir(""),configDir_local(""), pwd(""),

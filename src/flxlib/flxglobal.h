@@ -42,6 +42,15 @@ FLXLIB_EXPORT void FlxError(bool errSerious, std::string errnumber, std::string 
   #define FLXMSG(M,I)
 #endif
 
+
+class FLXLIB_EXPORT flxLoggerBase {
+  public:
+    virtual ~flxLoggerBase() {};
+
+    virtual std::ostream& slog(const int logLevel_) = 0;
+};
+
+
 class FLXLIB_EXPORT strGlobalVar {
   private:
     const ostreamp true_stdcout;              // this pointer will always point to std::cout
@@ -90,6 +99,7 @@ class FLXLIB_EXPORT strGlobalVar {
     * @brief true, if fesslix is run in leak-check-mode
     */
     bool leak_check;
+    flxLoggerBase* Logger_ptr;
     
   public:
     tuint logLev_counter;
@@ -123,6 +133,11 @@ class FLXLIB_EXPORT strGlobalVar {
     ~strGlobalVar();
 
     /**
+    * @brief updates Logger_ptr
+    * @note the memory management has to be taken care of externally
+    */
+    void set_logger(flxLoggerBase& Logger) { Logger_ptr = &Logger; }
+    /**
     * @brief updates the log and the cout stream
     * @note the memory management has to be taken care of externally
     */
@@ -130,13 +145,13 @@ class FLXLIB_EXPORT strGlobalVar {
 //     void set_slog(ostreamp slogV);
 //     void set_stdcout(ostreamp stdcoutV) { stdcout = stdcoutV; }
     void set_stdcerr(ostreamp stdcerrV) { stdcerr= stdcerrV; }
-    const ostreamp& get_cout() { return stdcout; }
-    const ostreamp& get_cerr() { return stdcerr; }
-    const ostreamp& get_log() { return slogP; }
-    const ostreamp& get_true_cout() { return true_stdcout; }
-    const ostreamp& get_true_cerr() { return true_cerr; }
-    const std::string& get_exe_dir() { return exe_dir; }
-    const std::string& get_exe_PathName() { return exe_PathName; }
+    const ostreamp& get_cout() { return stdcout; }                     // TODO obsolete? delete?
+    const ostreamp& get_cerr() { return stdcerr; }                     // TODO obsolete? delete?
+    const ostreamp& get_log() { return slogP; }                        // TODO obsolete? delete?
+    const ostreamp& get_true_cout() { return true_stdcout; }           // TODO obsolete? delete?
+    const ostreamp& get_true_cerr() { return true_cerr; }              // TODO obsolete? delete?
+    const std::string& get_exe_dir() { return exe_dir; }               // TODO obsolete? delete?
+    const std::string& get_exe_PathName() { return exe_PathName; }     // TODO obsolete? delete?
     /**
     * @returns the directory of the executable - must end with an '/' !!!
     */
@@ -152,12 +167,11 @@ class FLXLIB_EXPORT strGlobalVar {
     */
     std::ostream& slog(const int logLevel_);
     std::ostream& slogcout(const int logLevel_);
-    void slog_flush() { slogP->flush(); }
+    void slog_flush() { slogP->flush(); }                             // TODO obsolete? delete?
     /**
     * @returns true if log-stream is not cout
     */
-    const bool check_logNOTcout() { return (slogP != stdcout); };
-    const std::string get_flxPrompt() { return "fesslix:> "; }
+    const bool check_logNOTcout() { return (slogP != stdcout); };     // TODO obsolete? delete?
     
     /**
     * @returns send double to string in maximum precision
@@ -192,15 +206,15 @@ class FLXLIB_EXPORT strGlobalVar {
     /**
     * @brief set the strong loglevel
     */
-    void logLevel_strong_set(const int logL);
+    void logLevel_strong_set(const int logL);                                             // TODO obsolete? delete?
     /**
     * @brief deactivates/activates logging
     */
-    void logLevel_log_deactivate(const bool deact);
+    void logLevel_log_deactivate(const bool deact);                                       // TODO obsolete? delete?
     /**
     * @brief set the temporary loglevel to the strong loglevel
     */
-    void logLevel_strong_reset() { logLevel = logLevel_strong; logLev_counter=0; };
+    void logLevel_strong_reset() { logLevel = logLevel_strong; logLev_counter=0; };       // TODO obsolete? delete?
     /**
     * @brief activates/deactivates the prelog
     */

@@ -21,19 +21,49 @@
 
 namespace py = pybind11;
 
+
+// #################################################################################
+// 'global' functions
+// #################################################################################
+
+/**
+* @brief Convert a double into a string
+*/
+std::string Double2String(tdouble a) {
+    return GlobalVar.Double2String(a);
+}
+
+void slog(int logLevel, const std::string& message) {
+    GlobalVar.slogcout(logLevel) << message << std::endl;
+}
+
+
+
+// #################################################################################
+// only for debugging purposes
+// #################################################################################
+
 double add(double a, double b) {
     return a + b;
 }
 
-std::string Double2String(double a) {
-    return GlobalVar.Double2String(a);
-}
+// #################################################################################
+// Expose interface to Python
+// #################################################################################
 
 PYBIND11_MODULE(core, m) {
     GlobalVar.slogcout(1) << "Fesslix::core » loaded" << std::endl;
-    m.def("add", &add, "A function that adds two numbers");
-    m.def("Double2String", &Double2String, "Convert a double into a string");
-    m.attr("the_answer") = 42;
+    // ====================================================
+    // 'global' functions
+    // ====================================================
+        m.def("Double2String", &Double2String, "Convert a double into a string");
+        m.def("slog", &slog, "Log a message at a specified level");
+
+    // ====================================================
+    // only for debugging purposes (TODO remove at some point)
+    // ====================================================
+        m.def("add", &add, "A function that adds two numbers");
+        m.attr("the_answer") = 42;
 }
 
 

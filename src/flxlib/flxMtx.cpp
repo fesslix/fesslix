@@ -1191,7 +1191,7 @@ void FlxMtxSym::assign_LTL(const FlxMtxLTri& L)
         inner_fun(i,j,mtxp[c++]);
       }
     }
-  #ifdef FLX_parallel_algorithm
+  #if FLX_parallel_algorithm
   }
   #endif
 }

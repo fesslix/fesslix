@@ -274,7 +274,7 @@ if(DEFINED RPATH_STRING)
 endif()
 
 target_compile_definitions(core PRIVATE VERSION_INFO=${PROJECT_VERSION})
-
+target_compile_options(core PRIVATE -fvisibility=hidden)
 
 #==========================================================
 # install

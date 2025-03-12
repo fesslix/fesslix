@@ -1028,7 +1028,7 @@ const tdouble FunConvExp::calc()
         throw;
       }
   // Define the importance sampling density
-    RBRV_set_MVN mvn(false,N,0,"ipstmpinternal",true,new flxVec(*cv),cov_dist,2);
+    RBRV_set_MVN mvn(false,N,static_cast<tuint>(0),std::string("ipstmpinternal"),true,new flxVec(*cv),cov_dist,2);
   // initialize the random number generator
     boost::random::mt19937 rgL;
     rv_initialize(false,true,seed,Nrgir,&rgL,false);

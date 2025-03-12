@@ -77,7 +77,8 @@ void set_logger(py::object logger_obj)
 }
 
 void slog(int logLevel, const std::string& message) {
-    GlobalVar.slogcout(logLevel) << message << std::endl;
+    GlobalVar.slogcout(logLevel) << message;
+    GlobalVar.slogcout(logLevel).flush();
 }
 
 
@@ -91,17 +92,15 @@ double add(double a, double b) {
 }
 
 
-
 // #################################################################################
 // Expose interface to Python
 // #################################################################################
 
 PYBIND11_MODULE(core, m) {
-    GlobalVar.slogcout(1) << "Fesslix::core » loaded" << std::endl;
     // ====================================================
     // 'global' functions
     // ====================================================
-        m.def("Double2String", &Double2String, "Convert a double into a string");
+        m.def("Double2String", &Double2String, "Convert a double into a string");   // TODO docu
 
     // ====================================================
     // logging

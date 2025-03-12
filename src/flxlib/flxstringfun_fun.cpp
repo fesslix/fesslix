@@ -376,13 +376,13 @@ const std::string StringFunSubStr_search::write()
 {
   switch (actio) {
     case pos:
-      return "p:" + fV->write();
+      return std::string("p:") + fV->write();
     case length:
-      return "l:" + fV->write();
+      return std::string("l:") + fV->write();
     case fchar:
-      return "c:" + cV;
+      return std::string("c:") + cV;
     case fstring:
-      return "s:\"" + sV + '\"';
+      return std::string("s:\"") + sV + '\"';
     default:
       throw FlxException_Crude("StringFunSubStr_search::StringFunSubStr_search_1");
   }

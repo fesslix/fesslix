@@ -187,6 +187,10 @@ else("${FLX_USE_GSL}" STREQUAL "ON")
   set ( FLX_USE_GSLb 0 )
 endif("${FLX_USE_GSL}" STREQUAL "ON")
 
+MARK_AS_ADVANCED(
+  FLX_USE_GSL
+)
+
 #==========================================================
 # Boost
 #==========================================================
@@ -209,6 +213,33 @@ if(Boost_INCLUDE_DIRS)
   include_directories(${Boost_INCLUDE_DIRS})
 endif()
 
+if (Boost_FILESYSTEM_FOUND)
+  option ( FLX_USE_BOOST_FS "compile with BOOST::filesystem support" ON )
+else()
+  option ( FLX_USE_BOOST_FS "compile with BOOST::filesystem support" OFF )
+endif()
+if (Boost_REGEX_FOUND)
+  option ( FLX_USE_BOOST_RX "compile with BOOST::regex support" ON )
+else()
+  option ( FLX_USE_BOOST_RX "compile with BOOST::regex support" OFF )
+endif()
+
+if("${FLX_USE_BOOST_FS}" STREQUAL "ON")
+set ( FLX_USE_BOOST_FSb 1 )
+else("${FLX_USE_BOOST_FS}" STREQUAL "ON")
+set ( FLX_USE_BOOST_FSb 0 )
+endif("${FLX_USE_BOOST_FS}" STREQUAL "ON")
+if("${FLX_USE_BOOST_RX}" STREQUAL "ON")
+set ( FLX_USE_BOOST_RXb 1 )
+else("${FLX_USE_BOOST_RX}" STREQUAL "ON")
+set ( FLX_USE_BOOST_RXb 0 )
+endif("${FLX_USE_BOOST_RX}" STREQUAL "ON")
+
+MARK_AS_ADVANCED(
+  FLX_USE_BOOST_FS
+  FLX_USE_BOOST_RX
+)
+
 #==========================================================
 # ARPACK library
 #==========================================================
@@ -230,6 +261,10 @@ else("${FLX_USE_ARPACK}" STREQUAL "ON")
   set ( FLX_USE_ARPACKb 0 )
 endif("${FLX_USE_ARPACK}" STREQUAL "ON")
 
+
+MARK_AS_ADVANCED(
+  FLX_USE_ARPACK
+)
 
 ###################################################################################
 # compile

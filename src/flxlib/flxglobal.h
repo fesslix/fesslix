@@ -291,7 +291,7 @@ class FLXLIB_EXPORT FlxProgress {
 
 FLXLIB_EXPORT const std::string bool2string(const bool b);
   
-FLXLIB_EXPORT void flxlib_logInfo(std::ostream& lout);
+FLXLIB_EXPORT void fesslix_logInfo(std::ostream& lout);
 
 
 

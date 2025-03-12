@@ -207,7 +207,7 @@ void getFiles( const std::string& sourcePath, const std::string& sourcePattern, 
 
 
 // -----------------------------------------------------------------------------------------------------------------
-#else
+#else   // FLX_BOOST_FS
 // -----------------------------------------------------------------------------------------------------------------
 
 void copyDir( const std::string& source_dir, const std::string& dest_dir, const bool overwrite )
@@ -235,10 +235,15 @@ const bool existsDir(const std::string& dir)
   throw FlxException("existsDir_200","Method not available.");
 }
 
+const bool createDir(const std::string& dir)
+{
+  throw FlxException("createDir_200","Method not available.");
+}
+
 void getFiles( const std::string& sourcePath, const std::string& sourcePattern, std::vector< std::string >& match_files ) {
   throw FlxException("getFiles_200","Method not available.");
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-#endif
+#endif  // FLX_BOOST_FS
 // -----------------------------------------------------------------------------------------------------------------

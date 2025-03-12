@@ -2253,10 +2253,10 @@ void FlxObjStatSmp::sigfig_mean(const tdouble estim_mu, const tdouble estim_sd, 
     if (fabs(estim_mu)<ONE) --p10;
   for (int i=0;i<=5;++i) {
     const tdouble rd = round_flx_fb(estim_mu,i);
-    #if _MSC_VER
-      const tdouble rd_delta_h = pow(10,p10-i)/2;
-    #else
+    #ifdef __unix__
       const tdouble rd_delta_h = exp10(p10-i)/2;
+    #else
+      const tdouble rd_delta_h = pow(10,p10-i)/2;
     #endif
     const tdouble Pr_sf = rv_cdf_Studentst(tdouble(N-1),((rd-estim_mu)+rd_delta_h)*f) - rv_cdf_Studentst(tdouble(N-1),((rd-estim_mu)-rd_delta_h)*f);
     sout() << "    " << GlobalVar.Double2String(i,false,-1,5) << GlobalVar.Double2String_sci(rd,i,20) << "      " << GlobalVar.Double2String(Pr_sf) << std::endl;
@@ -2268,10 +2268,10 @@ void FlxObjStatSmp::sigfig_mean(const tdouble estim_mu, const tdouble estim_sd, 
   ts.sd = estim_sd;
   for (int i=0;i<=5;++i) {
     const tdouble rd = round_flx_fb(estim_mu,i);
-    #if _MSC_VER
-      const tdouble rd_delta_h = pow(10,p10-i)/2;
-    #else
+    #ifdef __unix__
       const tdouble rd_delta_h = exp10(p10-i)/2;
+    #else
+      const tdouble rd_delta_h = pow(10,p10-i)/2;
     #endif
     ts.ubound = rd + rd_delta_h;
     ts.lbound = rd - rd_delta_h;

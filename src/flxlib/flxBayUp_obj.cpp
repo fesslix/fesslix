@@ -1028,7 +1028,7 @@ const tdouble FunConvExp::calc()
         throw;
       }
   // Define the importance sampling density
-    RBRV_set_MVN mvn(false,N,static_cast<tuint>(0),std::string("ipstmpinternal"),true,new flxVec(*cv),cov_dist,2);
+    RBRV_set_MVN mvn_instance(false,N,static_cast<tuint>(0),std::string("ipstmpinternal"),true,new flxVec(*cv),cov_dist,2);
   // initialize the random number generator
     boost::random::mt19937 rgL;
     rv_initialize(false,true,seed,Nrgir,&rgL,false);
@@ -1041,16 +1041,16 @@ const tdouble FunConvExp::calc()
           yp[j] = rv_normal(rgL);
         }
       // transform sample to original space
-        mvn.set_is_valid(false);
-        mvn.set_y_only_this(yp);
-        mvn.transform_y2x();
-        mvn.get_x_only_this(eps_Mo->get_tmp_vptr());
+        mvn_instance.set_is_valid(false);
+        mvn_instance.set_y_only_this(yp);
+        mvn_instance.transform_y2x();
+        mvn_instance.get_x_only_this(eps_Mo->get_tmp_vptr());
       // evaluate the integrand
         tdouble t = get_pulse_log();
         dist_set->set_is_valid(false);
         dist_set->set_x_only_this(eps_Mo->get_tmp_vptr_const());
         t += dist_set->get_pdf_x_eval_log();
-        t -= mvn.get_pdf_x_eval_log();
+        t -= mvn_instance.get_pdf_x_eval_log();
         t = exp(t);
       ipv.operator+=(t);
     }

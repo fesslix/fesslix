@@ -22,6 +22,7 @@
 #include "flxmath.h"
 #include "flxdefault.h"
 #include "flxio.h"
+#include "flxfunction_data.h"
 
 #include <string>
 #include <sstream>
@@ -541,7 +542,7 @@ const std::string bool2string(const bool b)
 
 void fesslix_logInfo(std::ostream& lout)
 {
-  lout << " FlxLib: " << std::endl;
+  lout << " Fesslix:" << std::endl;
   lout << "   version: " << FLX_VERSION << std::endl;
   lout << "   compiled with the options ..." << std::endl;
   // FLXDEBUG
@@ -557,6 +558,22 @@ void fesslix_logInfo(std::ostream& lout)
     #if FLX_DEBUG_COUT
       lout << "ON";
     #else 
+      lout << "OFF";
+    #endif
+    lout << std::endl;
+  // FLX_USE_ARPACK
+    lout << "     FLX_USE_ARPACK                ";
+    #if FLX_USE_ARPACK
+      lout << "ON";
+    #else
+      lout << "OFF";
+    #endif
+    lout << std::endl;
+  // FLX_USE_GSL
+    lout << "     FLX_USE_GSL                   ";
+    #if FLX_USE_GSL
+      lout << "ON";
+    #else
       lout << "OFF";
     #endif
     lout << std::endl;
@@ -675,5 +692,140 @@ void fesslix_logInfo(std::ostream& lout)
   // FLX_KAHAN_CG_STAGE
     lout << "     FLX_KAHAN_CG_STAGE            ";
     lout << FLX_KAHAN_CG_STAGE << std::endl;    
+  // Compilation
+    lout << " Compilation:" << std::endl;
+    // Operating System
+      lout << "   OS of compilation:              ";
+      #ifdef __unix__
+        lout << "UNIX ";
+        #define FLX_OS_DET
+      #endif
+      #ifdef _WIN64
+        lout << "WIN64 ";
+        #define FLX_OS_DET
+      #else
+        #ifdef __WIN32__
+          lout << "WIN32 ";
+          #define FLX_OS_DET
+        #endif
+      #endif
+      #ifdef __WINDOWS__
+        lout << "Windows ";
+        #define FLX_OS_DET
+      #endif
+      #ifdef __linux__
+        lout << "Linux ";
+        #define FLX_OS_DET
+      #endif
+      #ifndef FLX_OS_DET
+        lout << "OTHER";
+      #endif
+      lout << std::endl;
+
+    // Time of compilation
+      lout << "   Compiled on " << __DATE__ << " at " << __TIME__ << std::endl;
+    lout << "   Numeric limits ..." << std::endl;
+    // tdouble
+      lout << "     tdouble                       " << std::endl;
+      lout << "        digits:                    " << std::numeric_limits<tdouble>::digits10 << std::endl;
+      lout << "        epsilon:                   " << std::numeric_limits<tdouble>::epsilon() << std::endl;
+      lout << "        min:                       " << (std::numeric_limits<tdouble>::min)() << std::endl;
+      lout << "        max:                       " << (std::numeric_limits<tdouble>::max)() << std::endl;
+      lout << "        round_style:               " << std::numeric_limits<tdouble>::round_style << std::endl;
+    // tfloat
+      lout << "     tfloat                        " << std::endl;
+      lout << "        digits:                    " << std::numeric_limits<tfloat>::digits10 << std::endl;
+      lout << "        epsilon:                   " << std::numeric_limits<tfloat>::epsilon() << std::endl;
+      lout << "        min:                       " << (std::numeric_limits<tfloat>::min)() << std::endl;
+      lout << "        max:                       " << (std::numeric_limits<tfloat>::max)() << std::endl;
+      lout << "        round_style:               " << std::numeric_limits<tfloat>::round_style << std::endl;
+    // double
+      lout << "     double                        " << std::endl;
+      lout << "        digits:                    " << std::numeric_limits<double>::digits10 << std::endl;
+      lout << "        epsilon:                   " << std::numeric_limits<double>::epsilon() << std::endl;
+      lout << "        min:                       " << (std::numeric_limits<double>::min)() << std::endl;
+      lout << "        max:                       " << (std::numeric_limits<double>::max)() << std::endl;
+      lout << "        round_style:               " << std::numeric_limits<double>::round_style << std::endl;
+    // long double
+      lout << "     long double                   " << std::endl;
+      lout << "        digits:                    " << std::numeric_limits<long double>::digits10 << std::endl;
+      lout << "        epsilon:                   " << std::numeric_limits<long double>::epsilon() << std::endl;
+      lout << "        min:                       " << (std::numeric_limits<long double>::min)() << std::endl;
+      lout << "        max:                       " << (std::numeric_limits<long double>::max)() << std::endl;
+      lout << "        round_style:               " << std::numeric_limits<long double>::round_style << std::endl;
+    // float
+      lout << "     float                         " << std::endl;
+      lout << "        digits:                    " << std::numeric_limits<float>::digits10 << std::endl;
+      lout << "        epsilon:                   " << std::numeric_limits<float>::epsilon() << std::endl;
+      lout << "        min:                       " << (std::numeric_limits<float>::min)() << std::endl;
+      lout << "        max:                       " << (std::numeric_limits<float>::max)() << std::endl;
+      lout << "        round_style:               " << std::numeric_limits<float>::round_style << std::endl;
+    // int
+      lout << "     int                           " << std::endl;
+      lout << "        digits:                    " << std::numeric_limits<int>::digits10 << std::endl;
+      lout << "        min:                       " << (std::numeric_limits<int>::min)() << std::endl;
+      lout << "        max:                       " << (std::numeric_limits<int>::max)() << std::endl;
+      lout << "        round_style:               " << std::numeric_limits<int>::round_style << std::endl;
+    // long
+      lout << "     long                          " << std::endl;
+      lout << "        digits:                    " << std::numeric_limits<long>::digits10 << std::endl;
+      lout << "        min:                       " << (std::numeric_limits<long>::min)() << std::endl;
+      lout << "        max:                       " << (std::numeric_limits<long>::max)() << std::endl;
+      lout << "        round_style:               " << std::numeric_limits<long>::round_style << std::endl;
+    // unsigned int
+      lout << "     unsigned int                  " << std::endl;
+      lout << "        digits:                    " << std::numeric_limits<unsigned int>::digits10 << std::endl;
+      lout << "        min:                       " << (std::numeric_limits<unsigned int>::min)() << std::endl;
+      lout << "        max:                       " << (std::numeric_limits<unsigned int>::max)() << std::endl;
+      lout << "        round_style:               " << std::numeric_limits<unsigned int>::round_style << std::endl;
+    // unsigned long
+      lout << "     unsigned long                 " << std::endl;
+      lout << "        digits:                    " << std::numeric_limits<unsigned long>::digits10 << std::endl;
+      lout << "        min:                       " << (std::numeric_limits<unsigned long>::min)() << std::endl;
+      lout << "        max:                       " << (std::numeric_limits<unsigned long>::max)() << std::endl;
+      lout << "        round_style:               " << std::numeric_limits<unsigned long>::round_style << std::endl;
+    // tuint
+      lout << "     tuint                         " << std::endl;
+      lout << "        digits:                    " << std::numeric_limits<tuint>::digits10 << std::endl;
+      lout << "        min:                       " << (std::numeric_limits<tuint>::min)() << std::endl;
+      lout << "        max:                       " << (std::numeric_limits<tuint>::max)() << std::endl;
+      lout << "        round_style:               " << std::numeric_limits<tuint>::round_style << std::endl;
+    // tnlong
+      lout << "     tnlong                        " << std::endl;
+      lout << "        digits:                    " << std::numeric_limits<tnlong>::digits10 << std::endl;
+      lout << "        min:                       " << (std::numeric_limits<tnlong>::min)() << std::endl;
+      lout << "        max:                       " << (std::numeric_limits<tnlong>::max)() << std::endl;
+      lout << "        round_style:               " << std::numeric_limits<tnlong>::round_style << std::endl;
+    // tulong
+      lout << "     tulong                        " << std::endl;
+      lout << "        digits:                    " << std::numeric_limits<tulong>::digits10 << std::endl;
+      lout << "        min:                       " << (std::numeric_limits<tulong>::min)() << std::endl;
+      lout << "        max:                       " << (std::numeric_limits<tulong>::max)() << std::endl;
+      lout << "        round_style:               " << std::numeric_limits<tulong>::round_style << std::endl;
+    // size_t
+      lout << "     size_t                        " << std::endl;
+      lout << "        digits:                    " << std::numeric_limits<size_t>::digits10 << std::endl;
+      lout << "        min:                       " << (std::numeric_limits<size_t>::min)() << std::endl;
+      lout << "        max:                       " << (std::numeric_limits<size_t>::max)() << std::endl;
+      lout << "        round_style:               " << std::numeric_limits<size_t>::round_style << std::endl;
+
+    lout << "Fesslix: configuration options ..." << std::endl;
+    // gauss.maxnumb
+      lout << "  gauss.maxnumb                 ";
+      lout << GaussIntegration::GaussPointMaxArraySize;
+      lout << std::endl;
+    // legendre.numb
+      lout << "  legendre.numb                 ";
+      lout << GlobalVar.LegendrePolyH_init_numb;
+      lout << std::endl;
+    // TOL
+      lout << "  TOL                           " << GlobalVar.TOL() << std::endl;
+    // leak-check
+      lout << "  leak-check                    ";
+      lout << bool2string(GlobalVar.is_leak_check());
+      lout << std::endl;
+    // floating point conversion
+      GlobalVar.Double2String_log();
+
 }
 

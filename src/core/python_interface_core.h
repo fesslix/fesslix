@@ -34,6 +34,10 @@ namespace py = pybind11;
 */
 std::string Double2String(tdouble a);
 
+/**
+* @brief output configuration options of Fesslix
+*/
+void print_info();
 
 
 // #################################################################################

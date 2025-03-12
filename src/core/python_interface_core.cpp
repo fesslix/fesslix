@@ -18,8 +18,19 @@
 #include "python_interface_core.h"
 
 
+// #################################################################################
+// 'global' functions
+// #################################################################################
+
 std::string Double2String(tdouble a) {
     return GlobalVar.Double2String(a);
+}
+
+void print_info()
+{
+    std::ostream& lout = GlobalVar.slogcout(3);
+    fesslix_logInfo(lout);
+    lout.flush();
 }
 
 // #################################################################################
@@ -42,13 +53,25 @@ const char * PythonLoggerBuffer::logLevelToString(int logLevel)
 
 int PythonLoggerBuffer::sync()
 {
-    const std::string msg = str();
+    std::string msg = str();
     if (!msg.empty()) {
         if (py_logger.is_none()) {
             throw FlxException_Crude("PythonLoggerBuffer::sync");
         }
+        // remove newline at the end
+            if (msg.back()=='\n') {
+                msg.pop_back();
+            }
         // Forward the message to the Python logger when buffer is flushed
-        py_logger.attr(logLevelToString(log_Level))(msg);
+            // Note: However, we need a special treatment of line breaks
+            std::stringstream oss(msg);
+            std::string line;
+            while (std::getline(oss, line)) {
+                py_logger.attr(logLevelToString(log_Level))(line);
+            }
+
+        // const int i = msg[msg.size()-2];
+        // py_logger.attr(logLevelToString(log_Level))(msg + "[" + GlobalVar.Double2String(i) + "]");
     }
     str(""); // Clear the buffer
     return 0;
@@ -101,6 +124,7 @@ PYBIND11_MODULE(core, m) {
     // 'global' functions
     // ====================================================
         m.def("Double2String", &Double2String, "Convert a double into a string");   // TODO docu
+        m.def("print_info", &print_info, "output configuration options of Fesslix");
 
     // ====================================================
     // logging

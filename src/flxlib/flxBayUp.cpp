@@ -3345,7 +3345,7 @@ const tuint FlxBayUp_Update_List::update_thr(Flx_SuS_CLevelStat& curLevelStat_ne
         throw FlxException_NotImplemented("FlxBayUp_Update_List::update_thr_c1");
         break;
       case 2:        // random order (random shuffling)
-        std::random_shuffle(seed_idx,seed_idx+Nse,rv_uniform_int_range);
+        std::shuffle(seed_idx,seed_idx+Nse,get_rng());
         break;
       case 3:        // length
         throw FlxException_NotImplemented("FlxBayUp_Update_List::update_thr_c3");
@@ -3410,7 +3410,7 @@ const tuint FlxBayUp_Update_List::finalize()
         for (tuint i=0;i<Ns_final;++i) {
           seed_idx[i] = i;
         }
-        std::random_shuffle(seed_idx,seed_idx+Ns_final,rv_uniform_int_range);
+        std::shuffle(seed_idx,seed_idx+Ns_final,get_rng());
       break;
     }
     case (FlxBayUp_Update_List::RS):

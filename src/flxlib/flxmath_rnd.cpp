@@ -60,21 +60,19 @@ void rv_initialize(bool startup, bool user_seed, tuint user_seed_int, tuint user
   }
 }
 
+rng_type& get_rng()
+{
+  return randgen;
+}
 
 const tdouble rv_uniform()
 {
   return pd_uniform(randgen);
 }
 
-
 const tdouble rv_uniform(rng_type& rng)
 {
   return pd_uniform(rng);
-}
-
-int rv_uniform_int_range(int i)
-{
-  return int(rv_uniform()*i)%i;
 }
 
 const tdouble rv_normal()

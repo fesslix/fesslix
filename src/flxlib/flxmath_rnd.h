@@ -29,13 +29,13 @@ typedef boost::random::mt19937 rng_type;
 */
 void rv_initialize(bool startup, bool user_seed=false, tuint user_seed_int = 0, tuint user_init_calls = 0, rng_type* rngp=NULL, const bool do_output=true);
 
+rng_type& get_rng();
+
 /**
 * @brief realization of a random variable with a uniform distribution [0;1]
 */
 const tdouble rv_uniform();
 const tdouble rv_uniform(rng_type& rng);
-int rv_uniform_int_range(int i);
-
 
 /**
 * @brief realization of a random variable with a standard normal distribution

@@ -35,6 +35,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_TOOLCHAIN_FILE "$ENV{CMAKE_TOOLCHAIN_FILE}")
 set(VCPKG_ROOT "$ENV{VCPKG_ROOT}")
 set(PKG_CONFIG_PATH "$ENV{PKG_CONFIG_PATH}")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 # add the automatically determined parts of the RPATH
 # which point to directories outside the build tree to the install RPATH
@@ -178,6 +179,13 @@ if(DEFINED ENV{GSL_INCLUDE_DIR})
     set(GSL_CBLAS_LIBRARY "$ENV{GSL_CBLAS_LIBRARY}")
 endif()
 FIND_PACKAGE(GSL REQUIRED)
+option ( FLX_USE_GSL "compile with GSL support" ON )
+
+if("${FLX_USE_GSL}" STREQUAL "ON")
+  set ( FLX_USE_GSLb 1 )
+else("${FLX_USE_GSL}" STREQUAL "ON")
+  set ( FLX_USE_GSLb 0 )
+endif("${FLX_USE_GSL}" STREQUAL "ON")
 
 #==========================================================
 # Boost
@@ -200,6 +208,27 @@ endif()
 if(Boost_INCLUDE_DIRS)
   include_directories(${Boost_INCLUDE_DIRS})
 endif()
+
+#==========================================================
+# ARPACK library
+#==========================================================
+
+if(UNIX)
+  FIND_PACKAGE(ARPACK)
+  if (ARPACK_FOUND)
+    option ( FLX_USE_ARPACK "compile with arpack support" ON )
+  else()
+    option ( FLX_USE_ARPACK "compile with arpack support" OFF )
+  endif()
+else(UNIX)
+    set ( FLX_USE_ARPACK "OFF" )
+endif(UNIX)
+
+if("${FLX_USE_ARPACK}" STREQUAL "ON")
+  set ( FLX_USE_ARPACKb 1 )
+else("${FLX_USE_ARPACK}" STREQUAL "ON")
+  set ( FLX_USE_ARPACKb 0 )
+endif("${FLX_USE_ARPACK}" STREQUAL "ON")
 
 
 ###################################################################################
@@ -253,6 +282,31 @@ add_library(flxlib SHARED
   src/flxlib/flxfunction.cpp
   src/flxlib/flxrandom_base.cpp
   src/flxlib/flxMtx.cpp
+  src/flxlib/flxrbrv.cpp
+  src/flxlib/flxrbrv_rvs.cpp
+  src/flxlib/flxrbrv_rvs_read.cpp
+  src/flxlib/flxmtxfun_data.cpp
+  src/flxlib/flxmtxfun_fun.cpp
+  src/flxlib/flxmtxfun.cpp
+  src/flxlib/flxMtx_Eigen.cpp
+  src/flxlib/flxMtx_Eigen_ARP.cpp
+  src/flxlib/flxMtx_Eigen_GSL.cpp
+  src/flxlib/flxdata.cpp
+  src/flxlib/flxstringfun.cpp
+  src/flxlib/flxstringfun_fun.cpp
+  src/flxlib/flxstring.cpp
+  src/flxlib/flxobjects.cpp
+  src/flxlib/flxobjmtx.cpp
+  src/flxlib/flxobjcommon.cpp
+  src/flxlib/flxrandom.cpp
+  src/flxlib/flxobjrbrv.cpp
+  src/flxlib/flxostools_files.cpp
+  src/flxlib/flxBayDA.cpp
+  src/flxlib/flxBayUp.cpp
+  src/flxlib/flxBayUp_obj.cpp
+  src/flxlib/flxobjrandom.cpp
+  src/flxlib/flxsensi.cpp
+  src/flxlib/flxStatBox.cpp
 )
 if(MSVC)
   generate_export_header(flxlib)

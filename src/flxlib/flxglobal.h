@@ -172,7 +172,8 @@ class FLXLIB_EXPORT strGlobalVar {
     * @returns true if log-stream is not cout
     */
     const bool check_logNOTcout() { return (slogP != stdcout); };     // TODO obsolete? delete?
-    
+    const std::string get_flxPrompt() { return "fesslix:> "; }
+
     /**
     * @returns send double to string in maximum precision
     */

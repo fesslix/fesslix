@@ -63,3 +63,6 @@
   //#define BOOST_ALL_DYN_LINK
   //#define BOOST_PROGRAM_OPTIONS_DYN_LINK
 #endif
+
+#define FLX_USE_ARPACK @FLX_USE_ARPACKb@
+#define FLX_USE_GSL @FLX_USE_GSLb@

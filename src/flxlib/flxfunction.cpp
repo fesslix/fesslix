@@ -137,6 +137,11 @@ void FlxBoxBase::set_funBox(FlxFunctionBox* funBoxV)
 
 void FlxBoxBase::set_constBox(FlxConstantBox* ConstantBoxV)
 {
+  #if FLX_DEBUG
+    if (ConstantBox) {
+      throw FlxException_Crude("FlxBoxBase::set_constBox");
+    }
+  #endif
   ConstantBox = ConstantBoxV;
 }
 

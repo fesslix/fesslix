@@ -121,7 +121,6 @@ class FLXLIB_EXPORT strGlobalVar {
     std::string pwd;
     FlxAlert alert;
     const tdouble sqrtEps;                // square-root of precision of epsilon
-    bool cmd1st;
     tuint max_parallel_threads;
     void set_TOL(const tdouble tolV);
     /**

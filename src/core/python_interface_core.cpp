@@ -33,6 +33,210 @@ void print_info()
     lout.flush();
 }
 
+
+// #################################################################################
+// load configuration
+// #################################################################################
+
+void process_config(py::dict config) {
+    // ======================================================
+    // General options
+    // ======================================================
+    if (config.contains("flx")) {
+        if (py::isinstance<py::dict>(config["flx"])) {
+            py::dict pdl1 = config["flx"].cast<py::dict>();
+            // ----------------------------------------------
+            // prgbar
+            // ----------------------------------------------
+            if (pdl1.contains("prgbar")) {
+                if (py::isinstance<py::bool_>(pdl1["prgbar"])) {
+                    GlobalVar.prgBar = pdl1["prgbar"].cast<bool>();
+                } else {
+                    GlobalVar.slogcout(2) << "ERROR [process_config::flx::prgbar]: expected an entry of type <bool>" << std::endl;
+                }
+            }
+            // ----------------------------------------------
+            // leak-check
+            // ----------------------------------------------
+            if (pdl1.contains("leak-check")) {
+                if (py::isinstance<py::bool_>(pdl1["leak-check"])) {
+                    const bool lcheck = pdl1["leak-check"].cast<bool>();
+                    if (lcheck) {
+                        GlobalVar.set_leak_check_mode();
+                    }
+                } else {
+                    GlobalVar.slogcout(2) << "ERROR [process_config::flx::leak-check]: expected an entry of type <bool>" << std::endl;
+                }
+            }
+        } else {
+            GlobalVar.slogcout(2) << "ERROR [process_config::flx]: expected an entry of type <dict>" << std::endl;
+        }
+    }
+    // ======================================================
+    // TOL
+    // ======================================================
+    if (config.contains("TOL")) {
+        if (py::isinstance<py::float_>(config["TOL"])) {
+            GlobalVar.set_TOL( config["TOL"].cast<tdouble>() );
+        } else {
+            GlobalVar.slogcout(2) << "ERROR [process_config::TOL]: expected an entry of type <float>, got <" << py::str(config["TOL"].get_type()) << ">" << std::endl;
+        }
+    }
+    // ======================================================
+    // Floating-point conversion
+    // ======================================================
+    if (config.contains("fpc")) {
+        if (py::isinstance<py::dict>(config["fpc"])) {
+            py::dict pdl1 = config["fpc"].cast<py::dict>();
+            // ----------------------------------------------
+            // prec
+            // ----------------------------------------------
+            if (pdl1.contains("prec")) {
+                if (py::isinstance<py::int_>(pdl1["prec"])) {
+                    GlobalVar.Double2String_setPrec(pdl1["prec"].cast<tuint>());
+                } else {
+                    GlobalVar.slogcout(2) << "ERROR [process_config::fpc::prec]: expected an entry of type <unsigned int>" << std::endl;
+                }
+            }
+            // ----------------------------------------------
+            // type
+            // ----------------------------------------------
+            if (pdl1.contains("type")) {
+                if (py::isinstance<py::int_>(pdl1["type"])) {
+                    GlobalVar.Double2String_setType(pdl1["type"].cast<tuint>());
+                } else {
+                    GlobalVar.slogcout(2) << "ERROR [process_config::fpc::type]: expected an entry of type <unsigned int>" << std::endl;
+                }
+            }
+            // ----------------------------------------------
+            // bvalu
+            // ----------------------------------------------
+            if (pdl1.contains("bvalu")) {
+                if (py::isinstance<py::float_>(pdl1["bvalu"])) {
+                    GlobalVar.Double2String_setBValU( pdl1["bvalu"].cast<tdouble>() );
+                } else {
+                    GlobalVar.slogcout(2) << "ERROR [process_config::fpc::bvalu]: expected an entry of type <float>" << std::endl;
+                }
+            }
+            // ----------------------------------------------
+            // bvall
+            // ----------------------------------------------
+            if (pdl1.contains("bvall")) {
+                if (py::isinstance<py::float_>(pdl1["bvall"])) {
+                    GlobalVar.Double2String_setBValL( pdl1["bvall"].cast<tdouble>() );
+                } else {
+                    GlobalVar.slogcout(2) << "ERROR [process_config::fpc::bvall]: expected an entry of type <float>" << std::endl;
+                }
+            }
+            // ----------------------------------------------
+            // del0
+            // ----------------------------------------------
+            if (pdl1.contains("del0")) {
+                if (py::isinstance<py::bool_>(pdl1["del0"])) {
+                    GlobalVar.Double2String_setDel0( pdl1["del0"].cast<bool>() );
+                } else {
+                    GlobalVar.slogcout(2) << "ERROR [process_config::fpc::del0]: expected an entry of type <bool>" << std::endl;
+                }
+            }
+            // ----------------------------------------------
+            // delp
+            // ----------------------------------------------
+            if (pdl1.contains("delp")) {
+                if (py::isinstance<py::bool_>(pdl1["delp"])) {
+                    GlobalVar.Double2String_setDel0( pdl1["delp"].cast<bool>() );
+                } else {
+                    GlobalVar.slogcout(2) << "ERROR [process_config::fpc::delp]: expected an entry of type <bool>" << std::endl;
+                }
+            }
+        } else {
+            GlobalVar.slogcout(2) << "ERROR [process_config::fpc]: expected an entry of type <dict>" << std::endl;
+        }
+    }
+    // ======================================================
+    // MT19937
+    // ======================================================
+    if (config.contains("MT19937")) {
+        if (py::isinstance<py::dict>(config["MT19937"])) {
+            py::dict mt19937 = config["MT19937"].cast<py::dict>();
+
+            // ----------------------------------------------
+            // init
+            // ----------------------------------------------
+            if (mt19937.contains("init")) {
+                if (py::isinstance<py::dict>(mt19937["init"])) {
+                    py::dict init = mt19937["init"].cast<py::dict>();
+                    // --------------------------------------
+                    // calls
+                    // --------------------------------------
+                    if (init.contains("calls")) {
+                        if (py::isinstance<py::int_>(init["calls"])) {
+                            GlobalVar.MT19937_init_calls = init["calls"].cast<tuint>();
+                        } else {
+                            GlobalVar.slogcout(2) << "ERROR [process_config::MT19937::init::calls]: expected an entry of type <unsigned int>" << std::endl;
+                        }
+                    }
+                    // --------------------------------------
+                    // rand
+                    // --------------------------------------
+                    if (init.contains("rand")) {
+                        if (py::isinstance<py::bool_>(init["rand"])) {
+                            GlobalVar.MT19937_init_RAND = init["rand"].cast<bool>();
+                        } else {
+                            GlobalVar.slogcout(2) << "ERROR [process_config::MT19937::init::rand]: expected an entry of type <bool>" << std::endl;
+                        }
+                    }
+                    // --------------------------------------
+                    // seed
+                    // --------------------------------------
+                    if (init.contains("seed")) {
+                        if (py::isinstance<py::bool_>(init["seed"])) {
+                            GlobalVar.MT19937_init_seed = init["seed"].cast<bool>();
+                        } else {
+                            GlobalVar.slogcout(2) << "ERROR [process_config::MT19937::init::seed]: expected an entry of type <bool>" << std::endl;
+                        }
+                    }
+                    // --------------------------------------
+                    // seedvalue
+                    // --------------------------------------
+                    if (init.contains("seedvalue")) {
+                        if (py::isinstance<py::int_>(init["seedvalue"])) {
+                            GlobalVar.MT19937_init_seedvalue = init["seedvalue"].cast<tuint>();
+                        } else {
+                            GlobalVar.slogcout(2) << "ERROR [process_config::MT19937::init::seedvalue]: expected an entry of type <unsigned int>" << std::endl;
+                        }
+                    }
+                } else {
+                    GlobalVar.slogcout(2) << "ERROR [process_config::MT19937::init]: expected an entry of type <dict>" << std::endl;
+                }
+            }
+        } else {
+            GlobalVar.slogcout(2) << "ERROR [process_config::MT19937]: expected an entry of type <dict>" << std::endl;
+        }
+    }
+
+    // ======================================================
+    // Legendre polynomials
+    // ======================================================
+    if (config.contains("Legendre")) {
+        if (py::isinstance<py::dict>(config["Legendre"])) {
+            py::dict legendre = config["Legendre"].cast<py::dict>();
+            // ----------------------------------------------
+            // numb
+            // ----------------------------------------------
+            if (legendre.contains("numb")) {
+                if (py::isinstance<py::int_>(legendre["numb"])) {
+                    GlobalVar.LegendrePolyH_init_numb = legendre["numb"].cast<tuint>();
+                } else {
+                    GlobalVar.slogcout(2) << "ERROR [process_config::Legendre::numb]: expected an entry of type <unsigned int>" << std::endl;
+                }
+            }
+        } else {
+            GlobalVar.slogcout(2) << "ERROR [process_config::Legendre]: expected an entry of type <dict>" << std::endl;
+        }
+    }
+}
+
+
 // #################################################################################
 // logging
 // #################################################################################
@@ -125,6 +329,11 @@ PYBIND11_MODULE(core, m) {
     // ====================================================
         m.def("Double2String", &Double2String, "Convert a double into a string");   // TODO docu
         m.def("print_info", &print_info, "output configuration options of Fesslix");
+
+    // ====================================================
+    // load configuration
+    // ====================================================
+        m.def("process_config", &process_config, "Process a dictionary containing configuration options");
 
     // ====================================================
     // logging

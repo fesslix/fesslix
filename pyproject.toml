@@ -10,7 +10,7 @@ readme = "README.md"
 license = {file = "LICENSE"}
 authors = [{ name = "Wolfgang Betz", email = "w.betz@fesslix.org" }]
 maintainers = [{ name = "Wolfgang Betz", email = "w.betz@fesslix.org" }]
-dependencies = []
+dependencies = [ "pyyaml" ]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: C++",

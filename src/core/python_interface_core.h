@@ -21,6 +21,7 @@
 #include "flxmath.h"
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
@@ -38,6 +39,13 @@ std::string Double2String(tdouble a);
 * @brief output configuration options of Fesslix
 */
 void print_info();
+
+
+// #################################################################################
+// load configuration
+// #################################################################################
+
+void process_config(py::dict config);
 
 
 // #################################################################################

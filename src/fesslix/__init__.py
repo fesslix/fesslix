@@ -44,7 +44,7 @@ try:
     from importlib.metadata import metadata as _metadata  # Python 3.8+
 except ImportError:
     from importlib_metadata import metadata as _metadata  # Python <3.8, requires 'importlib-metadata' package
-_meta = _metadata("fesslix")  # Change to your package name
+_meta = _metadata("fesslix")
 
 __title__ = _meta["name"]
 __summary__ = _meta["description"]
@@ -55,6 +55,26 @@ __uri__ = next(
 )
 __version__ = _meta["version"]
 __license__ = _meta["license"]
+
+
+#==================================================================
+# Attempt to load configuration
+#==================================================================
+
+import yaml
+
+try:
+    # Load YAML configuration from a file
+    with open("fesslix.yaml", "r") as fs:
+        process_config( yaml.safe_load(fs) )
+except KeyboardInterrupt:
+    raise
+except FileNotFoundError:
+    pass
+except yaml.YAMLError as e:
+    print(f"Error [Fesslix::__init__::yaml_01]: Failed to parse YAML file: {e}")
+except Exception as e:
+    print(f"Error [Fesslix::__init__::yaml_02]: {e}")
 
 
 

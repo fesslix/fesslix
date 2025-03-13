@@ -37,10 +37,8 @@ const tuint DEFAULT_LEGENDRE_NUMB = 10;
 const bool DEFAULT_LOG_INPUT=true;
 const char DEFAULT_LOG_FILE [] = "fesslix.log";
 const bool DEFAULT_LOG_OUTPUT = true;
-const bool DEFAULT_LOG_DO_LOGINFO = true;
 const int DEFAULT_LOG_LEVEL = 4;
 const bool DEFAULT_LOG_TRUNC = true;
-const bool DEFAULT_CMD1st = false;
 
 const tuint DEFAULT_MT19937_INIT_CALLS = 1000;
 const bool DEFAULT_MT19937_INIT_RAND = true;
@@ -48,6 +46,4 @@ const bool DEFAULT_MT19937_INIT_SEED = false;
 const tuint DEFAULT_MT19937_INIT_SEEDVALUE = 0;
 
 const tdouble DEFAULT_TOL = 1e-14;
-
-
 

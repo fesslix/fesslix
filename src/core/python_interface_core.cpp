@@ -27,6 +27,11 @@ void check_engine_state()
     }
 }
 
+void finalize_call()
+{
+    std::cout << std::flush;
+}
+
 // #################################################################################
 // 'global' functions
 // #################################################################################
@@ -430,6 +435,7 @@ void slog(int logLevel, const std::string& message) {
     check_engine_state();
     GlobalVar.slogcout(logLevel) << message << std::endl;
     GlobalVar.slogcout(logLevel).flush();
+    finalize_call();
 }
 
 
@@ -470,6 +476,7 @@ int load_engine()
 
     // start the Fesslix-engine
         const int itmp = flxengine_init();
+        finalize_call();
         if (itmp>=0) return itmp;
 
     // return success

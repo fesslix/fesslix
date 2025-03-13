@@ -79,6 +79,11 @@ message("202502240926 Boost_INCLUDE_DIR=${Boost_INCLUDE_DIR}")
 
 git push -u origin main
 
+## commit messages
+
+increase patch number
+attempt package build
+
 
 # Documentation
 

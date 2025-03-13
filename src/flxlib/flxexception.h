@@ -33,11 +33,12 @@ typedef std::ostream* ostreamp;
 /**
 * @brief A class for exception handling.
 */
-class FLXLIB_EXPORT FlxException {
+class FLXLIB_EXPORT FlxException : public std::exception {
   private:
     std::string errNumber;
     std::string titel;
     std::string msg;
+    std::string full_msg;
   public:
     /**
     * @brief Create a FlxException class.
@@ -46,13 +47,12 @@ class FLXLIB_EXPORT FlxException {
     * @param Msg More error information.
     * @return FlxException
     */
-    FlxException ( std::string errnumber, std::string Titel = "", std::string Msg = "" ) 
-      : errNumber(errnumber), titel(Titel), msg(Msg) { }
+    FlxException( std::string errnumber, std::string Titel = "", std::string Msg = "" );
     /**
     * @brief Get error information (usefull for catch-blocks).
     * @return string describing the error.
     */
-    const std::string what();
+    const char* what() const noexcept override;
 };
 
 /**

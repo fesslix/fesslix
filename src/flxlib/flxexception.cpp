@@ -17,6 +17,7 @@
 
 #define FLXLIB_CPP
 
+#include "flxexception.h"
 #include "flxglobal.h"
 
 #include <ostream>
@@ -33,14 +34,21 @@ void FlxAlert::alert(const std::string& alertID, const std::string& alertStr) co
   }
 }
 
-const std::string FlxException::what()
+
+FlxException::FlxException( std::string errnumber, std::string Titel, std::string Msg )
+: errNumber(errnumber), titel(Titel), msg(Msg)
 {
   std::ostringstream ssV;
-  ssV << "ERROR - an error occurred (" << errNumber << ")" << std::endl << "\t" << titel << std::endl << "\t" << msg << std::endl;
+  ssV << "ERROR - an error occurred while running Fesslix (" << errNumber << ")" << std::endl << "\t" << titel << std::endl << "\t" << msg << std::endl;
   if (GlobalVar.prelog_isNOTempty()) {
     ssV << "Last parsed input:" << std::endl << GlobalVar.prelog_force_write() << std::endl;
   }
-  return ssV.str();
+  full_msg = ssV.str();
+}
+
+const char* FlxException::what() const noexcept
+{
+  return full_msg.c_str();
 }
 
 

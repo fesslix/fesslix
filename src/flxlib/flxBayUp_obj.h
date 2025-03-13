@@ -24,7 +24,7 @@
 #include "flxobjrandom.h"
 
 
-class FlxCreateObjReaders_BU : public FlxCreateObjReaders {
+class FLXLIB_EXPORT FlxCreateObjReaders_BU : public FlxCreateObjReaders {
   public:
     void createObjReaders (FlxObjectReadBox* objReadBox );
     void createFunReaders (FlxData* dataBox );

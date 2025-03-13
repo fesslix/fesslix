@@ -20,7 +20,7 @@
 #include "flxobjects.h"
 
 
-class FlxCreateObjReaders_Common : public FlxCreateObjReaders {
+class FLXLIB_EXPORT FlxCreateObjReaders_Common : public FlxCreateObjReaders {
   public:
     void createObjReaders (FlxObjectReadBox* objReadBox );
     void createFunReaders (FlxData* dataBox );

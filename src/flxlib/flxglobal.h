@@ -90,7 +90,6 @@ class FLXLIB_EXPORT strGlobalVar {
     * @brief stores the directory of the binary (executable)
     */
     std::string exe_dir;
-    std::string exe_PathName;
     /**
     * @brief truncates new_line at the end of prelog
     */
@@ -114,11 +113,7 @@ class FLXLIB_EXPORT strGlobalVar {
     bool MT19937_init_seed;
     tuint MT19937_init_seedvalue;
     size_t LegendrePolyH_init_numb;
-    bool allowInteractiveMode;
     bool prgBar;                // true if progress-bar is activated for timeconsuming jobs
-    std::string configDir;
-    std::string configDir_local;
-    std::string pwd;
     FlxAlert alert;
     const tdouble sqrtEps;                // square-root of precision of epsilon
     tuint max_parallel_threads;
@@ -150,12 +145,10 @@ class FLXLIB_EXPORT strGlobalVar {
     const ostreamp& get_true_cout() { return true_stdcout; }           // TODO obsolete? delete?
     const ostreamp& get_true_cerr() { return true_cerr; }              // TODO obsolete? delete?
     const std::string& get_exe_dir() { return exe_dir; }               // TODO obsolete? delete?
-    const std::string& get_exe_PathName() { return exe_PathName; }     // TODO obsolete? delete?
     /**
     * @returns the directory of the executable - must end with an '/' !!!
     */
     void set_exe_dir(const std::string& exe_dirV) { exe_dir = exe_dirV; }
-    void set_exe_PathName(const std::string& exe_PathNameV) { exe_PathName = exe_PathNameV; }
     /**
     * @brief returns the logging-stream
     * (1) alerts and errors are logged (ALERT)

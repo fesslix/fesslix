@@ -35,7 +35,6 @@ void FlxCreateObjReaders_Common::createObjReaders(FlxObjectReadBox* objReadBox) 
   objReadBox->insert("calc", new FlxObjReadCalc());
   objReadBox->insert("echo", new FlxObjReadEcho());
   objReadBox->insert("run_external", new FlxObjReadRunExternal());
-  objReadBox->insert("run_fesslix", new FlxObjReadRunExternal_Fesslix());
   objReadBox->insert("run_files", new FlxObjReadRunExternal_Files());
   objReadBox->insert("file_filter_cv", new FlxObjReadFileFilterCV());
   objReadBox->insert("file_filter_sofistik", new FlxObjReadFileFilterSOFiSTiK());
@@ -284,25 +283,6 @@ FlxObjBase* FlxObjReadRunExternal::read()
     return new FlxObjRunExternal(get_doLog(),fn,get_stream(),get_optPara_bool("throw"));
   } catch (FlxException &e) {
     FLXMSG("FlxObjReadRunExternal::read",1);
-    if (fn) delete fn;
-    throw;
-  }
-}
-
-FlxObjReadRunExternal_Fesslix::FlxObjReadRunExternal_Fesslix(): FlxObjReadOutputBase()
-{
-  AllDefParaBox->insert(new FlxOptionalParaBool(true,"runext::throw"));
-  ParaBox.insert("throw", "runext::throw" );
-}
-
-FlxObjBase* FlxObjReadRunExternal_Fesslix::read()
-{
-  FlxString* fn = new FlxString(false,false);
-  try {
-    read_optionalPara(false);
-    return new FlxObjRunExternal_Fesslix(get_doLog(),fn,get_stream(),get_optPara_bool("throw"));
-  } catch (FlxException &e) {
-    FLXMSG("FlxObjReadRunExternal_Fesslix::read",1);
     if (fn) delete fn;
     throw;
   }
@@ -819,34 +799,6 @@ void FlxObjRunExternal::task()
 FlxObjRunExternal::~FlxObjRunExternal()
 {
   delete ext_cmd;
-}
-
-FlxObjRunExternal_Fesslix::~FlxObjRunExternal_Fesslix()
-{
-  delete para_cmd;
-}
-
-void FlxObjRunExternal_Fesslix::task()
-{
-  std::string para_str = para_cmd->eval(false);
-  std::string cmd_str = GlobalVar.get_exe_PathName();
-  #ifdef __WINDOWS__
-    cmd_str = "\"" + cmd_str + "\"";
-  #endif
-  if (para_str.find("--pause")==std::string::npos) {
-   para_str = std::string("--pause=false ") + para_str;
-  }
-  cmd_str += " " + para_str;
-  const tuint res = system(cmd_str.c_str());
-  if (bthrow && res>0) {
-    std::ostringstream ssV;
-    ssV << "The command \"" << cmd_str << "\" was not executed successfully. "
-    << "The returned error-code is " << res << ".";
-    throw FlxException_NeglectInInteractive("FlxObjRunExternal_Fesslix::task_1", "'run_fesslix' caused an error" , ssV.str());
-  }
-  if (!NOTdolog) {
-    GlobalVar.slog(4) << "run_fesslix: \"" << para_str << "\" returned " << res << std::endl;
-  }
 }
 
 FlxObjRunExternal_Files::~FlxObjRunExternal_Files()

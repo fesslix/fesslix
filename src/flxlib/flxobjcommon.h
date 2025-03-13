@@ -153,21 +153,6 @@ class FLXLIB_EXPORT FlxObjRunExternal : public FlxObjOutputBase {
     ~FlxObjRunExternal();
 };
 
-/**
-* @brief object class: executes Fesslix 'a second time'
-*
-* run_fesslix "PARAMETERS";
-*/
-class FLXLIB_EXPORT FlxObjRunExternal_Fesslix : public FlxObjOutputBase {
-  private:
-    FlxString* para_cmd;
-    const bool bthrow;
-    void task();
-  public:
-    FlxObjRunExternal_Fesslix ( bool dolog, FlxString* para_cmd, std::string ostreamV, const bool bthrow ) 
-      : FlxObjOutputBase(dolog,ostreamV), para_cmd(para_cmd), bthrow(bthrow) {}
-    ~FlxObjRunExternal_Fesslix();
-};
 
 /**
 * @brief object class: executes Fesslix 'a second time'
@@ -924,15 +909,6 @@ class FlxObjReadFileFilterSOFiSTiK : public FlxObjReadBase {
 class FlxObjReadRunExternal : public FlxObjReadOutputBase {
   public:
     FlxObjReadRunExternal();
-    FlxObjBase* read ();
-};
-
-/**
-* @brief object read class: for FlxObjRunExternal_Fesslix
-*/
-class FlxObjReadRunExternal_Fesslix : public FlxObjReadOutputBase {
-  public:
-    FlxObjReadRunExternal_Fesslix();
     FlxObjBase* read ();
 };
 

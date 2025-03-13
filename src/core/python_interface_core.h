@@ -45,6 +45,7 @@ void print_info();
 // load configuration
 // #################################################################################
 
+void set_exe_dir(const std::string& exe_dir);
 void process_config(py::dict config);
 
 
@@ -112,6 +113,12 @@ void set_logger(py::object logger_obj);
 */
 void slog(int logLevel, const std::string& message);
 
+
+// #################################################################################
+// Fesslix Engine
+// #################################################################################
+
+int load_engine();
 
 
 

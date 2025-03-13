@@ -30,7 +30,6 @@ void flxString_fun_insert(FlxStringFunBox& StrFunBox)
 {
   StrFunBox.insert("trim",new FunReadFlxStringFunTrim());
   StrFunBox.insert("replace_all",new FunReadFlxStringFunReplaceAll());
-  StrFunBox.insert("pwd",new FunReadFlxStringFunPWD());
   StrFunBox.insert("filename",new FunReadFlxStringFunFileName());
   StrFunBox.insert("datefromtoday",new FunReadFlxStringFunDateFromToday());
   StrFunBox.insert("strconst",new FunReadFlxStringFunStrConst());
@@ -230,23 +229,6 @@ StringFunBase* FunReadFlxStringFunReplaceAll::read(bool errSerious)
   reader->getChar(',',errSerious);
   FlxString* replace_str = new FlxString(true,false);
   return new StringFunReplaceAll(expr,find_str,replace_str);
-}
-
-// ------------------------------------------------------------------------------------------------
-
-void StringFunPWD::eval(std::ostream& os)
-{
-  os << GlobalVar.pwd;
-}
-
-const std::string StringFunPWD::write()
-{
-  return "pwd()";
-}
-
-StringFunBase* FunReadFlxStringFunPWD::read(bool errSerious)
-{
-  return new StringFunPWD();
 }
 
 // ------------------------------------------------------------------------------------------------

@@ -438,20 +438,18 @@ void GaussIntegration::open_GaussFile(string gaussFile)
   if (gaussRS) throw FlxException_Crude("GaussIntegration::open_GaussFile_1");
   if ( gaussFile == "{no}" ) return;
   if ( gaussFile == "{default}") {
-    gaussFile = GlobalVar.configDir_local;
+    gaussFile = GlobalVar.get_exe_dir();
+    if (!gaussFile.empty()) {
+      const char last_char = gaussFile.back();
+      if (last_char!='/' || last_char!='\\') {
+        gaussFile.append("/");
+      }
+    }
     gaussFile.append("gausspoints.dat");
     try {
       gaussRS = new ReadStream(gaussFile.c_str());
     } catch (FlxException &e) {
       FLXMSG("GaussIntegration::open_GaussFile_2",1);
-      if (GlobalVar.configDir == GlobalVar.configDir_local) return;
-      gaussFile = GlobalVar.configDir;
-      gaussFile.append("gausspoints.dat");
-      try {
-        gaussRS = new ReadStream(gaussFile.c_str());
-      } catch (FlxException &e) {
-        FLXMSG("GaussIntegration::open_GaussFile_3",1);
-      }
     }
     return;
   }

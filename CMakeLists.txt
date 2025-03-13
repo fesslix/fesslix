@@ -355,6 +355,7 @@ target_link_libraries(flxlib PRIVATE GSL::gsl)
 
 # Add a library using FindPython's tooling (pybind11 also provides a helper like this)
 python_add_library(core MODULE
+  src/core/fesslix.cpp
   src/core/python_interface_core.cpp
   WITH_SOABI)
 target_link_libraries(core PRIVATE flxlib PRIVATE pybind11::headers)  #  PRIVATE GSL::gsl

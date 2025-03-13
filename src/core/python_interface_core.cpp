@@ -16,6 +16,9 @@
  */
 
 #include "python_interface_core.h"
+#include "fesslix.h"
+#include "flxfunction_data.h"
+
 
 
 // #################################################################################
@@ -29,6 +32,15 @@ std::string Double2String(tdouble a) {
 void print_info()
 {
     std::ostream& lout = GlobalVar.slogcout(3);
+    // check state of Engine
+        lout << "Engine: ";
+        if (FlxEngine) {
+            lout << "up and running";
+        } else {
+            lout << "NOT running";
+        }
+        lout << std::endl;
+    // log information
     fesslix_logInfo(lout);
     lout.flush();
 }
@@ -37,6 +49,11 @@ void print_info()
 // #################################################################################
 // load configuration
 // #################################################################################
+
+void set_exe_dir(const std::string& exe_dir)
+{
+    GlobalVar.set_exe_dir(exe_dir);
+}
 
 void process_config(py::dict config) {
     // ======================================================
@@ -150,6 +167,106 @@ void process_config(py::dict config) {
             }
         } else {
             GlobalVar.slogcout(2) << "ERROR [process_config::fpc]: expected an entry of type <dict>" << std::endl;
+        }
+    }
+    // ======================================================
+    // Gauss points
+    // ======================================================
+    if (config.contains("gauss")) {
+        if (py::isinstance<py::dict>(config["gauss"])) {
+            py::dict pdl1 = config["gauss"].cast<py::dict>();
+            // ----------------------------------------------
+            // file
+            // ----------------------------------------------
+            if (pdl1.contains("file")) {
+                if (py::isinstance<py::str>(pdl1["file"])) {
+                    fesslix_gaussFile = pdl1["file"].cast<std::string>();
+                } else {
+                    GlobalVar.slogcout(2) << "ERROR [process_config::gauss::file]: expected an entry of type <string>" << std::endl;
+                }
+            }
+            // ----------------------------------------------
+            // maxnumb
+            // ----------------------------------------------
+            if (pdl1.contains("maxnumb")) {
+                if (py::isinstance<py::int_>(pdl1["maxnumb"])) {
+                    GaussIntegration::GaussPointMaxArraySize = pdl1["maxnumb"].cast<tuint>();
+                } else {
+                    GlobalVar.slogcout(2) << "ERROR [process_config::gauss::maxnumb]: expected an entry of type <unsigned int>" << std::endl;
+                }
+            }
+            // ----------------------------------------------
+            // numb
+            // ----------------------------------------------
+            if (pdl1.contains("numb")) {
+                if (py::isinstance<py::int_>(pdl1["numb"])) {
+                    GaussIntegration::GaussPointArraySize = pdl1["numb"].cast<tuint>();
+                } else {
+                    GlobalVar.slogcout(2) << "ERROR [process_config::gauss::numb]: expected an entry of type <unsigned int>" << std::endl;
+                }
+            }
+        } else {
+            GlobalVar.slogcout(2) << "ERROR [process_config::gauss]: expected an entry of type <dict>" << std::endl;
+        }
+    }
+    // ======================================================
+    // Control the logging behavior
+    // ======================================================
+    if (config.contains("log")) {
+        if (py::isinstance<py::dict>(config["log"])) {
+            py::dict pdl1 = config["log"].cast<py::dict>();
+            // ----------------------------------------------
+            // input
+            // ----------------------------------------------
+            if (pdl1.contains("input")) {
+                if (py::isinstance<py::bool_>(pdl1["input"])) {
+                    GlobalVar.prelog_activated( pdl1["input"].cast<bool>() );
+                } else {
+                    GlobalVar.slogcout(2) << "ERROR [process_config::log::input]: expected an entry of type <bool>" << std::endl;
+                }
+            }
+            // ----------------------------------------------
+            // file
+            // ----------------------------------------------
+            if (pdl1.contains("file")) {
+                if (py::isinstance<py::str>(pdl1["file"])) {
+                    fesslix_logFile = pdl1["file"].cast<std::string>();
+                } else {
+                    GlobalVar.slogcout(2) << "ERROR [process_config::log::file]: expected an entry of type <string>" << std::endl;
+                }
+            }
+            // ----------------------------------------------
+            // level
+            // ----------------------------------------------
+            if (pdl1.contains("level")) {
+                if (py::isinstance<py::int_>(pdl1["level"])) {
+                    GlobalVar.logLevel = pdl1["level"].cast<tuint>();
+                } else {
+                    GlobalVar.slogcout(2) << "ERROR [process_config::log::level]: expected an entry of type <integer>" << std::endl;
+                }
+            }
+            // ----------------------------------------------
+            // output
+            // ----------------------------------------------
+            if (pdl1.contains("output")) {
+                if (py::isinstance<py::bool_>(pdl1["output"])) {
+                    fesslix_logOutput = pdl1["output"].cast<bool>();
+                } else {
+                    GlobalVar.slogcout(2) << "ERROR [process_config::log::output]: expected an entry of type <bool>" << std::endl;
+                }
+            }
+            // ----------------------------------------------
+            // logTrunc
+            // ----------------------------------------------
+            if (pdl1.contains("logTrunc")) {
+                if (py::isinstance<py::bool_>(pdl1["logTrunc"])) {
+                    fesslix_logTrunc = pdl1["logTrunc"].cast<bool>();
+                } else {
+                    GlobalVar.slogcout(2) << "ERROR [process_config::log::logTrunc]: expected an entry of type <bool>" << std::endl;
+                }
+            }
+        } else {
+            GlobalVar.slogcout(2) << "ERROR [process_config::log]: expected an entry of type <dict>" << std::endl;
         }
     }
     // ======================================================
@@ -304,11 +421,86 @@ void set_logger(py::object logger_obj)
 }
 
 void slog(int logLevel, const std::string& message) {
-    GlobalVar.slogcout(logLevel) << message;
+    GlobalVar.slogcout(logLevel) << message << std::endl;
     GlobalVar.slogcout(logLevel).flush();
 }
 
 
+// #################################################################################
+// Fesslix Engine
+// #################################################################################
+
+void error_out(std::string errMsg)
+{
+  // write to the actual error stream
+    *(GlobalVar.get_true_cerr()) << std::endl << errMsg << std::endl;
+  // write to the default error stream of Fesslix
+    if (GlobalVar.get_true_cerr() != GlobalVar.get_cerr() ) {
+      *(GlobalVar.get_cerr()) << std::endl << errMsg << std::endl;
+    }
+  // write to the log-file
+    GlobalVar.logLevel_strong_reset();
+    if (GlobalVar.check_logNOTcout()) {
+      GlobalVar.slog(1) << std::endl << errMsg << std::endl;
+      flx_print_RETURN_ERROR();
+    }
+  flxengine_unload();
+  flx_delete_FLXcout();
+}
+
+void unload_engine()
+{
+    flxengine_unload();
+    flx_delete_FLXcout();
+}
+
+int load_engine()
+{
+  try {
+    // make sure it is not already running
+      if (FlxEngine) {
+          unload_engine();
+      }
+
+    // start the Fesslix-engine
+      const int itmp = flxengine_init();
+      if (itmp>=0) return itmp;
+
+    // return success
+      return RETURN_SUCCESS;
+  }
+  catch ( FlxEndE const &e) {
+    FLXMSG("load_engine_01",1);
+    GlobalVar.logLevel_strong_reset();
+    GlobalVar.slog(4) << "end: 'end;' was called" << std::endl;
+    flxengine_unload();
+    flx_delete_FLXcout();
+    return RETURN_SUCCESS;
+  }
+  catch ( FlxException &e) {
+    FLXMSG("load_engine_02",1);
+    error_out(e.what());
+    return RETURN_ERROR;
+  }
+  catch (std::exception const &e) {
+    FLXMSG("load_engine_03",1);
+    error_out(std::string("ERROR: Whoops, something went wrong: ") + e.what());
+    return RETURN_ERROR;
+  }
+  catch(...) {
+    FLXMSG("load_engine_04",1);
+    error_out("ERROR: whoops!");
+    return RETURN_ERROR;
+  }
+}
+
+class ModuleCleanup {
+  public:
+    ~ModuleCleanup() {
+        unload_engine();
+    }
+};
+static ModuleCleanup module_cleanup;
 
 // #################################################################################
 // only for debugging purposes
@@ -333,6 +525,7 @@ PYBIND11_MODULE(core, m) {
     // ====================================================
     // load configuration
     // ====================================================
+        m.def("set_exe_dir", &set_exe_dir, "Set the directory which contains the Fesslix module");
         m.def("process_config", &process_config, "Process a dictionary containing configuration options");
 
     // ====================================================
@@ -340,6 +533,11 @@ PYBIND11_MODULE(core, m) {
     // ====================================================
         m.def("set_logger", &set_logger, "Set the logger object");
         m.def("slog", &slog, "Log a message at a specified level");
+
+    // ====================================================
+    // Fesslix Engine
+    // ====================================================
+        m.def("load_engine", &load_engine, "Load the Fesslix Engine");
 
     // ====================================================
     // only for debugging purposes (TODO remove at some point)

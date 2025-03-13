@@ -27,6 +27,7 @@ const tdouble DEFAULT_FPC_BVALL = 1e-2;
 const bool DEFAULT_FPC_DEL0 = true;
 const bool DEFAULT_FPC_DELP = true;
 const bool DEFAULT_FLX_PRGBAR = true;
+const bool DEFAULT_FLX_USESCREEN = true;
 
 const char DEFAULT_GAUSS_FILE [] = "{default}";
 const tuint DEFAULT_GAUSS_MAXNUMB = 45;

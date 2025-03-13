@@ -144,18 +144,6 @@ class FunReadFlxStringFunReplaceAll : public FunReadFlxStringFunBase {
   public:
     virtual StringFunBase* read ( bool errSerious );
 };
-// ------------------------------------------------------------------------------------------------
-
-class StringFunPWD : public StringFunBase {
-  public:
-    virtual void eval(std::ostream& os);
-    virtual const std::string write();
-};
-
-class FunReadFlxStringFunPWD : public FunReadFlxStringFunBase {
-  public:
-    virtual StringFunBase* read ( bool errSerious );
-};
 
 // ------------------------------------------------------------------------------------------------
 

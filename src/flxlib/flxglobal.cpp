@@ -354,7 +354,7 @@ strGlobalVar::strGlobalVar()
   logLevel_strong(DEFAULT_LOG_LEVEL),leak_check(false),Logger_ptr(nullptr),logLev_counter(0),
   logLevel(DEFAULT_LOG_LEVEL),
   MT19937_init_calls(DEFAULT_MT19937_INIT_CALLS), MT19937_init_RAND(DEFAULT_MT19937_INIT_RAND), MT19937_init_seed(DEFAULT_MT19937_INIT_SEED), MT19937_init_seedvalue(DEFAULT_MT19937_INIT_SEEDVALUE),
-  LegendrePolyH_init_numb(DEFAULT_LEGENDRE_NUMB), allowInteractiveMode(true), prgBar(DEFAULT_FLX_PRGBAR), configDir(""),configDir_local(""), pwd(""),
+  LegendrePolyH_init_numb(DEFAULT_LEGENDRE_NUMB), prgBar(DEFAULT_FLX_PRGBAR),
   sqrtEps(std::sqrt(std::numeric_limits<tdouble>::epsilon())), max_parallel_threads(std::thread::hardware_concurrency())
 {
   set_slogcout(true_stdcout,true_stdcout);

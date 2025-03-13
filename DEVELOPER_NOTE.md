@@ -12,6 +12,8 @@ pip install twine cibuildwheel
 
 ## Local build
 
+source .venv-fesslix/bin/activate
+
 python -m build
 pip install .
 
@@ -62,7 +64,9 @@ To transfer all tags to the server:
 git push origin --tags
 ```
 
-## CMake
+
+
+# CMake
 Output messages in CMake:
 
 ```
@@ -75,4 +79,8 @@ message("202502240926 Boost_INCLUDE_DIR=${Boost_INCLUDE_DIR}")
 
 git push -u origin main
 
+
+# Documentation
+
+see <https://github.com/fesslix/fesslix-docu>
 

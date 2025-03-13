@@ -26,6 +26,12 @@
 namespace py = pybind11;
 
 
+/**
+* @brief ensure that the Fesslix engine is up and running; otherwise, an error is thrown
+*/
+void check_engine_state();
+
+
 // #################################################################################
 // 'global' functions
 // #################################################################################

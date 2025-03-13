@@ -236,6 +236,8 @@ void FesslixMain::test()
 
 
 void flx_create_log(const std::string& logFile, const bool logTrunc) {
+  // check whether a 'special' logger is already registered
+    if (GlobalVar.has_logger()) return;
   if (logFile != "{screen}") {
     std::ofstream* ofLog;
     if ( logTrunc ) {

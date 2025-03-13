@@ -20,6 +20,12 @@
 #include "flxfunction_data.h"
 
 
+void check_engine_state()
+{
+    if (FlxEngine==nullptr) {
+        throw FlxException_NeglectInInteractive("check_engine_state","Fesslix Engine is not running", "Please start the engine using load_engine()");
+    }
+}
 
 // #################################################################################
 // 'global' functions
@@ -421,6 +427,7 @@ void set_logger(py::object logger_obj)
 }
 
 void slog(int logLevel, const std::string& message) {
+    check_engine_state();
     GlobalVar.slogcout(logLevel) << message << std::endl;
     GlobalVar.slogcout(logLevel).flush();
 }
@@ -507,6 +514,7 @@ static ModuleCleanup module_cleanup;
 // #################################################################################
 
 double add(double a, double b) {
+    check_engine_state();
     return a + b;
 }
 

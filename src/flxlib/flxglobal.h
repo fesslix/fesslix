@@ -131,6 +131,7 @@ class FLXLIB_EXPORT strGlobalVar {
     * @note the memory management has to be taken care of externally
     */
     void set_logger(flxLoggerBase& Logger) { Logger_ptr = &Logger; }
+    const bool has_logger() const { return Logger_ptr!=nullptr; }
     /**
     * @brief updates the log and the cout stream
     * @note the memory management has to be taken care of externally

@@ -38,7 +38,7 @@
 using namespace std;
 
 int FesslixMain::Cinst = 0;      // true, cout is std::cout (otherwise cout is redirected to the log-file)
-std::ostream* flxcout = NULL;
+std::ostream* flxcout = nullptr;
 int flx_engine_init_count = 0;        
 
 /**
@@ -54,7 +54,7 @@ void flx_create_log(const std::string& logFile, const bool logTrunc);
 
   
   
-FesslixMain::FesslixMain () 
+FesslixMain::FesslixMain() : initialized(false)
 {
   // check for multiple instances
     ++Cinst;
@@ -88,21 +88,15 @@ FesslixMain::FesslixMain ()
 
 void FesslixMain::initialize(const ostreamp coutV, const ostreamp cerrV, const string& gaussFile)
 {
-  // check for multiple runs
-    static int Cruns = 0;
-    ++Cruns;
-    if (Cruns > 1) {
-      std::ostringstream ssV;
-      ssV << "FesslixMain::initialize can only be run once ...";
-      throw FlxException("FesslixMain::initialize", ssV.str() );
-    }
+  if (initialized) return;
   // initialise output-streams
     dataBox.OstreamBox.insert("cout", coutV);
     dataBox.OstreamBox.insert("cerr", cerrV);
     dataBox.OstreamBox.insert("dummy",new flxDummyOstream());
     dataBox.OstreamBox.insert("log", &(GlobalVar.slog(0)) );
   // Read Gauss-Point Information
-    dataBox.GaussInt.ReadGP(0,gaussFile);  
+    dataBox.GaussInt.ReadGP(0,gaussFile);
+  initialized = true;
 }
 
 void FesslixMain::load_FlxReaders(FlxCreateObjReaders* cor)
@@ -116,6 +110,7 @@ FesslixMain::~FesslixMain () {
   // AddOnManager.delete_AddOns();        // free the loaded AddOns
   delete EvaluateCmd;
   delete funReader;
+  --Cinst;
 }
 
 void FesslixMain::evaluate () {
@@ -287,12 +282,11 @@ void flx_print_current_time(ostream& os)
 
 void flx_delete_FLXcout() {
   if (flx_engine_init_count>0) return;
-  if (!fesslix_logOutput || flxcout==NULL) return;
+  if (flxcout==nullptr) return;
   flxStreamAlloc* fsa = dynamic_cast<flxStreamAlloc*>(flxcout);
-  #if FLX_DEBUG
-    if (fsa==NULL) throw FlxException_Crude("delete_FLXcout");
-  #endif
-  delete fsa;
+  if (fsa) {
+    delete fsa;
+  }
   flxcout = nullptr;
 }
 
@@ -305,14 +299,6 @@ string flx_get_version()
 
 void flxengine_load()
 {
-  // check for multiple runs
-    static int Cruns = 0;
-    ++Cruns;
-    if (Cruns > 1) {
-      std::ostringstream ssV;
-      ssV << "flxengine_load can only be run once ...";
-      throw FlxException("flxengine_load", ssV.str() );
-    }
   FlxEngine = new FesslixMain;
 }
 
@@ -331,69 +317,34 @@ const int flxengine_init()
 {
   flx_engine_init_count++;
   if (flx_engine_init_count>1) return RETURN_SUCCESS;
-  try {
-    // run pre-checks
-      if (flxcout) {
-        throw FlxException_Crude("flxengine_init_01");
-      }
-    // set some global options
-      GlobalVar.logLevel_strong_set(GlobalVar.logLevel);
-      
-    // Deal with the log-files
-      flx_create_log(fesslix_logFile, fesslix_logTrunc);
-      
-      if (!GlobalVar.check_logNOTcout()) fesslix_logOutput=false;
-      if (fesslix_logOutput) {
-        flxcout = new flxStreamAlloc(GlobalVar.get_cout(), GlobalVar.get_log());
-      } else {
-        flxcout = GlobalVar.get_cout();
-      }
-        
-    // create main object
-      flxengine_load();
-      FlxEngine->initialize(flxcout, GlobalVar.get_cerr(), fesslix_gaussFile);
-      
-      #if FLX_DEBUG
-      // testing
-        FlxEngine->test();
-      #endif
-  } 
-  catch ( FlxException &e) {
-    FLXMSG("flxengine_init_101",1);
-    *(GlobalVar.get_true_cerr()) << std::endl << e.what() << std::endl;
-    GlobalVar.logLevel_strong_reset();
-    if (GlobalVar.check_logNOTcout()) {
-      GlobalVar.slog(1) << std::endl << e.what() << std::endl;
-      flx_print_RETURN_ERROR();
+
+  // run pre-checks
+    if (flxcout) {
+      throw FlxException_Crude("flxengine_init_01");
     }
-    flxengine_unload();
-    flx_delete_FLXcout();
-    return RETURN_ERROR;
-  }
-  catch (std::exception const &e) {
-    FLXMSG("flxengine_init_102",1);
-    *(GlobalVar.get_true_cerr()) << std::endl << "ERROR: Whoops, something went wrong: " << e.what() << std::endl;
-    GlobalVar.logLevel_strong_reset();
-    if (GlobalVar.check_logNOTcout()) {
-      GlobalVar.slog(1) << std::endl << "ERROR: Whoops, something went wrong: " << e.what() << std::endl;
-      flx_print_RETURN_ERROR();
+  // set some global options
+    GlobalVar.logLevel_strong_set(GlobalVar.logLevel);
+
+  // Deal with the log-files
+    flx_create_log(fesslix_logFile, fesslix_logTrunc);
+
+    bool logout = fesslix_logOutput;
+    if (!GlobalVar.check_logNOTcout()) logout=false;
+    if (logout) {
+      flxcout = new flxStreamAlloc(GlobalVar.get_cout(), GlobalVar.get_log());
+    } else {
+      flxcout = GlobalVar.get_cout();
     }
-    flxengine_unload();
-    flx_delete_FLXcout();
-    return RETURN_ERROR;
-  }
-  catch(...) { 
-    FLXMSG("flxengine_init_103",1);
-    *(GlobalVar.get_true_cerr()) << std::endl << "ERROR: whoops!" << std::endl; 
-    GlobalVar.logLevel_strong_reset();
-    if (GlobalVar.check_logNOTcout()) {
-      GlobalVar.slog(1) << std::endl << "ERROR: whoops!" << std::endl; 
-      flx_print_RETURN_ERROR();
-    }
-    flxengine_unload();
-    flx_delete_FLXcout();
-    return RETURN_ERROR;
-  }
+
+  // create main object
+    flxengine_load();
+    FlxEngine->initialize(flxcout, GlobalVar.get_cerr(), fesslix_gaussFile);
+
+    #if FLX_DEBUG
+    // testing
+      FlxEngine->test();
+    #endif
+
   return -1;
 }
 

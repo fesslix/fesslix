@@ -44,6 +44,7 @@ class FesslixMain : public FlxReaderBase {
     FlxFunctionReader *funReader;
     FlxEvaluateCmd *EvaluateCmd;
     FlxDefParaBox AllDefParaBox;
+    bool initialized;
   private:
     static int Cinst;
     

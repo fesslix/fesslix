@@ -463,42 +463,17 @@ void unload_engine()
 
 int load_engine()
 {
-  try {
     // make sure it is not already running
-      if (FlxEngine) {
-          unload_engine();
-      }
+        if (FlxEngine) {
+            unload_engine();
+        }
 
     // start the Fesslix-engine
-      const int itmp = flxengine_init();
-      if (itmp>=0) return itmp;
+        const int itmp = flxengine_init();
+        if (itmp>=0) return itmp;
 
     // return success
-      return RETURN_SUCCESS;
-  }
-  catch ( FlxEndE const &e) {
-    FLXMSG("load_engine_01",1);
-    GlobalVar.logLevel_strong_reset();
-    GlobalVar.slog(4) << "end: 'end;' was called" << std::endl;
-    flxengine_unload();
-    flx_delete_FLXcout();
-    return RETURN_SUCCESS;
-  }
-  catch ( FlxException &e) {
-    FLXMSG("load_engine_02",1);
-    error_out(e.what());
-    return RETURN_ERROR;
-  }
-  catch (std::exception const &e) {
-    FLXMSG("load_engine_03",1);
-    error_out(std::string("ERROR: Whoops, something went wrong: ") + e.what());
-    return RETURN_ERROR;
-  }
-  catch(...) {
-    FLXMSG("load_engine_04",1);
-    error_out("ERROR: whoops!");
-    return RETURN_ERROR;
-  }
+        return RETURN_SUCCESS;
 }
 
 class ModuleCleanup {

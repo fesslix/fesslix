@@ -373,6 +373,6 @@ target_compile_options(core PRIVATE -fvisibility=hidden)
 # The install directory is the output (wheel) directory
 install(TARGETS core DESTINATION fesslix)
 install(TARGETS flxlib LIBRARY DESTINATION fesslix)
-
+install(FILES config/gausspoints.dat DESTINATION fesslix)
 
 

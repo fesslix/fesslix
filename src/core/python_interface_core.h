@@ -121,7 +121,7 @@ void set_logger(py::object logger_obj);
 /**
 * @brief log some <message> with <logLevel>
 */
-void slog(int logLevel, const std::string& message);
+void slog(const std::string& message, int logLevel=4);
 
 
 // #################################################################################

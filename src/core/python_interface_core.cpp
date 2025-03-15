@@ -431,7 +431,7 @@ void set_logger(py::object logger_obj)
     GlobalVar.set_logger(pyLogger);
 }
 
-void slog(int logLevel, const std::string& message) {
+void slog(const std::string& message, int logLevel) {
     check_engine_state();
     GlobalVar.slogcout(logLevel) << message << std::endl;
     GlobalVar.slogcout(logLevel).flush();
@@ -522,7 +522,7 @@ PYBIND11_MODULE(core, m) {
     // logging
     // ====================================================
         m.def("set_logger", &set_logger, "Set the logger object");
-        m.def("slog", &slog, "Log a message at a specified level");
+        m.def("slog", &slog, pybind11::arg("message"), pybind11::arg("logLevel") = 4, "Log a message at a specified level");
 
     // ====================================================
     // Fesslix Engine

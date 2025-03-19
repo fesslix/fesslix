@@ -362,6 +362,7 @@ if(MSVC)
 endif(MSVC)
 
 if(GSL_FOUND_STATIC)
+    message(STATUS "GSL: static linking: ${GSL_STATIC_LIB} and ${GSLCBLAS_STATIC_LIB}")
     target_link_libraries(flxlib PRIVATE ${GSL_STATIC_LIB} ${GSLCBLAS_STATIC_LIB})
 else()
     target_link_libraries(flxlib PRIVATE GSL::gsl)

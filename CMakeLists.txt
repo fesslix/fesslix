@@ -15,6 +15,7 @@
 # along with Fesslix.  If not, see <http://www.gnu.org/licenses/>.
 
 cmake_minimum_required(VERSION 3.15)
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
 if(NOT DEFINED SKBUILD_PROJECT_VERSION)
   set(SKBUILD_PROJECT_VERSION "0.0.0")
@@ -189,6 +190,7 @@ if(GSL_STATIC_LIB AND GSLCBLAS_STATIC_LIB)
     message(STATUS "Found static GSL: ${GSL_STATIC_LIB} and ${GSLCBLAS_STATIC_LIB}")
     set(GSL_FOUND_STATIC TRUE)
 else()
+    message(STATUS "NOT found static GSL")
     FIND_PACKAGE(GSL REQUIRED)
 endif()
 option ( FLX_USE_GSL "compile with GSL support" ON )

@@ -347,7 +347,7 @@ if(MSVC)
   generate_export_header(flxlib)
 endif(MSVC)
 target_link_libraries(flxlib PRIVATE GSL::gsl)
-
+target_compile_definitions(flxlib PRIVATE GSL_STATIC)
 
 #==========================================================
 # core » main interface of Fesslix
@@ -372,7 +372,11 @@ target_compile_options(core PRIVATE -fvisibility=hidden)
 
 # The install directory is the output (wheel) directory
 install(TARGETS core DESTINATION fesslix)
-install(TARGETS flxlib LIBRARY DESTINATION fesslix)
+install(TARGETS flxlib
+    RUNTIME DESTINATION fesslix  # For Windows (.dll)
+    LIBRARY DESTINATION fesslix  # For Linux (.so)
+    ARCHIVE DESTINATION fesslix  # For static libs (.lib)
+)
 install(FILES config/gausspoints.dat DESTINATION fesslix)
 
 

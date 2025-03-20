@@ -37,13 +37,13 @@ test-skip = "*-win_arm64"
 #################################################################################
 
 [tool.cibuildwheel.linux]
-archs = ["auto", "aarch64"]
+archs = ["auto64", "aarch64"]
 #manylinux-x86_64-image = "manylinux_2_28"
 before-all = [ #"yum install -y gsl-devel",
                "yum install -y curl zip unzip tar wget",
                "yum install -y boost-devel",
                #"yum install -y curl epel-release",
-               "yum install -y ninja-build",
+               #"yum install -y ninja-build",
                "source ./linux_install_dependencies.sh",
                ]
 #before-build = [ "ls -la",

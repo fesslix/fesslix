@@ -29,7 +29,7 @@ minimum-version = "build-system.requires"
 
 [tool.cibuildwheel]
 build = "cp312-* cp313-*"   # cp39-* cp310-* cp311-* cp312-*
-build-verbosity = 1
+build-verbosity = 3
 test-skip = "*-win_arm64"
 
 #################################################################################
@@ -45,12 +45,13 @@ before-all = [ #"yum install -y gsl-devel",
                #"yum install -y curl epel-release",
                #"yum install -y curl ninja-build cmake",
                ]
-before-build = [ "[ ! -d vcpkg ] && git clone https://github.com/microsoft/vcpkg.git",
-               "cd vcpkg",
-               "./bootstrap-vcpkg.sh",
-               "./vcpkg install gsl",
-               "find ./ -name libgsl*",
-               "pwd",
+before-build = [ "source linux_install_dependencies.sh",
+               #"[ ! -d vcpkg ] && git clone https://github.com/microsoft/vcpkg.git",
+               #"cd vcpkg",
+               #"./bootstrap-vcpkg.sh",
+               #"./vcpkg install gsl",
+               #"find ./ -name libgsl*",
+               #"pwd",
                #"./vcpkg install boost-format boost-math boost-concept-check boost-random",
                #"./vcpkg integrate install",
                #"wget https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.gz",

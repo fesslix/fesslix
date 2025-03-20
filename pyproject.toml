@@ -43,10 +43,10 @@ before-all = [ #"yum install -y gsl-devel",
                "yum install -y curl zip unzip tar wget",
                "yum install -y boost-devel",
                #"yum install -y curl epel-release",
-               #"yum install -y curl ninja-build cmake",
-               ]
-before-build = [ "ls -la",
+               "yum install -y ninja-build",
                "source ./linux_install_dependencies.sh",
+               ]
+#before-build = [ "ls -la",
                #"[ ! -d vcpkg ] && git clone https://github.com/microsoft/vcpkg.git",
                #"cd vcpkg",
                #"./bootstrap-vcpkg.sh",
@@ -64,7 +64,7 @@ before-build = [ "ls -la",
                #"find ./ -type d -name boost",
                #"find ./ -type f -name 'special_functions.hpp'",
                #"find ./ -type f -name 'BoostConfig.cmake'"
-               ]
+#               ]
 test-command = "echo 'installed gsl-devel boost-devel'"
 environment = "Boost_skip_search=1 VCPKG_ROOT=/project/vcpkg/"
 

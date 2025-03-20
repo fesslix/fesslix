@@ -45,7 +45,7 @@ before-all = [ #"yum install -y gsl-devel",
                #"yum install -y curl epel-release",
                #"yum install -y curl ninja-build cmake",
                ]
-before-build = [ "git clone https://github.com/microsoft/vcpkg.git",
+before-build = [ "[ ! -d vcpkg ] && git clone https://github.com/microsoft/vcpkg.git",
                "cd vcpkg",
                "./bootstrap-vcpkg.sh",
                "./vcpkg install gsl",

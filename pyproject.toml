@@ -64,7 +64,6 @@ before-build = [ "git clone https://github.com/microsoft/vcpkg.git",
                #"find ./ -type f -name 'BoostConfig.cmake'"
                ]
 test-command = "echo 'installed gsl-devel boost-devel'"
-inherit.environment="append"
 environment = "Boost_skip_search=1 VCPKG_ROOT=/project/vcpkg/"
 
 [[tool.cibuildwheel.overrides]]

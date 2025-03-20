@@ -15,7 +15,7 @@ pip install twine cibuildwheel
 source .venv-fesslix/bin/activate
 
 python -m build
-pip install .
+pip install --verbose .
 
 ## Precompiled Binaries
 https://pypi.org/account/register/
@@ -83,6 +83,11 @@ git push -u origin main
 
 increase patch number
 attempt package build
+
+
+# Check for memory leaks
+
+
 
 
 # Documentation

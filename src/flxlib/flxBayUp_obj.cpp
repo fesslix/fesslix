@@ -1030,7 +1030,7 @@ const tdouble FunConvExp::calc()
   // Define the importance sampling density
     RBRV_set_MVN mvn_instance(false,N,static_cast<tuint>(0),std::string("ipstmpinternal"),true,new flxVec(*cv),cov_dist,2);
   // initialize the random number generator
-    boost::random::mt19937 rgL;
+    rng_type rgL;
     rv_initialize(false,true,seed,Nrgir,&rgL,false);
   // perform the sampling
     qdouble ipv(Ninteg,false);

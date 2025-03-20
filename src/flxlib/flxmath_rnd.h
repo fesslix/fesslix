@@ -19,9 +19,11 @@
 
 #include "flxVec.h"
 
-#include <boost/random.hpp>
+// #include <boost/random.hpp>
+// typedef boost::random::mt19937 rng_type;
 
-typedef boost::random::mt19937 rng_type;
+#include <random>
+typedef std::mt19937 rng_type;
 
 
 /**

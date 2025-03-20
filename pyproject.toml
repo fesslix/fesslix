@@ -38,7 +38,8 @@ test-skip = "*-win_arm64"
 
 [tool.cibuildwheel.linux]
 archs = ["auto64", "aarch64"]
-#manylinux-x86_64-image = "manylinux_2_28"
+manylinux-x86_64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux_2_28"
 before-all = [ #"yum install -y gsl-devel",
                "yum install -y curl zip unzip tar wget",
                "yum install -y boost-devel",
@@ -110,21 +111,22 @@ before-all = "apk add --no-cache gsl gsl-dev boost-dev"
 [tool.cibuildwheel.windows]
 archs = ["auto", "ARM64"]
 before-build = "powershell -ExecutionPolicy Bypass -File windows_install_dependencies.ps1 & vcpkg integrate install"
+environment = "VCPKG_ROOT=D:/a/fesslix/fesslix/vcpkg CMAKE_TOOLCHAIN_FILE=D:/a/fesslix/fesslix/vcpkg/scripts/buildsystems/vcpkg.cmake"
 
 [[tool.cibuildwheel.overrides]]
 select ="*-win32*"
 inherit.environment="append"
-environment = "VCPKG_ROOT=D:/a/fesslix/fesslix/vcpkg CMAKE_TOOLCHAIN_FILE=D:/a/fesslix/fesslix/vcpkg/scripts/buildsystems/vcpkg.cmake PKG_CONFIG_PATH=D:/a/fesslix/fesslix/vcpkg/installed/x86-windows/lib/pkgconfig GSL_INCLUDE_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x86-windows-static/include GSL_LIBRARY=D:/a/fesslix/fesslix/vcpkg/installed/x86-windows-static/lib/gsl.lib GSL_CBLAS_LIBRARY=D:/a/fesslix/fesslix/vcpkg/installed/x86-windows-static/lib/gslcblas.lib Boost_INCLUDE_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/include Boost_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/share/boost"
+environment = "PKG_CONFIG_PATH=D:/a/fesslix/fesslix/vcpkg/installed/x86-windows/lib/pkgconfig GSL_INCLUDE_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x86-windows-static/include GSL_LIBRARY=D:/a/fesslix/fesslix/vcpkg/installed/x86-windows-static/lib/gsl.lib GSL_CBLAS_LIBRARY=D:/a/fesslix/fesslix/vcpkg/installed/x86-windows-static/lib/gslcblas.lib Boost_INCLUDE_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/include Boost_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/share/boost"
 
 [[tool.cibuildwheel.overrides]]
 select ="*-win_amd64*"
 inherit.environment="append"
-environment = "VCPKG_ROOT=D:/a/fesslix/fesslix/vcpkg CMAKE_TOOLCHAIN_FILE=D:/a/fesslix/fesslix/vcpkg/scripts/buildsystems/vcpkg.cmake PKG_CONFIG_PATH=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows/lib/pkgconfig GSL_INCLUDE_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/include GSL_LIBRARY=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/lib/gsl.lib GSL_CBLAS_LIBRARY=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/lib/gslcblas.lib Boost_INCLUDE_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/include Boost_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/share/boost"
+environment = "PKG_CONFIG_PATH=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows/lib/pkgconfig GSL_INCLUDE_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/include GSL_LIBRARY=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/lib/gsl.lib GSL_CBLAS_LIBRARY=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/lib/gslcblas.lib Boost_INCLUDE_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/include Boost_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/share/boost"
 
 [[tool.cibuildwheel.overrides]]
 select ="*-win_arm64*"
 inherit.environment="append"
-environment = "VCPKG_ROOT=D:/a/fesslix/fesslix/vcpkg CMAKE_TOOLCHAIN_FILE=D:/a/fesslix/fesslix/vcpkg/scripts/buildsystems/vcpkg.cmake PKG_CONFIG_PATH=D:/a/fesslix/fesslix/vcpkg/installed/arm64-windows/lib/pkgconfig GSL_INCLUDE_DIR=D:/a/fesslix/fesslix/vcpkg/installed/arm64-windows-static/include GSL_LIBRARY=D:/a/fesslix/fesslix/vcpkg/installed/arm64-windows-static/lib/gsl.lib GSL_CBLAS_LIBRARY=D:/a/fesslix/fesslix/vcpkg/installed/arm64-windows-static/lib/gslcblas.lib Boost_INCLUDE_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/include Boost_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/share/boost"
+environment = "PKG_CONFIG_PATH=D:/a/fesslix/fesslix/vcpkg/installed/arm64-windows/lib/pkgconfig GSL_INCLUDE_DIR=D:/a/fesslix/fesslix/vcpkg/installed/arm64-windows-static/include GSL_LIBRARY=D:/a/fesslix/fesslix/vcpkg/installed/arm64-windows-static/lib/gsl.lib GSL_CBLAS_LIBRARY=D:/a/fesslix/fesslix/vcpkg/installed/arm64-windows-static/lib/gslcblas.lib Boost_INCLUDE_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/include Boost_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/share/boost"
 
 #################################################################################
 # macOS

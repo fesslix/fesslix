@@ -20,6 +20,6 @@ pkg-config --modversion gsl
 Write-Output 'List files in directory'
 #Get-ChildItem -Path "D:\a\fesslix\fesslix\vcpkg" -Recurse -File | Select-Object -ExpandProperty FullName
 #dumpbin /symbols D:\a\fesslix\fesslix\vcpkg\installed\x86-windows-static\lib\gsl.lib
-llvm-objdump -p D:\a\fesslix\fesslix\vcpkg\installed\x86-windows-static\lib\gsl.lib
-llvm-readobj --coff-export-table D:\a\fesslix\fesslix\vcpkg\installed\x86-windows-static\lib\gsl.lib
+#llvm-objdump -p D:\a\fesslix\fesslix\vcpkg\installed\x86-windows-static\lib\gsl.lib
+#llvm-readobj D:\a\fesslix\fesslix\vcpkg\installed\x86-windows-static\lib\gsl.lib
 

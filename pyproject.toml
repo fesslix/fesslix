@@ -35,14 +35,18 @@ test-skip = "*-win_arm64"
 [tool.cibuildwheel.linux]
 archs = ["auto", "aarch64"]
 #manylinux-x86_64-image = "manylinux_2_28"
-before-all = [ "yum install -y gsl-devel",
+before-all = [ #"yum install -y gsl-devel",
                "yum install -y curl zip unzip tar wget",
                "yum install -y boost-devel",
                #"yum install -y curl epel-release",
                #"yum install -y curl ninja-build cmake",
-               #"git clone https://github.com/microsoft/vcpkg.git",
-               #"cd vcpkg",
-               #"./bootstrap-vcpkg.sh",
+               "git clone https://github.com/microsoft/vcpkg.git",
+               "cd vcpkg",
+               "./bootstrap-vcpkg.sh",
+               "./vcpkg install gsl",
+               "find ./ -name libgsl*",
+               "echo 'output pwd'",
+               "pwd",
                #"./vcpkg install boost-format boost-math boost-concept-check boost-random",
                #"./vcpkg integrate install",
                #"wget https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.gz",

@@ -42,7 +42,7 @@ manylinux-x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
 before-all = [ #"yum install -y gsl-devel",
                "yum install -y curl zip unzip tar wget",
-               "yum install -y boost-devel",
+               #"yum install -y boost-devel",
                #"yum install -y curl epel-release",
                "yum install -y ninja-build",
                "source ./.github/linux_install_dependencies.sh",
@@ -101,9 +101,7 @@ environment = "TRIPLET=arm64-linux-musl"
 
 [[tool.cibuildwheel.overrides]]
 select = "*-musllinux*"
-before-all = [ "apk add --no-cache gsl gsl-dev boost-dev ninja-build",
-               "source ./.github/linux_install_dependencies.sh"
-               ]
+before-all = "apk add --no-cache gsl gsl-dev boost-dev"
 
 
 #################################################################################

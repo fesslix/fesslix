@@ -43,7 +43,7 @@ before-all = [ #"yum install -y gsl-devel",
                "yum install -y curl zip unzip tar wget",
                "yum install -y boost-devel",
                #"yum install -y curl epel-release",
-               #"yum install -y ninja-build",
+               "yum install -y ninja-build",
                "source ./linux_install_dependencies.sh",
                ]
 #before-build = [ "ls -la",
@@ -73,7 +73,7 @@ select ="*-manylinux_x86_64"
 inherit.environment="append"
 environment = "TRIPLET=x64-linux"
 
-[[tool.cibuildwheel.overrides]]
+[[tool.cibuildwheel.overrides]]  ## TODO i686 support dropped ... delete this entry
 select ="*-manylinux_i686"
 inherit.environment="append"
 environment = "TRIPLET=x86-linux"
@@ -88,7 +88,7 @@ select ="*-musllinux_x86_64"
 inherit.environment="append"
 environment = "TRIPLET=x64-linux-musl"
 
-[[tool.cibuildwheel.overrides]]
+[[tool.cibuildwheel.overrides]]  ## TODO i686 support dropped ... delete this entry
 select ="*-musllinux_i686"
 inherit.environment="append"
 environment = "TRIPLET=x86-linux-musl"

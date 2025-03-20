@@ -101,7 +101,7 @@ environment = "TRIPLET=arm64-linux-musl"
 
 [[tool.cibuildwheel.overrides]]
 select = "*-musllinux*"
-before-all = [ "apk add --no-cache gsl gsl-dev boost-dev",
+before-all = [ "apk add --no-cache gsl gsl-dev boost-dev ninja-build",
                "source ./.github/linux_install_dependencies.sh"
                ]
 

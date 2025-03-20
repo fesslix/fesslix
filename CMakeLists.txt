@@ -359,6 +359,7 @@ add_library(flxlib SHARED
 )
 if(MSVC)
   generate_export_header(flxlib)
+  target_link_options(flxlib PRIVATE /VERBOSE:LIB)
 endif(MSVC)
 
 if(GSL_FOUND_STATIC)

@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "fesslix"
-version = "0.1.18"
+version = "0.1.19"
 description = "stochastic analysis"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -102,6 +102,8 @@ environment = "TRIPLET=arm64-linux-musl"
 [[tool.cibuildwheel.overrides]]
 select = "*-musllinux*"
 before-all = "apk add --no-cache gsl gsl-dev boost-dev"
+## NOTE: do not run "source ./.github/linux_install_dependencies.sh"
+##       musllinux does not officially support 'vcpkg'.
 
 
 #################################################################################

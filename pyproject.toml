@@ -84,20 +84,20 @@ select ="*-manylinux_aarch64"
 inherit.environment="append"
 environment = "TRIPLET=arm64-linux"
 
-[[tool.cibuildwheel.overrides]]
-select ="*-musllinux_x86_64"
-inherit.environment="append"
-environment = "TRIPLET=x64-linux-musl"
-
-[[tool.cibuildwheel.overrides]]  ## TODO i686 support dropped ... delete this entry
-select ="*-musllinux_i686"
-inherit.environment="append"
-environment = "TRIPLET=x86-linux-musl"
-
-[[tool.cibuildwheel.overrides]]
-select ="*-musllinux_aarch64"
-inherit.environment="append"
-environment = "TRIPLET=arm64-linux-musl"
+# [[tool.cibuildwheel.overrides]]
+# select ="*-musllinux_x86_64"
+# inherit.environment="append"
+# environment = "TRIPLET=x64-linux-musl"
+#
+# [[tool.cibuildwheel.overrides]]  ## TODO i686 support dropped ... delete this entry
+# select ="*-musllinux_i686"
+# inherit.environment="append"
+# environment = "TRIPLET=x86-linux-musl"
+#
+# [[tool.cibuildwheel.overrides]]
+# select ="*-musllinux_aarch64"
+# inherit.environment="append"
+# environment = "TRIPLET=arm64-linux-musl"
 
 [[tool.cibuildwheel.overrides]]
 select = "*-musllinux*"

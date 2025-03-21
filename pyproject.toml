@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "fesslix"
-version = "0.1.19"
+version = "0.1.20"
 description = "stochastic analysis"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -29,7 +29,7 @@ minimum-version = "build-system.requires"
 
 [tool.cibuildwheel]
 build = "cp312-* cp313-*"   # cp39-* cp310-* cp311-* cp312-*
-build-verbosity = 3
+build-verbosity = 1
 test-skip = "*-win_arm64"
 
 #################################################################################

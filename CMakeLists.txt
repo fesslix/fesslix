@@ -28,8 +28,8 @@ project(
 
 set( FLX_VERSIONb ${PROJECT_VERSION} )
 
-#set(CMAKE_CXX_STANDARD 20)  ## does not compile with manylinux2014
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)  ## does not compile with manylinux2014
+#set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 

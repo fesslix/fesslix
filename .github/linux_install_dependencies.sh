@@ -1,4 +1,5 @@
 #!/bin/bash
+ls /opt/python/
 python --version
 gcc --version
 g++ --version

@@ -1,4 +1,5 @@
 #!/bin/bash
+python --version
 gcc --version
 g++ --version
 [ ! -d vcpkg ] && git clone https://github.com/microsoft/vcpkg.git

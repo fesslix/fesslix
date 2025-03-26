@@ -44,6 +44,7 @@ before-all = [ #"yum install -y gsl-devel",
                "yum install -y curl zip unzip tar wget",
                #"yum install -y boost-devel",
                #"yum install -y curl epel-release",
+               "yum install python3-devel",
                "yum install -y ninja-build",
                "source ./.github/linux_install_dependencies.sh",
                ]
@@ -101,7 +102,7 @@ environment = "TRIPLET=arm64-linux"
 
 [[tool.cibuildwheel.overrides]]
 select = "*-musllinux*"
-before-all = "apk add --no-cache gsl gsl-dev boost-dev"
+before-all = "apk add --no-cache gsl gsl-dev boost-dev python3-dev"
 ## NOTE: do not run "source ./.github/linux_install_dependencies.sh"
 ##       musllinux does not officially support 'vcpkg'.
 

@@ -575,6 +575,41 @@ const bool FunBaseFun_multPara::optimize(FunBasePtr& optf, const Fun_OptimizeInf
   }
 }
 
+const tdouble FunBaseFun_Python::calc()
+{
+  if (ParaList->size()==0) {
+    py::object result = pyfunc();
+    if (py::isinstance<py::float_>(result)) {
+        return result.cast<tdouble>();
+    } else {
+        throw FlxException("FunBaseFun_Python::calc_01", "Result of Python function has wrong type.");
+    }
+  } else {
+    throw FlxException_NotImplemented("FunBaseFun_Python::calc_02");
+  }
+}
+
+const std::string FunBaseFun_Python::write()
+{
+  std::string str1 = write_v() + '(';
+  str1 += pyFunName;
+  for (size_t i = 0; i < ParaList->size(); ++i) {
+    str1 += ',';
+    str1 += ParaList->operator[](i)->write();
+  }
+  str1 += ')';
+  return str1;
+}
+
+const bool FunBaseFun_Python::optimize(FunBasePtr& optf, const Fun_OptimizeInfo& foi)
+{
+  for ( size_t i = 0; i < ParaList->size(); ++i ) {
+    child_optimize( ParaList->operator[](i), foi );
+  }
+  return false;
+}
+
+
 FunUser::FunUser(std::vector< FunBase* >* ParaListV, FlxFunction* funV, const string& fname, const tuint numbofpara)
  : FunBaseFun_multPara(ParaListV), fun(funV), fname(fname), numbofpara(numbofpara), tPL(ParaList->size()), tPLp(&tPL[0])
 {

@@ -19,6 +19,7 @@
 
 
 #include "flxmath.h"
+#include "flxrbrv_rvs.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -129,6 +130,36 @@ void slog(const std::string& message, int logLevel=4);
 // #################################################################################
 
 int load_engine();
+
+
+// #################################################################################
+// random variables
+// #################################################################################
+
+class flxPyRV {
+  private:
+    RBRV_entry_RV_base* rv_ptr;
+  public:
+    flxPyRV(py::dict config);
+    ~flxPyRV();
+
+    const std::string get_type() const;
+    const tdouble x2y(const tdouble x_val);
+    const tdouble y2x(const tdouble y_val);
+
+    const tdouble pdf(const tdouble& x_val, const bool safeCalc);
+    const tdouble pdf_log(const tdouble& x_val, const bool safeCalc);
+    const tdouble cdf(const tdouble& x_val, const bool safeCalc);
+    const tdouble sf(const tdouble& x_val, const bool safeCalc);
+    const tdouble entropy();
+    const tdouble mean();
+    const tdouble sd();
+    const tdouble median();
+    const tdouble mode();
+    const bool check_x(const tdouble xV);
+    const tdouble get_HPD(const tdouble p);
+    const std::string info();
+};
 
 
 

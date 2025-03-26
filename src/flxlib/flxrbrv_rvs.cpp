@@ -17,6 +17,18 @@
 
 #include "flxrbrv_rvs.h"
 
+#include "flxdata.h"
+
+FlxFunction * parse_py_para(const std::string& para_name, py::dict config)
+{
+  if (config.contains(para_name.c_str()) == false) {
+    std::ostringstream ssV;
+    ssV << "Key '" << para_name << "' not found in Python <dict>.";
+    throw FlxException_NeglectInInteractive("parse_py_para_01", ssV.str());
+  }
+  return parse_function(config[para_name.c_str()]);
+}
+
 
 const tdouble RBRV_entry_RV_stdN::transform_y2x(const tdouble y_val)
 {
@@ -71,6 +83,51 @@ RBRV_entry_RV_normal::RBRV_entry_RV_normal(const std::string& name, const tuint 
 : RBRV_entry_RV_base(name,iID), pid(pid), p1(p1v), p2(p2v), p3(p3v), p4(p4v), eval_once(eval_once), mu(ZERO), sigma(ZERO)
 {
 
+}
+
+RBRV_entry_RV_normal::RBRV_entry_RV_normal(const std::string& name, const tuint iID, py::dict config)
+: RBRV_entry_RV_base(name,iID), pid(0), p1(nullptr), p2(nullptr), p3(nullptr), p4(nullptr), eval_once(false), mu(ZERO), sigma(ZERO)
+{
+  try {
+    if (config.contains("mu")) {          // mean, standard deviation
+      pid = 0;
+      p1 = parse_function(config["mu"]);
+      p2 = parse_py_para("sd", config);
+    } else if (config.contains("cov")) {   // // C.o.V. and quantile value
+      pid = 2;
+      p1 = parse_function(config["cov"]);
+      p2 = parse_py_para("val_1", config);
+      p3 = parse_py_para("pr_1", config);
+    } else if (config.contains("sd")) {   // std.dev. and quantile value
+      pid = 3;
+      p1 = parse_function(config["sd"]);
+      p2 = parse_py_para("val_1", config);
+      p3 = parse_py_para("pr_1", config);
+    } else if (config.contains("pr_1")) {   // quantile values
+      pid = 1;
+      p2 = parse_function(config["pr_1"]);
+      p1 = parse_py_para("val_1", config);
+      p3 = parse_py_para("val_2", config);
+      p4 = parse_py_para("pr_2", config);
+    } else {
+      throw FlxException_NeglectInInteractive("RBRV_entry_RV_normal::RBRV_entry_RV_normal_70", "Required parameters to define distribution not found in Python <dict>.");
+    }
+
+    if (config.contains("eval_once")) {
+      try {
+        eval_once = py::cast<bool>(config["eval_once"]);
+      } catch (const py::cast_error &e) {
+        throw FlxException_NeglectInInteractive("RBRV_entry_RV_normal::RBRV_entry_RV_normal_80", "Key 'eval_once' in Python <dict> cannot be cast into type 'bool'.");
+      }
+    }
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_normal::RBRV_entry_RV_normal_99",1);
+    if (p1) delete p1;
+    if (p2) delete p2;
+    if (p3) delete p3;
+    if (p4) delete p4;
+    throw;
+  }
 }
 
 RBRV_entry_RV_normal::~RBRV_entry_RV_normal()

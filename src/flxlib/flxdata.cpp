@@ -15,13 +15,15 @@
  * along with Fesslix.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
+#define fesslix_fxldata_CPP
+
 #include "flxdata.h"
 
 #include <fstream>
 
 using namespace std;
 
-FlxData* FlxDataBase::data = NULL;
+FlxData* FlxDataBase::data = nullptr;
 #if FLX_DEBUG
   int FlxData::Cinst = 0;
   int FlxReadManager::Cinst = 0;
@@ -31,6 +33,14 @@ FlxData* FlxDataBase::data = NULL;
   int FlxOstreamBox::Cinst = 0;
   int FlxIstreamBox::Cinst = 0;
 #endif
+
+FlxReadManager* readManager_ptr = nullptr;
+
+void set_ReadManager(FlxReadManager* readManager_ptr_)
+{
+  readManager_ptr = readManager_ptr_;
+}
+
 
 FlxReadManager::FlxReadManager()
 {
@@ -71,7 +81,7 @@ void FlxReadManager::pop()
   }
 }
 
-FlxFunction* FlxReadManager::parse_function(string funStr)
+FlxFunction* FlxReadManager::parse_function(const std::string& funStr)
 {
   ReadStream* rs = new ReadStream(std::string(funStr));
   push(rs);
@@ -88,6 +98,64 @@ FlxFunction* FlxReadManager::parse_function(string funStr)
   delete rs;
   return value;
 }
+
+FlxFunction * FlxReadManager::parse_function(py::object pyobj)
+{
+  // ==================================================
+  // float
+  // ==================================================
+  if (py::isinstance<py::float_>(pyobj)) {
+    const tdouble val = py::cast<tdouble>(pyobj);
+    return new FlxFunction(new FunNumber(val));
+  }
+  // ==================================================
+  // function
+  // ==================================================
+  if (py::isinstance<py::function>(pyobj)) {
+      try {
+          // Get the function's __code__ object
+          py::object code_obj = pyobj.attr("__code__");
+          int arg_count = code_obj.attr("co_argcount").cast<int>();
+
+          // Check if it takes zero arguments
+          if (arg_count == 0) {
+              py::function pyfunc = py::reinterpret_borrow<py::function>(pyobj);
+              vector< FunBase*>* paraL = new vector< FunBase*>(0);
+              return new FlxFunction(new FunBaseFun_Python("INTERNAL_CALLABLE", pyfunc, paraL));
+          } else {
+              std::ostringstream ssV;
+              ssV << "The parameter is a callable function, but it requires " << arg_count << " parameters.";
+              throw FlxException("FlxReadManager::parse_function_20", ssV.str());
+          }
+      } catch (const py::error_already_set &e) {
+          std::ostringstream ssV;
+          ssV << "Error retrieving function signature: " << e.what();
+          throw FlxException("FlxReadManager::parse_function_29", ssV.str() );
+      }
+  }
+  // ==================================================
+  // string
+  // ==================================================
+  if (py::isinstance<py::str>(pyobj)) {
+    const std::string val = py::cast<std::string>(pyobj);
+    return parse_function(val);
+  }
+  // ==================================================
+  // otherwise
+  // ==================================================
+  throw FlxException("FlxReadManager::parse_function_99", "Unhandled data type of Python object");
+}
+
+FlxFunction * parse_function(const std::string& funStr)
+{
+  return readManager_ptr->parse_function(funStr);
+}
+
+FlxFunction * parse_function(py::object pyobj)
+{
+  return readManager_ptr->parse_function(pyobj);
+}
+
 
 FlxData::FlxData()
 { 

@@ -236,6 +236,24 @@ class FLXLIB_EXPORT FunBaseFun_multPara : public FunBaseFun {
 };
 
 /**
+* @brief The base class for all arithmetic classes of -functions- with multiple parameters.
+*/
+class PYBIND11_EXPORT FLXLIB_EXPORT FunBaseFun_Python : public FunBaseFun_multPara {
+  protected:
+    const std::string pyFunName;
+    py::function pyfunc;
+
+  public:
+    FunBaseFun_Python (const std::string& pyFunName, py::function pyfunc, std::vector<FunBase*> *ParaListV) : FunBaseFun_multPara(ParaListV), pyFunName(pyFunName), pyfunc(pyfunc) {};
+    virtual ~FunBaseFun_Python() {}
+    const tdouble calc();
+    const std::string write_v() { return "pyfun"; }
+    const std::string write();
+    virtual const bool optimize(FunBasePtr& optf, const Fun_OptimizeInfo &foi);
+    virtual const bool evalw() { return false; }
+};
+
+/**
 * @brief arithmetic class: stores a number
 */
 class FLXLIB_EXPORT FunNumber : public FunBase {

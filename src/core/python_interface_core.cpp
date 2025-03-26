@@ -492,6 +492,165 @@ class ModuleCleanup {
 static ModuleCleanup module_cleanup;
 
 // #################################################################################
+// random variables
+// #################################################################################
+
+flxPyRV::flxPyRV(py::dict config)
+: rv_ptr(nullptr)
+{
+    // retrieve type
+        if (config.contains("type")==false) {
+            throw FlxException_NeglectInInteractive("flxPyRV::flxPyRV_01", "Python <dict> does not contain key 'type'.");
+        }
+        if (py::isinstance<py::str>(config["type"])==false) {
+            throw FlxException_NeglectInInteractive("flxPyRV::flxPyRV_02", "Key 'type' in Python <dict> is not of type 'str'.");
+        }
+        const std::string rv_type = config["type"].cast<std::string>();
+    // retrieve name
+        std::string rv_name = "name_unspecified";
+        if (config.contains("name")) {
+            if (py::isinstance<py::str>(config["name"])) {
+                rv_name = config["name"].cast<std::string>();
+            } else {
+                throw FlxException_NeglectInInteractive("flxPyRV::flxPyRV_03", "Key 'name' in Python <dict> is not of type 'str'.");
+            }
+        }
+    // select rbrv-class based on type
+        if (rv_type=="stdn") {
+            rv_ptr = new RBRV_entry_RV_stdN(rv_name,0,config);
+        } else if (rv_type=="normal") {
+            rv_ptr = new RBRV_entry_RV_normal(rv_name,0,config);
+        // } else if (rv_type=="logn") {
+        //     rv_ptr = new RBRV_entry_read_logn(readName,readBrakets);
+        // } else if (rv_type=="uniform") {
+        //     rv_ptr = new RBRV_entry_read_uniform(readName,readBrakets);
+        // } else if (rv_type=="gumbel") {
+        //     rv_ptr = new RBRV_entry_read_Gumbel(readName,readBrakets);
+        // } else if (rv_type=="normal_trunc") {
+        //     rv_ptr = new RBRV_entry_read_normal_trunc(readName,readBrakets);
+        // } else if (rv_type=="beta") {
+        //     rv_ptr = new RBRV_entry_read_beta(readName,readBrakets);
+        // } else if (rv_type=="exponential") {
+        //     rv_ptr = new RBRV_entry_read_exponential(readName,readBrakets);
+        // } else if (rv_type=="gamma") {
+        //     rv_ptr = new RBRV_entry_read_gamma(readName,readBrakets);
+        // } else if (rv_type=="poisson") {
+        //     rv_ptr = new RBRV_entry_read_Poisson(readName,readBrakets);
+        // } else if (rv_type=="binomial") {
+        //     rv_ptr = new RBRV_entry_read_Binomial(readName,readBrakets);
+        // } else if (rv_type=="cauchy") {
+        //     rv_ptr = new RBRV_entry_read_Cauchy(readName,readBrakets);
+        // } else if (rv_type=="weibull") {
+        //     rv_ptr = new RBRV_entry_read_Weibull(readName,readBrakets);
+        // } else if (rv_type=="chisquared") {
+        //     rv_ptr = new RBRV_entry_read_ChiSquared(true,readName,readBrakets);
+        // } else if (rv_type=="chi") {
+        //     rv_ptr = new RBRV_entry_read_ChiSquared(false,readName,readBrakets);
+        // } else if (rv_type=="studentst") {
+        //     rv_ptr = new RBRV_entry_read_StudentsT(readName,readBrakets);
+        // } else if (rv_type=="studentstgen") {
+        //     rv_ptr = new RBRV_entry_read_StudentsT_generalized(readName,readBrakets);
+        // } else if (rv_type=="laplace") {
+        //     rv_ptr = new RBRV_entry_read_Laplace(readName,readBrakets);
+        // } else if (rv_type=="usertransform") {
+        //     rv_ptr = new RBRV_entry_read_UserTransform(readName,readBrakets);
+        // } else if (rv_type=="truncated") {
+        //     rv_ptr = new RBRV_entry_read_Truncated(readName,readBrakets);
+        // } else if (rv_type=="maxmintransform") {
+        //     rv_ptr = new RBRV_entry_read_maxminTransform(readName,readBrakets);
+        // } else if (rv_type=="bayda") {
+        //     rv_ptr = new RBRV_entry_read_bayDA(readName,readBrakets);
+        } else {
+            std::ostringstream ssV;
+            ssV << "Unknown random variable type '" << rv_type << "'.";
+            throw FlxException("flxPyRV::flxPyRV_50", ssV.str() );
+        }
+}
+
+flxPyRV::~flxPyRV()
+{
+    delete rv_ptr;
+}
+
+const std::string flxPyRV::get_type() const
+{
+    return rv_ptr->get_type();
+}
+
+const tdouble flxPyRV::x2y(const tdouble x_val)
+{
+    return rv_ptr->transform_x2y(x_val);
+}
+
+const tdouble flxPyRV::y2x(const tdouble y_val)
+{
+    return rv_ptr->transform_y2x(y_val);
+}
+
+const tdouble flxPyRV::pdf(const tdouble& x_val, const bool safeCalc)
+{
+    return rv_ptr->calc_pdf_x(x_val,safeCalc);
+}
+
+const tdouble flxPyRV::pdf_log(const tdouble& x_val, const bool safeCalc)
+{
+    return rv_ptr->calc_pdf_x_log(x_val,safeCalc);
+}
+
+const tdouble flxPyRV::cdf(const tdouble& x_val, const bool safeCalc)
+{
+    return rv_ptr->calc_cdf_x(x_val,safeCalc);
+}
+
+const tdouble flxPyRV::sf(const tdouble& x_val, const bool safeCalc)
+{
+    return rv_ptr->calc_sf_x(x_val,safeCalc);
+}
+
+const tdouble flxPyRV::entropy()
+{
+    return rv_ptr->calc_entropy();
+}
+
+const tdouble flxPyRV::mean()
+{
+    return rv_ptr->get_mean_current_config();
+}
+
+const tdouble flxPyRV::sd()
+{
+    return rv_ptr->get_sd_current_config();
+}
+
+const tdouble flxPyRV::median()
+{
+    return rv_ptr->get_median_current_config();
+}
+
+const tdouble flxPyRV::mode()
+{
+    return rv_ptr->get_mode_current_config();
+}
+
+const bool flxPyRV::check_x(const tdouble xV)
+{
+    return rv_ptr->check_x(xV);
+}
+
+const tdouble flxPyRV::get_HPD(const tdouble p)
+{
+    return rv_ptr->get_HPD(p);
+}
+
+const std::string flxPyRV::info()
+{
+    std::ostringstream ssV;
+    rv_ptr->info(ssV);
+    return ssV.str();
+}
+
+
+// #################################################################################
 // only for debugging purposes
 // #################################################################################
 
@@ -528,6 +687,27 @@ PYBIND11_MODULE(core, m) {
     // Fesslix Engine
     // ====================================================
         m.def("load_engine", &load_engine, "Load the Fesslix Engine");
+
+    // ====================================================
+    // random variables
+    // ====================================================
+        py::class_<flxPyRV>(m, "rv")
+            .def(py::init<py::dict>())
+            .def("get_type", &flxPyRV::get_type, "get type of random variable")
+            .def("x2y", &flxPyRV::x2y, "transformation from 'original space' to standard normal space")
+            .def("y2x", &flxPyRV::y2x, "transformation from standard normal space into 'original space'")
+            .def("pdf", &flxPyRV::pdf, pybind11::arg("x_val"), pybind11::arg("safeCalc") = true, "evaluates the pdf of the random variable at x_val")
+            .def("pdf_log", &flxPyRV::pdf_log, pybind11::arg("x_val"), pybind11::arg("safeCalc") = true, "evaluates the log-pdf of the random variable at x_val")
+            .def("cdf", &flxPyRV::cdf, pybind11::arg("x_val"), pybind11::arg("safeCalc") = true, "evaluates the cdf of the random variable at x_val")
+            .def("sf", &flxPyRV::sf, pybind11::arg("x_val"), pybind11::arg("safeCalc") = true, "returns the survival function of the random variable; i.e., 1-cdf(x_val)")
+            .def("entropy", &flxPyRV::entropy, "returns the entropy of the random variable")
+            .def("mean", &flxPyRV::mean, "returns the mean of the random variable")
+            .def("sd", &flxPyRV::sd, "returns the standard deviation of the random variable")
+            .def("median", &flxPyRV::median, "returns the median of the random variable")
+            .def("mode", &flxPyRV::mode, "returns the mode of the random variable")
+            .def("check_x", &flxPyRV::check_x, "check if x_val is inside of the valid domain of the random variable")
+            .def("get_HPD", &flxPyRV::get_HPD, "returns the lower quantile value of the HPD (highest probability density) interval of the distribution")
+            .def("info", &flxPyRV::info, "return information about random variable");
 
     // ====================================================
     // only for debugging purposes (TODO remove at some point)

@@ -32,6 +32,9 @@ typedef std::valarray<bool> bVec;
 typedef std::valarray<tuint> iVec;
 typedef std::valarray<tnlong> lVec;
 
+#include <pybind11/pybind11.h>
+namespace py = pybind11;
+
 FLXLIB_EXPORT size_t bVec_NumbTrue(const bVec& bv);
 
 FLXLIB_EXPORT void FlxError(bool errSerious, std::string errnumber, std::string Titel = "", std::string Msg = "");

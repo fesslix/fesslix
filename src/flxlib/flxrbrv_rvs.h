@@ -19,21 +19,23 @@
 
 #include "flxrbrv.h"
 
+FlxFunction* parse_py_para(const std::string& para_name, py::dict config);
 
-class FLXLIB_EXPORT RBRV_entry_RV_normal : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_normal : public RBRV_entry_RV_base {
   protected:
-    const int pid;        // 0: mean,std.dev; 1: quantile value; 2: C.o.V, quantile value; 3: std.dev, quantile value
+    int pid;        // 0: mean,std.dev; 1: quantile value; 2: C.o.V, quantile value; 3: std.dev, quantile value
     FlxFunction* p1;
     FlxFunction* p2;
     FlxFunction* p3;
     FlxFunction* p4;
-    const bool eval_once;
+    bool eval_once;
     tdouble mu;
     tdouble sigma;
     
     void get_paras();
   public:
     RBRV_entry_RV_normal(const std::string& name, const tuint iID, const int pid, FlxFunction* p1v, FlxFunction* p2v, FlxFunction* p3v, FlxFunction* p4v, const bool eval_once);
+    RBRV_entry_RV_normal(const std::string& name, const tuint iID, py::dict config);
     virtual ~RBRV_entry_RV_normal();
     
     const std::string get_type() const { return "normal"; }
@@ -62,9 +64,10 @@ class FLXLIB_EXPORT RBRV_entry_RV_normal : public RBRV_entry_RV_base {
 };
 
 
-class FLXLIB_EXPORT RBRV_entry_RV_stdN : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_stdN : public RBRV_entry_RV_base {
   public:
     RBRV_entry_RV_stdN(const std::string& name, const tuint iID) : RBRV_entry_RV_base(name,iID) {}
+    RBRV_entry_RV_stdN(const std::string& name, const tuint iID, py::dict config) : RBRV_entry_RV_base(name,iID) {}
     virtual ~RBRV_entry_RV_stdN() {}
     
     const std::string get_type() const { return "stdn"; }

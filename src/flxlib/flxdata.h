@@ -44,14 +44,16 @@ class FLXLIB_EXPORT FlxReadManager : public FlxReaderBase2 {
     */
     void pop();
     
-    FlxFunction* parse_function(std::string funStr);
+    FlxFunction* parse_function(const std::string& funStr);
+    FlxFunction* parse_function(py::object pyobj);
     
     static void set_funReader( FlxFunctionReader* funReaderV) {funReader = funReaderV;};
 };
 
 
-
-
+void set_ReadManager(FlxReadManager* readManager_ptr_);
+FlxFunction* parse_function(const std::string& funStr);
+FlxFunction* parse_function(py::object pyobj);
 
 
 /**

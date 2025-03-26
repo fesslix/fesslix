@@ -67,6 +67,7 @@ FesslixMain::FesslixMain() : initialized(false)
   // create readers ...
     funReader = new FlxFunctionReader();
       FlxReadManager::set_funReader(funReader);
+    set_ReadManager(&(dataBox.ReadManager));
   // FlxObjReadLoadLib::AddOnManager = &AddOnManager;
 
   // create the evaluation class

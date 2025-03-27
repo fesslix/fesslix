@@ -565,6 +565,7 @@ flxPyRV::flxPyRV(py::dict config)
             ssV << "Unknown random variable type '" << rv_type << "'.";
             throw FlxException("flxPyRV::flxPyRV_50", ssV.str() );
         }
+    finalize_call();
 }
 
 flxPyRV::~flxPyRV()

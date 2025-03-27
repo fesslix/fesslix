@@ -110,7 +110,7 @@ RBRV_entry_RV_normal::RBRV_entry_RV_normal(const std::string& name, const tuint 
       pid = 0;
       p1 = parse_py_para("mu", config);
       p2 = parse_py_para("sd", config);
-    } else if (config.contains("cov")) {   // // C.o.V. and quantile value
+    } else if (config.contains("cov")) {   // C.o.V. and quantile value
       pid = 2;
       p1 = parse_py_para("cov", config);
       p2 = parse_py_para("val_1", config);
@@ -2453,11 +2453,17 @@ RBRV_entry_RV_StudentsT_generalized::RBRV_entry_RV_StudentsT_generalized(const s
 : RBRV_entry_RV_base(name,iID), pid(0), p1(nullptr), p2(nullptr), p3(nullptr), p4(nullptr), dof(ZERO), loc(ZERO), scale(ZERO)
 {
   try {
-    if (config.contains("dof")) {          // dof, loc, scale
+    if (config.contains("scale")) {          // dof, loc, scale
       pid = 0;
       p1 = parse_py_para("dof", config);
       p2 = parse_py_para("loc", config);
       p3 = parse_py_para("scale", config);
+    } else if (config.contains("pr_1")) {   // dof, loc, val_1, pr_1
+      pid = 1;
+      p1 = parse_py_para("dof", config);
+      p2 = parse_py_para("loc", config);
+      p3 = parse_py_para("val_1", config);
+      p4 = parse_py_para("pr_1", config);
     } else {
       throw FlxException_NeglectInInteractive("RBRV_entry_RV_StudentsT_generalized::RBRV_entry_RV_StudentsT_generalized_01", "Required parameters to define distribution not found in Python <dict>.");
     }
@@ -2479,6 +2485,18 @@ RBRV_entry_RV_StudentsT_generalized::~RBRV_entry_RV_StudentsT_generalized()
   if (p4) delete p4;
 }
 
+tdouble RV_StudentsT_generalized_pid1_root_search_fun(const tdouble scale, void* dp) {
+  // convert data-pointer
+    tdouble *dp_ = (tdouble *)dp;
+    const tdouble dof = dp_[0];
+    const tdouble loc = dp_[1];
+    const tdouble val_1 = dp_[2];
+    const tdouble pr_1 = dp_[3];
+  // evalute function expression for root
+  const tdouble x_ = (val_1-loc)/scale;
+  return (rv_cdf_Studentst(dof,x_) - pr_1)/pr_1;
+}
+
 void RBRV_entry_RV_StudentsT_generalized::get_pars()
 {
   switch (pid)
@@ -2488,8 +2506,32 @@ void RBRV_entry_RV_StudentsT_generalized::get_pars()
       loc = p2->calc();
       scale = p3->cast2positive();
       return;
+    case 1:
+    {
+      // evaluate and prepare parameter values
+        dof = p1->cast2positive();
+        loc = p2->calc();
+        const tdouble val_1 = p3->calc();
+        const tdouble pr_1 = p4->cast2positive();
+        tdouble dp[] = {dof, loc, val_1, pr_1};
+        if (pr_1>=ONE) {
+          throw FlxException("RBRV_entry_RV_StudentsT_generalized::get_pars_10", "A value larger or equal than one is not allowed.");
+        }
+      // find initial guess (for root search)
+        tdouble mu_ = ZERO;
+        tdouble sd_ = ZERO;
+        RBRV_entry_RV_normal::get_para_from_quantile(mu_,sd_,val_1,pr_1,loc,0.5);
+        const tdouble start_ub = sd_;
+        const tdouble start_lb = 0.1*sd_;
+      // perform root search
+        std::ostringstream ssV;
+        GlobalVar.slogcout(1) << start_lb << "  " << start_ub << std::endl;
+        scale = flx_RootSearch_RegulaFalsi(&RV_StudentsT_generalized_pid1_root_search_fun,dp,start_lb,start_ub,1e-6,1e-8,&ssV);  // TODO remove cout after debug
+        GlobalVar.slogcout(1) << ssV.str() << std::endl << std::flush; // TODO
+      return;
+    }
     default:
-      throw FlxException_Crude("RBRV_entry_RV_StudentsT_generalized::get_pars");
+      throw FlxException_Crude("RBRV_entry_RV_StudentsT_generalized::get_pars_99");
   }
 }
 

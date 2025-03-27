@@ -26,7 +26,7 @@ FlxFunction * parse_py_para(const std::string& para_name, py::dict config)
     ssV << "Key '" << para_name << "' not found in Python <dict>.";
     throw FlxException_NeglectInInteractive("parse_py_para_01", ssV.str());
   }
-  return parse_function(config[para_name.c_str()]);
+  return parse_function(config[para_name.c_str()], "parameter '"+para_name+"'");
 }
 
 
@@ -91,21 +91,21 @@ RBRV_entry_RV_normal::RBRV_entry_RV_normal(const std::string& name, const tuint 
   try {
     if (config.contains("mu")) {          // mean, standard deviation
       pid = 0;
-      p1 = parse_function(config["mu"]);
+      p1 = parse_py_para("mu", config);
       p2 = parse_py_para("sd", config);
     } else if (config.contains("cov")) {   // // C.o.V. and quantile value
       pid = 2;
-      p1 = parse_function(config["cov"]);
+      p1 = parse_py_para("cov", config);
       p2 = parse_py_para("val_1", config);
       p3 = parse_py_para("pr_1", config);
     } else if (config.contains("sd")) {   // std.dev. and quantile value
       pid = 3;
-      p1 = parse_function(config["sd"]);
+      p1 = parse_py_para("sd", config);
       p2 = parse_py_para("val_1", config);
       p3 = parse_py_para("pr_1", config);
     } else if (config.contains("pr_1")) {   // quantile values
       pid = 1;
-      p2 = parse_function(config["pr_1"]);
+      p2 = parse_py_para("pr_1", config);
       p1 = parse_py_para("val_1", config);
       p3 = parse_py_para("val_2", config);
       p4 = parse_py_para("pr_2", config);

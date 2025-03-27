@@ -99,15 +99,9 @@ FlxFunction* FlxReadManager::parse_function(const std::string& funStr)
   return value;
 }
 
-FlxFunction * FlxReadManager::parse_function(py::object pyobj)
+FlxFunction * FlxReadManager::parse_function(py::object pyobj, std::string descr)
 {
-  // ==================================================
-  // float
-  // ==================================================
-  if (py::isinstance<py::float_>(pyobj)) {
-    const tdouble val = py::cast<tdouble>(pyobj);
-    return new FlxFunction(new FunNumber(val));
-  }
+  const std::string descr_ = (descr.empty()?"":(" ("+descr+")"));
   // ==================================================
   // function
   // ==================================================
@@ -124,12 +118,12 @@ FlxFunction * FlxReadManager::parse_function(py::object pyobj)
               return new FlxFunction(new FunBaseFun_Python("INTERNAL_CALLABLE", pyfunc, paraL));
           } else {
               std::ostringstream ssV;
-              ssV << "The parameter is a callable function, but it requires " << arg_count << " parameters.";
+              ssV << "The parameter is a callable function, but it requires " << arg_count << " parameters." << descr_;
               throw FlxException("FlxReadManager::parse_function_20", ssV.str());
           }
       } catch (const py::error_already_set &e) {
           std::ostringstream ssV;
-          ssV << "Error retrieving function signature: " << e.what();
+          ssV << "Error retrieving function signature: " << e.what() << descr_;
           throw FlxException("FlxReadManager::parse_function_29", ssV.str() );
       }
   }
@@ -141,9 +135,14 @@ FlxFunction * FlxReadManager::parse_function(py::object pyobj)
     return parse_function(val);
   }
   // ==================================================
-  // otherwise
+  // float
   // ==================================================
-  throw FlxException("FlxReadManager::parse_function_99", "Unhandled data type of Python object");
+    try {
+      const tdouble val = py::cast<tdouble>(pyobj);
+      return new FlxFunction(new FunNumber(val));
+    } catch (const py::cast_error &e) {
+      throw FlxException("FlxReadManager::parse_function_99", "Unhandled data type of Python object " + descr_);
+    }
 }
 
 FlxFunction * parse_function(const std::string& funStr)
@@ -151,9 +150,9 @@ FlxFunction * parse_function(const std::string& funStr)
   return readManager_ptr->parse_function(funStr);
 }
 
-FlxFunction * parse_function(py::object pyobj)
+FlxFunction * parse_function(py::object pyobj, std::string descr)
 {
-  return readManager_ptr->parse_function(pyobj);
+  return readManager_ptr->parse_function(pyobj, descr);
 }
 
 

@@ -89,7 +89,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_stdN : public RBRV_entry_RV_ba
     virtual const tdouble get_HPD(const tdouble p);
 };
 
-class FLXLIB_EXPORT RBRV_entry_RV_lognormal : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_lognormal : public RBRV_entry_RV_base {
   protected:
     const int pid;                // 0:lambda,zeta; 1:mean,sd; 2:mode,sd; 3:median,sd; 4: quantile values; 5: median,C.o.V.; 6: C.o.V,quantile
     FlxFunction* p1;
@@ -126,7 +126,7 @@ class FLXLIB_EXPORT RBRV_entry_RV_lognormal : public RBRV_entry_RV_base {
     const tdouble get_CoeffOfVar_withoutEpsilon();
 };
 
-class FLXLIB_EXPORT RBRV_entry_RV_uniform : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_uniform : public RBRV_entry_RV_base {
   protected:
     FlxFunction* a;
     FlxFunction* b;
@@ -156,7 +156,7 @@ class FLXLIB_EXPORT RBRV_entry_RV_uniform : public RBRV_entry_RV_base {
     const tdouble Inv_cdf_x(const tdouble p);
 };
 
-class FLXLIB_EXPORT RBRV_entry_RV_Gumbel : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Gumbel : public RBRV_entry_RV_base {
   protected:
     const int methID;                // 0: p1=location, p2=scale; 1: p1=mean and p2=sd; 2: P(p1)=p2, P(p3)=p4
     FlxFunction* p1;
@@ -188,7 +188,7 @@ class FLXLIB_EXPORT RBRV_entry_RV_Gumbel : public RBRV_entry_RV_base {
     virtual void info(std::ostream& os);
 };
 
-class FLXLIB_EXPORT RBRV_entry_RV_normal_trunc : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_normal_trunc : public RBRV_entry_RV_base {
   protected:
     FlxFunction* m;
     FlxFunction* s;
@@ -223,7 +223,7 @@ class FLXLIB_EXPORT RBRV_entry_RV_normal_trunc : public RBRV_entry_RV_base {
     virtual void info(std::ostream& os);
 };
 
-class FLXLIB_EXPORT RBRV_entry_RV_beta : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_beta : public RBRV_entry_RV_base {
   protected:
     const bool is_mean;                // true if p1=mean and p2=sd
     FlxFunction* p1;
@@ -260,7 +260,7 @@ class FLXLIB_EXPORT RBRV_entry_RV_beta : public RBRV_entry_RV_base {
     const tdouble Inv_cdf_x(const tdouble p);
 };
 
-class FLXLIB_EXPORT RBRV_entry_RV_exponential : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_exponential : public RBRV_entry_RV_base {
   protected:
     FlxFunction* lambda;
     FlxFunction* epsilon;
@@ -286,7 +286,7 @@ class FLXLIB_EXPORT RBRV_entry_RV_exponential : public RBRV_entry_RV_base {
     virtual void info(std::ostream& os);
 };
 
-class FLXLIB_EXPORT RBRV_entry_RV_gamma : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_gamma : public RBRV_entry_RV_base {
   protected:
     const bool is_mean;                // true if p1=mean and p2=sd
     FlxFunction* p1;
@@ -319,7 +319,7 @@ class FLXLIB_EXPORT RBRV_entry_RV_gamma : public RBRV_entry_RV_base {
     virtual void info(std::ostream& os);
 };
 
-class FLXLIB_EXPORT RBRV_entry_RV_Poisson : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Poisson : public RBRV_entry_RV_base {
   protected:
     FlxFunction* mean;
   public:
@@ -336,7 +336,7 @@ class FLXLIB_EXPORT RBRV_entry_RV_Poisson : public RBRV_entry_RV_base {
     virtual const bool search_circref(FlxFunction* fcr);
 };
 
-class FLXLIB_EXPORT RBRV_entry_RV_Binomial : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Binomial : public RBRV_entry_RV_base {
   protected:
     FlxFunction* p;
     FlxFunction* N;
@@ -358,7 +358,7 @@ class FLXLIB_EXPORT RBRV_entry_RV_Binomial : public RBRV_entry_RV_base {
     virtual const bool search_circref(FlxFunction* fcr);
 };
 
-class FLXLIB_EXPORT RBRV_entry_RV_Cauchy : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Cauchy : public RBRV_entry_RV_base {
   protected:
     FlxFunction* loc;
     FlxFunction* scale;
@@ -381,7 +381,7 @@ class FLXLIB_EXPORT RBRV_entry_RV_Cauchy : public RBRV_entry_RV_base {
     virtual const bool search_circref(FlxFunction* fcr);
 };
 
-class FLXLIB_EXPORT RBRV_entry_RV_Weibull : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Weibull : public RBRV_entry_RV_base {
   protected:
     const bool is_mean;                // true if p1=mean and p2=sd
     FlxFunction* p1;
@@ -418,7 +418,7 @@ class FLXLIB_EXPORT RBRV_entry_RV_Weibull : public RBRV_entry_RV_base {
     
 };
 
-class FLXLIB_EXPORT RBRV_entry_RV_ChiSquared : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_ChiSquared : public RBRV_entry_RV_base {
   protected:
     FlxFunction* p1;
     const bool eval_once;
@@ -445,7 +445,7 @@ class FLXLIB_EXPORT RBRV_entry_RV_ChiSquared : public RBRV_entry_RV_base {
     virtual const bool search_circref(FlxFunction* fcr);
 };
 
-class FLXLIB_EXPORT RBRV_entry_RV_Chi : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Chi : public RBRV_entry_RV_base {
   protected:
     FlxFunction* p1;
     const bool eval_once;
@@ -473,15 +473,16 @@ class FLXLIB_EXPORT RBRV_entry_RV_Chi : public RBRV_entry_RV_base {
 };
 
 
-class FLXLIB_EXPORT RBRV_entry_RV_StudentsT : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_StudentsT : public RBRV_entry_RV_base {
   protected:
     FlxFunction* p1;
-    const bool eval_once;
+    bool eval_once;
     tdouble dof;
     
     void get_pars();
   public:
     RBRV_entry_RV_StudentsT(const std::string& name, const tuint iID, FlxFunction* p1, const bool eval_once) : RBRV_entry_RV_base(name,iID), p1(p1), eval_once(eval_once) {}
+    RBRV_entry_RV_StudentsT(const std::string& name, const tuint iID, py::dict config);
     ~RBRV_entry_RV_StudentsT();
 
     const std::string get_type() const { return "studentst"; }
@@ -499,7 +500,7 @@ class FLXLIB_EXPORT RBRV_entry_RV_StudentsT : public RBRV_entry_RV_base {
     virtual const tdouble get_HPD(const tdouble p);
 };
 
-class FLXLIB_EXPORT RBRV_entry_RV_StudentsT_generalized : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_StudentsT_generalized : public RBRV_entry_RV_base {
   protected:
     FlxFunction* nu;
     FlxFunction* locf;
@@ -511,6 +512,7 @@ class FLXLIB_EXPORT RBRV_entry_RV_StudentsT_generalized : public RBRV_entry_RV_b
     void get_pars();
   public:
     RBRV_entry_RV_StudentsT_generalized(const std::string& name, const tuint iID, FlxFunction* nu, FlxFunction* locf, FlxFunction* scalef);
+    RBRV_entry_RV_StudentsT_generalized(const std::string& name, const tuint iID, py::dict config);
     ~RBRV_entry_RV_StudentsT_generalized();
 
     const std::string get_type() const { return "studentstgen"; }
@@ -528,7 +530,7 @@ class FLXLIB_EXPORT RBRV_entry_RV_StudentsT_generalized : public RBRV_entry_RV_b
     virtual const tdouble get_HPD(const tdouble p);
 };
 
-class FLXLIB_EXPORT RBRV_entry_RV_Laplace : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Laplace : public RBRV_entry_RV_base {
   protected:
     FlxFunction* locf;
     FlxFunction* scalef;
@@ -557,7 +559,7 @@ class FLXLIB_EXPORT RBRV_entry_RV_Laplace : public RBRV_entry_RV_base {
     virtual const tdouble get_HPD(const tdouble p);
 };
 
-class FLXLIB_EXPORT RBRV_entry_RV_UserTransform : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_UserTransform : public RBRV_entry_RV_base {
   protected:
     const bool is_z2x;
     FlxFunction* t1;                   // z2x or y2z
@@ -592,7 +594,7 @@ class FLXLIB_EXPORT RBRV_entry_RV_UserTransform : public RBRV_entry_RV_base {
 };
 
 
-class FLXLIB_EXPORT RBRV_entry_RV_Truncated : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Truncated : public RBRV_entry_RV_base {
   protected:
     FlxFunction* a;
     FlxFunction* b;
@@ -622,7 +624,7 @@ class FLXLIB_EXPORT RBRV_entry_RV_Truncated : public RBRV_entry_RV_base {
 };
 
 
-class FLXLIB_EXPORT RBRV_entry_RV_maxminTransform : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_maxminTransform : public RBRV_entry_RV_base {
   protected:
     const bool is_max;
     FlxFunction* n;                   // number of independent observations

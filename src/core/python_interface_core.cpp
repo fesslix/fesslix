@@ -546,10 +546,10 @@ flxPyRV::flxPyRV(py::dict config)
         //     rv_ptr = new RBRV_entry_read_ChiSquared(true,readName,readBrakets);
         // } else if (rv_type=="chi") {
         //     rv_ptr = new RBRV_entry_read_ChiSquared(false,readName,readBrakets);
-        // } else if (rv_type=="studentst") {
-        //     rv_ptr = new RBRV_entry_read_StudentsT(readName,readBrakets);
-        // } else if (rv_type=="studentstgen") {
-        //     rv_ptr = new RBRV_entry_read_StudentsT_generalized(readName,readBrakets);
+        } else if (rv_type=="studentst") {
+            rv_ptr = new RBRV_entry_RV_StudentsT(rv_name,0,config);
+        } else if (rv_type=="studentstgen") {
+            rv_ptr = new RBRV_entry_RV_StudentsT_generalized(rv_name,0,config);
         // } else if (rv_type=="laplace") {
         //     rv_ptr = new RBRV_entry_read_Laplace(readName,readBrakets);
         // } else if (rv_type=="usertransform") {

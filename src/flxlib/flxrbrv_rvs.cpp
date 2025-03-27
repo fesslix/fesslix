@@ -2353,6 +2353,21 @@ const bool RBRV_entry_RV_Chi::search_circref(FlxFunction* fcr)
 }
 
 
+
+RBRV_entry_RV_StudentsT::RBRV_entry_RV_StudentsT(const std::string& name, const tuint iID, py::dict config)
+: RBRV_entry_RV_base(name,iID), p1(nullptr), eval_once(false)
+{
+  try {
+    p1 = parse_py_para("dof", config);
+
+    eval_once = parse_py_para_as_bool("eval_once", config, false, false);
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_StudentsT::RBRV_entry_RV_StudentsT_99",1);
+    if (p1) delete p1;
+    throw;
+  }
+}
+
 RBRV_entry_RV_StudentsT::~RBRV_entry_RV_StudentsT()
 {
   if (p1) delete p1;
@@ -2432,6 +2447,26 @@ RBRV_entry_RV_StudentsT_generalized::RBRV_entry_RV_StudentsT_generalized(const s
 :RBRV_entry_RV_base(name,iID), nu(nu),locf(locf),scalef(scalef), dof(ZERO), loc(ZERO), scale(ZERO)
 {
 
+}
+
+RBRV_entry_RV_StudentsT_generalized::RBRV_entry_RV_StudentsT_generalized(const std::string& name, const tuint iID, py::dict config)
+: RBRV_entry_RV_base(name,iID), nu(nullptr), locf(nullptr), scalef(nullptr), dof(ZERO), loc(ZERO), scale(ZERO)
+{
+  try {
+    if (config.contains("dof")) {          // dof, loc, scale
+      nu = parse_py_para("dof", config);
+      locf = parse_py_para("loc", config);
+      scalef = parse_py_para("scale", config);
+    } else {
+      throw FlxException_NeglectInInteractive("RBRV_entry_RV_StudentsT_generalized::RBRV_entry_RV_StudentsT_generalized_01", "Required parameters to define distribution not found in Python <dict>.");
+    }
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_StudentsT_generalized::RBRV_entry_RV_StudentsT_generalized_99",1);
+    if (nu) delete nu;
+    if (locf) delete locf;
+    if (scalef) delete scalef;
+    throw;
+  }
 }
 
 RBRV_entry_RV_StudentsT_generalized::~RBRV_entry_RV_StudentsT_generalized()

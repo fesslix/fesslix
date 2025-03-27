@@ -132,11 +132,13 @@ void RBRV_entry::print(std::ostream& sout, const std::string prelim, tuint& coun
   sout << std::endl;
 }
 
-void RBRV_entry::info(std::ostream& os)
+py::dict RBRV_entry::info()
 {
-  throw FlxException_NeglectInInteractive("RBRV_entry::info");
+  py::dict res;
+  res["type"] = get_type();
+  res["name"] = name;
+  return res;
 }
-
 
 RBRV_entry_fun::RBRV_entry_fun(const std::string& name, FlxFunction* fun)
  : RBRV_entry(name), fun(fun)

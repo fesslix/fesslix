@@ -997,7 +997,7 @@ FlxObjBase* FlxObjReadRBRV_print::read() {
 
 void FlxObjRBRV_info::task()
 {
-  rep->info(sout());
+  throw FlxException_NotImplemented("FlxObjRBRV_info::task");
 }
 
 FlxObjBase* FlxObjReadRBRV_info::read()

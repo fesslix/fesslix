@@ -53,7 +53,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_normal : public RBRV_entry_RV_
     virtual const tdouble get_mode_current_config() { return get_mean_current_config(); }
     virtual const bool check_x(const tdouble xV) { return true; }
     virtual const bool search_circref(FlxFunction* fcr);
-    virtual void info(std::ostream& os);
+    virtual py::dict info();
     virtual const tdouble get_HPD(const tdouble p);
     
     // compute distribution based on two given quantile values
@@ -85,7 +85,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_stdN : public RBRV_entry_RV_ba
     virtual const tdouble get_mode_current_config() { return get_mean_current_config(); }
     virtual const bool check_x(const tdouble xV) { return true; }
     virtual const bool search_circref(FlxFunction* fcr) { return false; }
-    virtual void info(std::ostream& os);
+    virtual py::dict info();
     virtual const tdouble get_HPD(const tdouble p);
 };
 
@@ -122,7 +122,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_lognormal : public RBRV_entry_
     virtual const tdouble get_mode_current_config();
     virtual const bool check_x(const tdouble xV);
     virtual const bool search_circref(FlxFunction* fcr);
-    virtual void info(std::ostream& os);
+    virtual py::dict info();
     
     const tdouble get_CoeffOfVar_withoutEpsilon();
 };
@@ -186,7 +186,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Gumbel : public RBRV_entry_RV_
     virtual const tdouble get_mode_current_config();
     virtual const bool check_x(const tdouble xV) { return true; }
     virtual const bool search_circref(FlxFunction* fcr);
-    virtual void info(std::ostream& os);
+    virtual py::dict info();
 };
 
 class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_normal_trunc : public RBRV_entry_RV_base {
@@ -221,7 +221,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_normal_trunc : public RBRV_ent
     virtual const tdouble get_mode_current_config();
     virtual const bool check_x(const tdouble xV);
     virtual const bool search_circref(FlxFunction* fcr);
-    virtual void info(std::ostream& os);
+    virtual py::dict info();
 };
 
 class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_beta : public RBRV_entry_RV_base {
@@ -256,7 +256,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_beta : public RBRV_entry_RV_ba
     virtual const tdouble get_mode_current_config();
     virtual const bool check_x(const tdouble xV);
     virtual const bool search_circref(FlxFunction* fcr);
-    virtual void info(std::ostream& os);
+    virtual py::dict info();
     
     const tdouble Inv_cdf_x(const tdouble p);
 };
@@ -284,7 +284,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_exponential : public RBRV_entr
     virtual const tdouble get_mode_current_config();
     virtual const bool check_x(const tdouble xV);
     virtual const bool search_circref(FlxFunction* fcr);
-    virtual void info(std::ostream& os);
+    virtual py::dict info();
 };
 
 class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_gamma : public RBRV_entry_RV_base {
@@ -317,7 +317,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_gamma : public RBRV_entry_RV_b
     virtual const tdouble get_mode_current_config();
     virtual const bool check_x(const tdouble xV);
     virtual const bool search_circref(FlxFunction* fcr);
-    virtual void info(std::ostream& os);
+    virtual py::dict info();
 };
 
 class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Poisson : public RBRV_entry_RV_base {
@@ -415,7 +415,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Weibull : public RBRV_entry_RV
     virtual const tdouble get_mode_current_config();
     virtual const bool check_x(const tdouble xV);
     virtual const bool search_circref(FlxFunction* fcr);
-    virtual void info(std::ostream& os);
+    virtual py::dict info();
     
 };
 
@@ -499,7 +499,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_StudentsT : public RBRV_entry_
     virtual const bool check_x(const tdouble xV) { return true; }
     virtual const bool search_circref(FlxFunction* fcr);
     virtual const tdouble get_HPD(const tdouble p);
-    virtual void info(std::ostream& os);
+    virtual py::dict info();
 };
 
 class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_StudentsT_generalized : public RBRV_entry_RV_base {
@@ -532,7 +532,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_StudentsT_generalized : public
     virtual const bool check_x(const tdouble xV) { return true; }
     virtual const bool search_circref(FlxFunction* fcr);
     virtual const tdouble get_HPD(const tdouble p);
-    virtual void info(std::ostream& os);
+    virtual py::dict info();
 };
 
 class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Laplace : public RBRV_entry_RV_base {
@@ -594,7 +594,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_UserTransform : public RBRV_en
     virtual const tdouble get_sd_current_config();
     virtual const bool check_x(const tdouble xV);
     virtual const bool search_circref(FlxFunction* fcr);
-    virtual void info(std::ostream& os);
+    virtual py::dict info();
     void replace_rv_z(RBRV_entry_RV_base* rv_z_);
 };
 
@@ -625,7 +625,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Truncated : public RBRV_entry_
     virtual const tdouble get_sd_current_config();
     virtual const bool check_x(const tdouble xV);
     virtual const bool search_circref(FlxFunction* fcr);
-    virtual void info(std::ostream& os);
+    virtual py::dict info();
 };
 
 

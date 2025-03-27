@@ -649,11 +649,9 @@ const tdouble flxPyRV::get_HPD(const tdouble p)
     return rv_ptr->get_HPD(p);
 }
 
-const std::string flxPyRV::info()
+py::dict flxPyRV::info()
 {
-    std::ostringstream ssV;
-    rv_ptr->info(ssV);
-    return ssV.str();
+    return rv_ptr->info();
 }
 
 

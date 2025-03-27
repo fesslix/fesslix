@@ -22,7 +22,7 @@
 
 class RBRV_set;
 
-class FLXLIB_EXPORT RBRV_entry {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry {
   protected:
     #if FLX_DEBUG
       bool valid;                // true, if value has been set
@@ -72,10 +72,10 @@ class FLXLIB_EXPORT RBRV_entry {
     virtual const bool search_circref(FlxFunction* fcr) = 0;
     
     void print(std::ostream& sout, const std::string prelim, tuint& counter, const bool printID);      
-    virtual void info(std::ostream& os);
+    virtual py::dict info();
 };
 
-class FLXLIB_EXPORT RBRV_entry_fun : public RBRV_entry {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_fun : public RBRV_entry {
   protected:
     FlxFunction* fun;
     
@@ -94,7 +94,7 @@ class FLXLIB_EXPORT RBRV_entry_fun : public RBRV_entry {
     virtual const bool search_circref(FlxFunction* fcr) { return fun->search_circref(fcr); }
 };
 
-class FLXLIB_EXPORT RBRV_entry_RV_base : public RBRV_entry {
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_base : public RBRV_entry {
   protected:
     const tuint iID;        // the ID of the RV in the set
     // correlation with a single RBRV in the set (IF allowed)

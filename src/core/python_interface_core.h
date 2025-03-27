@@ -159,7 +159,7 @@ class flxPyRV {
     const tdouble mode();
     const bool check_x(const tdouble xV);
     const tdouble get_HPD(const tdouble p);
-    const std::string info();
+    py::dict info();
 };
 
 

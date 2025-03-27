@@ -86,12 +86,13 @@ const tdouble RBRV_entry_RV_stdN::calc_entropy()
   return log(2*PI*exp(ONE))/2;
 }
 
-void RBRV_entry_RV_stdN::info(std::ostream& os)
+py::dict RBRV_entry_RV_stdN::info()
 {
-  os << "standard Normal distribution" << std::endl;
-  os << "  mean    = " << GlobalVar.Double2String(get_mean_current_config()) << std::endl;
-  os << "  std.dev = " << GlobalVar.Double2String(get_sd_current_config()) << std::endl;
-  os << "  entropy = " << GlobalVar.Double2String(calc_entropy()) << std::endl;
+  py::dict res = RBRV_entry_RV_base::info();
+  res["mean"] = get_mean_current_config();
+  res["sd"] = get_sd_current_config();
+  res["entropy"] = calc_entropy();
+  return res;
 }
 
 const tdouble RBRV_entry_RV_stdN::get_HPD(const tdouble p)
@@ -319,13 +320,14 @@ const bool RBRV_entry_RV_normal::search_circref(FlxFunction* fcr)
   return b || p1->search_circref(fcr) || p2->search_circref(fcr) || (p3?(p3->search_circref(fcr)):false) || (p4?(p4->search_circref(fcr)):false);
 }
 
-void RBRV_entry_RV_normal::info(std::ostream& os)
+py::dict RBRV_entry_RV_normal::info()
 {
+  py::dict res = RBRV_entry_RV_base::info();
   get_paras();
-  os << "Normal distribution" << std::endl;
-  os << "  mean    = " << GlobalVar.Double2String(get_mean_current_config()) << std::endl;
-  os << "  std.dev = " << GlobalVar.Double2String(get_sd_current_config()) << std::endl;
-  os << "  entropy = " << GlobalVar.Double2String(calc_entropy()) << std::endl;
+  res["mean"] = get_mean_current_config();
+  res["sd"] = get_sd_current_config();
+  res["entropy"] = calc_entropy();
+  return res;
 }
 
 const tdouble RBRV_entry_RV_normal::get_HPD(const tdouble p)
@@ -634,16 +636,17 @@ const bool RBRV_entry_RV_lognormal::search_circref(FlxFunction* fcr)
   return b || (p1?(p1->search_circref(fcr)):false) || (p2?(p2->search_circref(fcr)):false) || (p3?(p3->search_circref(fcr)):false) || (p4?(p4->search_circref(fcr)):false) || (epsilon?(epsilon->search_circref(fcr)):false);
 }
 
-void RBRV_entry_RV_lognormal::info(std::ostream& os)
+py::dict RBRV_entry_RV_lognormal::info()
 {
+  py::dict res = RBRV_entry_RV_base::info();
   get_paras();
-  os << "log-Normal distribution" << std::endl;
-  os << "  lambda  = " << GlobalVar.Double2String(lambda) << std::endl;
-  os << "  zeta    = " << GlobalVar.Double2String(zeta) << std::endl;
-  os << "  epsilon = " << GlobalVar.Double2String(eps) << std::endl;
-  os << "  mean    = " << GlobalVar.Double2String(get_mean_current_config()) << std::endl;
-  os << "  std.dev = " << GlobalVar.Double2String(get_sd_current_config()) << std::endl;
-  os << "  entropy = " << GlobalVar.Double2String(calc_entropy()) << std::endl;
+  res["lambda"] = lambda;
+  res["zeta"] = zeta;
+  res["epsilon"] = eps;
+  res["mean"] = get_mean_current_config();
+  res["sd"] = get_sd_current_config();
+  res["entropy"] = calc_entropy();
+  return res;
 }
 
 const tdouble RBRV_entry_RV_lognormal::get_CoeffOfVar_withoutEpsilon()
@@ -939,15 +942,16 @@ const bool RBRV_entry_RV_Gumbel::search_circref(FlxFunction* fcr)
   return b || (p1?(p1->search_circref(fcr)):false) || (p2?(p2->search_circref(fcr)):false) || (p3?(p3->search_circref(fcr)):false) || (p4?(p4->search_circref(fcr)):false);
 }
 
-void RBRV_entry_RV_Gumbel::info(std::ostream& os)
+py::dict RBRV_entry_RV_Gumbel::info()
 {
+  py::dict res = RBRV_entry_RV_base::info();
   get_pars();
-  os << "Gumbel distribution" << std::endl;
-  os << "  u       = " << GlobalVar.Double2String(u) << std::endl;
-  os << "  alpha   = " << GlobalVar.Double2String(alpha) << std::endl;
-  os << "  mean    = " << GlobalVar.Double2String(get_mean_current_config()) << std::endl;
-  os << "  std.dev = " << GlobalVar.Double2String(get_sd_current_config()) << std::endl;
-  os << "  entropy = " << GlobalVar.Double2String(calc_entropy()) << std::endl;
+  res["u"] = u;
+  res["alpha"] = alpha;
+  res["mean"] = get_mean_current_config();
+  res["sd"] = get_sd_current_config();
+  res["entropy"] = calc_entropy();
+  return res;
 }
 
 RBRV_entry_RV_normal_trunc::~RBRV_entry_RV_normal_trunc()
@@ -1131,17 +1135,18 @@ const bool RBRV_entry_RV_normal_trunc::search_circref(FlxFunction* fcr)
   return bb || (m?(m->search_circref(fcr)):false) || (s?(s->search_circref(fcr)):false) || (a?(a->search_circref(fcr)):false) || (b?(b->search_circref(fcr)):false);
 }
 
-void RBRV_entry_RV_normal_trunc::info(std::ostream& os)
+py::dict RBRV_entry_RV_normal_trunc::info()
 {
+  py::dict res = RBRV_entry_RV_base::info();
   get_pars();
-  os << "truncated-Normal distribution" << std::endl;
-  os << "  m       = " << GlobalVar.Double2String(mV) << std::endl;
-  os << "  s       = " << GlobalVar.Double2String(sV) << std::endl;
-  os << "  a       = " << GlobalVar.Double2String(aV) << std::endl;
-  os << "  b       = " << GlobalVar.Double2String(bV) << std::endl;
-  os << "  alpha   = " << GlobalVar.Double2String(alpha) << std::endl;
-  os << "  beta    = " << GlobalVar.Double2String(beta) << std::endl;
-  os << "  q       = " << GlobalVar.Double2String(q) << std::endl;
+  res["m"] = mV;
+  res["s"] = sV;
+  res["a"] = aV;
+  res["b"] = bV;
+  res["alpha"] = alpha;
+  res["beta"] = beta;
+  res["q"] = q;
+  return res;
 }
 
 RBRV_entry_RV_beta::~RBRV_entry_RV_beta()
@@ -1328,17 +1333,18 @@ const bool RBRV_entry_RV_beta::search_circref(FlxFunction* fcr)
   return bb || (p1?(p1->search_circref(fcr)):false) || (p2?(p2->search_circref(fcr)):false) || (a?(a->search_circref(fcr)):false) || (b?(b->search_circref(fcr)):false);
 }
 
-void RBRV_entry_RV_beta::info(std::ostream& os)
+py::dict RBRV_entry_RV_beta::info()
 {
+  py::dict res = RBRV_entry_RV_base::info();
   get_pars();
-  os << "beta distribution" << std::endl;
-  os << "  alpha   = " << GlobalVar.Double2String(alpha) << std::endl;
-  os << "  beta    = " << GlobalVar.Double2String(beta) << std::endl;
-  os << "  a       = " << GlobalVar.Double2String(av) << std::endl;
-  os << "  b       = " << GlobalVar.Double2String(bv) << std::endl;
-  os << "  mean    = " << GlobalVar.Double2String(get_mean_current_config()) << std::endl;
-  os << "  std.dev = " << GlobalVar.Double2String(get_sd_current_config()) << std::endl;
-  os << "  entropy = " << GlobalVar.Double2String(calc_entropy()) << std::endl;
+  res["alpha"] = alpha;
+  res["beta"] = beta;
+  res["a"] = av;
+  res["b"] = bv;
+  res["mean"] = get_mean_current_config();
+  res["sd"] = get_sd_current_config();
+  res["entropy"] = calc_entropy();
+  return res;
 }
 
 const tdouble RBRV_entry_RV_beta::Inv_cdf_x(const tdouble p)
@@ -1469,15 +1475,16 @@ const bool RBRV_entry_RV_exponential::search_circref(FlxFunction* fcr)
   return b || (lambda?(lambda->search_circref(fcr)):false) || (epsilon?(epsilon->search_circref(fcr)):false);
 }
 
-void RBRV_entry_RV_exponential::info(std::ostream& os)
+py::dict RBRV_entry_RV_exponential::info()
 {
+  py::dict res = RBRV_entry_RV_base::info();
+  res["lambda"] = lambda->calc();
   const tdouble eps = (epsilon?(epsilon->calc()):ZERO);
-  os << "exponential distribution" << std::endl;
-  os << "  lambda  = " << GlobalVar.Double2String(lambda->calc()) << std::endl;
-  os << "  epsilon = " << GlobalVar.Double2String(eps) << std::endl;
-  os << "  mean    = " << GlobalVar.Double2String(get_mean_current_config()) << std::endl;
-  os << "  std.dev = " << GlobalVar.Double2String(get_sd_current_config()) << std::endl;
-  os << "  entropy = " << GlobalVar.Double2String(calc_entropy()) << std::endl;
+  res["epsilon"] = eps;
+  res["mean"] = get_mean_current_config();
+  res["sd"] = get_sd_current_config();
+  res["entropy"] = calc_entropy();
+  return res;
 }
 
 
@@ -1651,16 +1658,17 @@ const bool RBRV_entry_RV_gamma::search_circref(FlxFunction* fcr)
   return b || (p1?(p1->search_circref(fcr)):false) || (p2?(p2->search_circref(fcr)):false) || (epsilon?(epsilon->search_circref(fcr)):false);
 }
 
-void RBRV_entry_RV_gamma::info(std::ostream& os)
+py::dict RBRV_entry_RV_gamma::info()
 {
+  py::dict res = RBRV_entry_RV_base::info();
   get_pars();
-  os << "Gamma distribution" << std::endl;
-  os << "  k       = " << GlobalVar.Double2String(k) << std::endl;
-  os << "  lambda  = " << GlobalVar.Double2String(lambda) << std::endl;
-  os << "  epsilon = " << GlobalVar.Double2String(eps) << std::endl;
-  os << "  mean    = " << GlobalVar.Double2String(get_mean_current_config()) << std::endl;
-  os << "  std.dev = " << GlobalVar.Double2String(get_sd_current_config()) << std::endl;
-  os << "  entropy = " << GlobalVar.Double2String(calc_entropy()) << std::endl;
+  res["k"] = k;
+  res["lambda"] = lambda;
+  res["epsilon"] = eps;
+  res["mean"] = get_mean_current_config();
+  res["sd"] = get_sd_current_config();
+  res["entropy"] = calc_entropy();
+  return res;
 }
 
 
@@ -2060,16 +2068,17 @@ const bool RBRV_entry_RV_Weibull::search_circref(FlxFunction* fcr)
   return b || (p1?(p1->search_circref(fcr)):false) || (p2?(p2->search_circref(fcr)):false) || (epsilon?(epsilon->search_circref(fcr)):false);
 }
 
-void RBRV_entry_RV_Weibull::info(std::ostream& os)
+py::dict RBRV_entry_RV_Weibull::info()
 {
+  py::dict res = RBRV_entry_RV_base::info();
   get_pars();
-  os << "Weibull distribution" << std::endl;
-  os << "  k       = " << GlobalVar.Double2String(k) << std::endl;
-  os << "  lambda  = " << GlobalVar.Double2String(lambda) << std::endl;
-  os << "  epsilon = " << GlobalVar.Double2String(eps) << std::endl;
-  os << "  mean    = " << GlobalVar.Double2String(get_mean_current_config()) << std::endl;
-  os << "  std.dev = " << GlobalVar.Double2String(get_sd_current_config()) << std::endl;
-  os << "  entropy = " << GlobalVar.Double2String(calc_entropy()) << std::endl;
+  res["k"] = k;
+  res["lambda"] = lambda;
+  res["epsilon"] = eps;
+  res["mean"] = get_mean_current_config();
+  res["sd"] = get_sd_current_config();
+  res["entropy"] = calc_entropy();
+  return res;
 }
 
 const tdouble RBRV_entry_RV_Weibull::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
@@ -2503,13 +2512,14 @@ const tdouble RBRV_entry_RV_StudentsT::get_HPD(const tdouble p)
   return (ONE-p)/2;
 }
 
-void RBRV_entry_RV_StudentsT::info(std::ostream& os)
+py::dict RBRV_entry_RV_StudentsT::info()
 {
+  py::dict res = RBRV_entry_RV_base::info();
   get_pars();
-  os << "Student's t-distribution" << std::endl;
-  os << "  dof     = " << GlobalVar.Double2String(dof) << std::endl;
-  os << "  mean    = " << GlobalVar.Double2String(get_mean_current_config()) << std::endl;
-  os << "  std.dev = " << GlobalVar.Double2String(get_sd_current_config()) << std::endl;
+  res["dof"] = dof;
+  res["mean"] = get_mean_current_config();
+  res["sd"] = get_sd_current_config();
+  return res;
 }
 
 
@@ -2686,14 +2696,15 @@ const tdouble RBRV_entry_RV_StudentsT_generalized::get_HPD(const tdouble p)
   return (ONE-p)/2;
 }
 
-void RBRV_entry_RV_StudentsT_generalized::info(std::ostream& os)
+py::dict RBRV_entry_RV_StudentsT_generalized::info()
 {
+  py::dict res = RBRV_entry_RV_base::info();
   get_pars();
-  os << "generalized Student's t-distribution" << std::endl;
-  os << "  dof     = " << GlobalVar.Double2String(dof) << std::endl;
-  os << "  loc     = " << GlobalVar.Double2String(loc) << std::endl;
-  os << "  scale   = " << GlobalVar.Double2String(scale) << std::endl;
-  os << "  std.dev = " << GlobalVar.Double2String(get_sd_current_config()) << std::endl;
+  res["dof"] = dof;
+  res["loc"] = loc;
+  res["scale"] = scale;
+  res["sd"] = get_sd_current_config();
+  return res;
 }
 
 
@@ -2997,20 +3008,17 @@ const bool RBRV_entry_RV_UserTransform::search_circref(FlxFunction* fcr)
   return b || (t1?(t1->search_circref(fcr)):false) || (t2?(t2->search_circref(fcr)):false) || rv_z->search_circref(fcr);
 }
 
-void RBRV_entry_RV_UserTransform::info(std::ostream& os)
+py::dict RBRV_entry_RV_UserTransform::info()
 {
-  os << "user-transform distribution" << std::endl;
+  py::dict res = RBRV_entry_RV_base::info();
   if (is_z2x) {
-    if (t1)      { os << "  z2x     = " << t1->write() << std::endl; }
-    if (t2)      { os << "  x2z     = " << t2->write() << std::endl; }
-    if (dh)      { os << "  dx2z    = " << dh->write() << std::endl; }
-    //if (checkXf) { os << "  checkx  = " << checkXf->write() << std::endl; }
-    os << "  Distribution of Z (" << rv_z->get_type() << "):" << std::endl;
-    rv_z->info(os);
-  } else {
-    throw FlxException_NotImplemented("RBRV_entry_RV_UserTransform::info");
+    res["z2x"] = t1->write();
+    res["x2z"] = t2->write();
+    res["dx2z"] = dh->write();
+    res["sd"] = get_sd_current_config();
+    res["rv_z"] = rv_z->info();
   }
-
+  return res;
 }
 
 void RBRV_entry_RV_UserTransform::replace_rv_z(RBRV_entry_RV_base* rv_z_)
@@ -3142,16 +3150,16 @@ const bool RBRV_entry_RV_Truncated::search_circref(FlxFunction* fcr)
   return bb || (a?(a->search_circref(fcr)):false) || (b?(b->search_circref(fcr)):false) || rv_z->search_circref(fcr);
 }
 
-void RBRV_entry_RV_Truncated::info(std::ostream& os)
+py::dict RBRV_entry_RV_Truncated::info()
 {
+  py::dict res = RBRV_entry_RV_base::info();
   get_pars();
-  os << "truncated distribution" << std::endl;
-  os << "  lower   = " << GlobalVar.Double2String(aV) << std::endl;
-  os << "  upper   = " << GlobalVar.Double2String(bV) << std::endl;
-  os << "  q       = " << GlobalVar.Double2String(q) << std::endl;
-  os << "  aV_cdf  = " << GlobalVar.Double2String(aV_cdf) << std::endl;
-  os << "  Distribution of Z (" << rv_z->get_type() << "):" << std::endl;
-  rv_z->info(os);
+  res["lower"] = aV;
+  res["upper"] = bV;
+  res["q"] = q;
+  res["aV_cdf"] = aV_cdf;
+  res["rv_z"] = rv_z->info();
+  return res;
 }
 
 RBRV_entry_RV_maxminTransform::RBRV_entry_RV_maxminTransform(const std::string& name, const tuint iID, const bool is_max, FlxFunction* n, RBRV_entry_RV_base* rv_z)

@@ -172,8 +172,9 @@ MARK_AS_ADVANCED(
 #==========================================================
 # pybind11
 #==========================================================
-find_package(Python REQUIRED COMPONENTS Interpreter Development.Module Development.Embed) #Development.Module
+find_package(Python REQUIRED COMPONENTS Interpreter Development.Module) #Development.Module  Development.Embed
 find_package(pybind11 CONFIG REQUIRED)
+include_directories(${Python_INCLUDE_DIRS})
 
 #==========================================================
 # GSL
@@ -339,7 +340,7 @@ endif(MSVC)
 #==========================================================
 
 # Create a shared library for common functionality
-python_add_library(flxlib SHARED
+add_library(flxlib SHARED   # python_add_library add_library
   src/flxlib/flxexception.cpp
   src/flxlib/pdouble.cpp
   src/flxlib/flxMemoryManager.cpp
@@ -393,7 +394,7 @@ if(GSL_FOUND_STATIC)
 else()
     target_link_libraries(flxlib PRIVATE GSL::gsl)
 endif()
-target_link_libraries(flxlib PUBLIC pybind11::headers )
+target_link_libraries(flxlib PRIVATE pybind11::headers )
 if(DEFINED RPATH_STRING)
   set_target_properties(flxlib PROPERTIES INSTALL_RPATH ${RPATH_STRING} )
 endif()

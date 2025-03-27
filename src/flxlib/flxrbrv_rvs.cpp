@@ -26,7 +26,24 @@ FlxFunction * parse_py_para(const std::string& para_name, py::dict config)
     ssV << "Key '" << para_name << "' not found in Python <dict>.";
     throw FlxException_NeglectInInteractive("parse_py_para_01", ssV.str());
   }
-  return parse_function(config[para_name.c_str()], "parameter '"+para_name+"'");
+  return parse_function(config[para_name.c_str()], "key '"+para_name+"' in Python <dict>");
+}
+
+const bool parse_py_para_as_bool(const std::string& para_name, py::dict config, const bool required, const bool def_val)
+{
+  if (config.contains(para_name.c_str())) {
+    try {
+      return py::cast<bool>(config[para_name.c_str()]);
+    } catch (const py::cast_error &e) {
+      throw FlxException_NeglectInInteractive("parse_py_para_as_bool_01", "Key '"+para_name+"' in Python <dict> cannot be cast into type 'bool'.");
+    }
+  } else {
+    if (required) {
+      throw FlxException_NeglectInInteractive("parse_py_para_as_bool_02", "Key '" + para_name + "' not found in Python <dict>.");
+    } else {
+      return def_val;
+    }
+  }
 }
 
 
@@ -113,13 +130,7 @@ RBRV_entry_RV_normal::RBRV_entry_RV_normal(const std::string& name, const tuint 
       throw FlxException_NeglectInInteractive("RBRV_entry_RV_normal::RBRV_entry_RV_normal_70", "Required parameters to define distribution not found in Python <dict>.");
     }
 
-    if (config.contains("eval_once")) {
-      try {
-        eval_once = py::cast<bool>(config["eval_once"]);
-      } catch (const py::cast_error &e) {
-        throw FlxException_NeglectInInteractive("RBRV_entry_RV_normal::RBRV_entry_RV_normal_80", "Key 'eval_once' in Python <dict> cannot be cast into type 'bool'.");
-      }
-    }
+    eval_once = parse_py_para_as_bool("eval_once", config, false, false);
   } catch (FlxException& e) {
     FLXMSG("RBRV_entry_RV_normal::RBRV_entry_RV_normal_99",1);
     if (p1) delete p1;

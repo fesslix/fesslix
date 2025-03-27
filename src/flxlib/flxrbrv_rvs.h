@@ -20,6 +20,7 @@
 #include "flxrbrv.h"
 
 FlxFunction* parse_py_para(const std::string& para_name, py::dict config);
+const bool parse_py_para_as_bool(const std::string& para_name, py::dict config, const bool required, const bool def_val=false);
 
 class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_normal : public RBRV_entry_RV_base {
   protected:

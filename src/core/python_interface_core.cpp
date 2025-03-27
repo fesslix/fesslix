@@ -588,22 +588,28 @@ const tdouble flxPyRV::y2x(const tdouble y_val)
     return rv_ptr->transform_y2x(y_val);
 }
 
-const tdouble flxPyRV::pdf(const tdouble& x_val, const bool safeCalc)
+const tdouble flxPyRV::pdf(const tdouble x_val, const bool safeCalc)
 {
     return rv_ptr->calc_pdf_x(x_val,safeCalc);
 }
 
-const tdouble flxPyRV::pdf_log(const tdouble& x_val, const bool safeCalc)
+const tdouble flxPyRV::pdf_log(const tdouble x_val, const bool safeCalc)
 {
     return rv_ptr->calc_pdf_x_log(x_val,safeCalc);
 }
 
-const tdouble flxPyRV::cdf(const tdouble& x_val, const bool safeCalc)
+const tdouble flxPyRV::cdf(const tdouble x_val, const bool safeCalc)
 {
     return rv_ptr->calc_cdf_x(x_val,safeCalc);
 }
 
-const tdouble flxPyRV::sf(const tdouble& x_val, const bool safeCalc)
+const tdouble flxPyRV::icdf(const tdouble p)
+{
+  const tdouble y = rv_InvPhi_noAlert( p );
+  return rv_ptr->transform_y2x(y);
+}
+
+const tdouble flxPyRV::sf(const tdouble x_val, const bool safeCalc)
 {
     return rv_ptr->calc_sf_x(x_val,safeCalc);
 }
@@ -700,6 +706,7 @@ PYBIND11_MODULE(core, m) {
             .def("pdf", &flxPyRV::pdf, pybind11::arg("x_val"), pybind11::arg("safeCalc") = true, "evaluates the pdf of the random variable at x_val")
             .def("pdf_log", &flxPyRV::pdf_log, pybind11::arg("x_val"), pybind11::arg("safeCalc") = true, "evaluates the log-pdf of the random variable at x_val")
             .def("cdf", &flxPyRV::cdf, pybind11::arg("x_val"), pybind11::arg("safeCalc") = true, "evaluates the cdf of the random variable at x_val")
+            .def("icdf", &flxPyRV::icdf, "evaluates the inverse of the cdf of the random variable for probability p")
             .def("sf", &flxPyRV::sf, pybind11::arg("x_val"), pybind11::arg("safeCalc") = true, "returns the survival function of the random variable; i.e., 1-cdf(x_val)")
             .def("entropy", &flxPyRV::entropy, "returns the entropy of the random variable")
             .def("mean", &flxPyRV::mean, "returns the mean of the random variable")

@@ -147,10 +147,11 @@ class flxPyRV {
     const tdouble x2y(const tdouble x_val);
     const tdouble y2x(const tdouble y_val);
 
-    const tdouble pdf(const tdouble& x_val, const bool safeCalc);
-    const tdouble pdf_log(const tdouble& x_val, const bool safeCalc);
-    const tdouble cdf(const tdouble& x_val, const bool safeCalc);
-    const tdouble sf(const tdouble& x_val, const bool safeCalc);
+    const tdouble pdf(const tdouble x_val, const bool safeCalc);
+    const tdouble pdf_log(const tdouble x_val, const bool safeCalc);
+    const tdouble cdf(const tdouble x_val, const bool safeCalc);
+    const tdouble icdf(const tdouble p);
+    const tdouble sf(const tdouble x_val, const bool safeCalc);
     const tdouble entropy();
     const tdouble mean();
     const tdouble sd();

@@ -2534,9 +2534,8 @@ void RBRV_entry_RV_StudentsT_generalized::get_pars()
         const tdouble start_lb = 0.1*sd_;
       // perform root search
         std::ostringstream ssV;
-        GlobalVar.slogcout(1) << start_lb << "  " << start_ub << std::endl;
-        scale = flx_RootSearch_RegulaFalsi(&RV_StudentsT_generalized_pid1_root_search_fun,dp,start_lb,start_ub,1e-6,1e-8,&ssV);  // TODO remove cout after debug
-        GlobalVar.slogcout(1) << ssV.str() << std::endl << std::flush; // TODO
+        scale = flx_RootSearch_RegulaFalsi(&RV_StudentsT_generalized_pid1_root_search_fun,dp,start_lb,start_ub);  // ,1e-6,1e-8,&ssV);  // TODO remove cout after debug
+        // GlobalVar.slogcout(1) << ssV.str() << std::endl << std::flush;
       return;
     }
     default:

@@ -2444,43 +2444,53 @@ const tdouble RBRV_entry_RV_StudentsT::get_HPD(const tdouble p)
 
 
 RBRV_entry_RV_StudentsT_generalized::RBRV_entry_RV_StudentsT_generalized(const std::string& name, const tuint iID, FlxFunction* nu, FlxFunction* locf, FlxFunction* scalef)
-:RBRV_entry_RV_base(name,iID), nu(nu),locf(locf),scalef(scalef), dof(ZERO), loc(ZERO), scale(ZERO)
+:RBRV_entry_RV_base(name,iID), pid(0), p1(nu),p2(locf),p3(scalef), dof(ZERO), loc(ZERO), scale(ZERO)
 {
 
 }
 
 RBRV_entry_RV_StudentsT_generalized::RBRV_entry_RV_StudentsT_generalized(const std::string& name, const tuint iID, py::dict config)
-: RBRV_entry_RV_base(name,iID), nu(nullptr), locf(nullptr), scalef(nullptr), dof(ZERO), loc(ZERO), scale(ZERO)
+: RBRV_entry_RV_base(name,iID), pid(0), p1(nullptr), p2(nullptr), p3(nullptr), p4(nullptr), dof(ZERO), loc(ZERO), scale(ZERO)
 {
   try {
     if (config.contains("dof")) {          // dof, loc, scale
-      nu = parse_py_para("dof", config);
-      locf = parse_py_para("loc", config);
-      scalef = parse_py_para("scale", config);
+      pid = 0;
+      p1 = parse_py_para("dof", config);
+      p2 = parse_py_para("loc", config);
+      p3 = parse_py_para("scale", config);
     } else {
       throw FlxException_NeglectInInteractive("RBRV_entry_RV_StudentsT_generalized::RBRV_entry_RV_StudentsT_generalized_01", "Required parameters to define distribution not found in Python <dict>.");
     }
   } catch (FlxException& e) {
     FLXMSG("RBRV_entry_RV_StudentsT_generalized::RBRV_entry_RV_StudentsT_generalized_99",1);
-    if (nu) delete nu;
-    if (locf) delete locf;
-    if (scalef) delete scalef;
+    if (p1) delete p1;
+    if (p2) delete p2;
+    if (p3) delete p3;
+    if (p4) delete p4;
     throw;
   }
 }
 
 RBRV_entry_RV_StudentsT_generalized::~RBRV_entry_RV_StudentsT_generalized()
 {
-  if (nu) delete nu;
-  if (locf) delete locf;
-  if (scalef) delete scalef;
+  if (p1) delete p1;
+  if (p2) delete p2;
+  if (p3) delete p3;
+  if (p4) delete p4;
 }
 
 void RBRV_entry_RV_StudentsT_generalized::get_pars()
 {
-  dof = nu->cast2positive();
-  loc = locf->calc();
-  scale = scalef->cast2positive();
+  switch (pid)
+  {
+    case 0:
+      dof = p1->cast2positive();
+      loc = p2->calc();
+      scale = p3->cast2positive();
+      return;
+    default:
+      throw FlxException_Crude("RBRV_entry_RV_StudentsT_generalized::get_pars");
+  }
 }
 
 const tdouble RBRV_entry_RV_StudentsT_generalized::transform_y2x(const tdouble y_val)
@@ -2551,8 +2561,12 @@ const tdouble RBRV_entry_RV_StudentsT_generalized::get_mode_current_config()
 
 const bool RBRV_entry_RV_StudentsT_generalized::search_circref(FlxFunction* fcr)
 {
-  const bool b = (corr_valF==NULL)?false:(corr_valF->search_circref(fcr));
-  return b || nu->search_circref(fcr) || locf->search_circref(fcr) || scalef->search_circref(fcr);
+  bool b = (corr_valF==NULL)?false:(corr_valF->search_circref(fcr));
+  b = b || p1->search_circref(fcr) || p2->search_circref(fcr) || p3->search_circref(fcr);
+  if (p4) {
+    b = b || p4->search_circref(fcr);
+  }
+  return b;
 }
 
 const tdouble RBRV_entry_RV_StudentsT_generalized::get_HPD(const tdouble p)

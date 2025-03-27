@@ -502,9 +502,11 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_StudentsT : public RBRV_entry_
 
 class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_StudentsT_generalized : public RBRV_entry_RV_base {
   protected:
-    FlxFunction* nu;
-    FlxFunction* locf;
-    FlxFunction* scalef;
+    int pid;        // 0: dof, loc, scale; 1: dof, loc, val_1, pr_1
+    FlxFunction* p1;
+    FlxFunction* p2;
+    FlxFunction* p3;
+    FlxFunction* p4;
     tdouble dof;
     tdouble loc;
     tdouble scale;

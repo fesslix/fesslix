@@ -19,12 +19,16 @@
 
 #include "flxdata.h"
 
-FlxFunction * parse_py_para(const std::string& para_name, py::dict config)
+FlxFunction * parse_py_para(const std::string& para_name, py::dict config, const bool required)
 {
   if (config.contains(para_name.c_str()) == false) {
-    std::ostringstream ssV;
-    ssV << "Key '" << para_name << "' not found in Python <dict>.";
-    throw FlxException_NeglectInInteractive("parse_py_para_01", ssV.str());
+    if (required) {
+      std::ostringstream ssV;
+      ssV << "Key '" << para_name << "' not found in Python <dict>.";
+      throw FlxException_NeglectInInteractive("parse_py_para_01", ssV.str());
+    } else {
+      return nullptr;
+    }
   }
   return parse_function(config[para_name.c_str()], "key '"+para_name+"' in Python <dict>");
 }
@@ -328,6 +332,63 @@ const tdouble RBRV_entry_RV_normal::get_HPD(const tdouble p)
 {
   get_paras();
   return (ONE-p)/2;
+}
+
+RBRV_entry_RV_lognormal::RBRV_entry_RV_lognormal(const std::string& name, const tuint iID, py::dict config)
+: RBRV_entry_RV_base(name,iID), pid(0), p1(nullptr), p2(nullptr), p3(nullptr), p4(nullptr), epsilon(nullptr), eval_once(false), lambda(ZERO), zeta(ZERO), eps(ZERO)
+{
+  try {
+    if (config.contains("lambda")) {          // 0:lambda,zeta;
+      pid = 0;
+      p1 = parse_py_para("lambda", config);
+      p2 = parse_py_para("zeta", config);
+    } else if (config.contains("mu")) {   // 1:mean,sd;
+      pid = 1;
+      p1 = parse_py_para("mu", config);
+      p2 = parse_py_para("sd", config);
+    } else if (config.contains("mode") && config.contains("sd")) {   // 2:mode,sd;
+      pid = 2;
+      p1 = parse_py_para("mode", config);
+      p2 = parse_py_para("sd", config);
+    } else if (config.contains("median") && config.contains("sd")) {   // 3:median,sd;
+      pid = 3;
+      p1 = parse_py_para("median", config);
+      p2 = parse_py_para("sd", config);
+    } else if (config.contains("pr_2")) {   // 4: quantile values;
+      pid = 4;
+      p1 = parse_py_para("val_1", config);
+      p2 = parse_py_para("pr_1", config);
+      p3 = parse_py_para("val_2", config);
+      p4 = parse_py_para("pr_2", config);
+    } else if (config.contains("median") && config.contains("cov")) {   // 5: median,C.o.V.;
+      pid = 5;
+      p1 = parse_py_para("median", config);
+      p2 = parse_py_para("cov", config);
+    } else if (config.contains("cov") && config.contains("pr_1")) {   // 6: C.o.V,quantile
+      pid = 6;
+      p1 = parse_py_para("cov", config);
+      p2 = parse_py_para("val_1", config);
+      p3 = parse_py_para("pr_1", config);
+    } else if (config.contains("mode") && config.contains("cov")) {   // 6: mode, C.o.V.
+      pid = 7;
+      p1 = parse_py_para("mode", config);
+      p2 = parse_py_para("cov", config);
+    } else {
+      throw FlxException_NeglectInInteractive("RBRV_entry_RV_normal::RBRV_entry_RV_normal_70", "Required parameters to define distribution not found in Python <dict>.");
+    }
+
+    epsilon = parse_py_para("epsilon", config, false);
+
+    eval_once = parse_py_para_as_bool("eval_once", config, false, false);
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_normal::RBRV_entry_RV_normal_99",1);
+    if (p1) delete p1;
+    if (p2) delete p2;
+    if (p3) delete p3;
+    if (p4) delete p4;
+    if (epsilon) delete epsilon;
+    throw;
+  }
 }
 
 RBRV_entry_RV_lognormal::~RBRV_entry_RV_lognormal()

@@ -520,8 +520,8 @@ flxPyRV::flxPyRV(py::dict config)
             rv_ptr = new RBRV_entry_RV_stdN(rv_name,0,config);
         } else if (rv_type=="normal") {
             rv_ptr = new RBRV_entry_RV_normal(rv_name,0,config);
-        // } else if (rv_type=="logn") {
-        //     rv_ptr = new RBRV_entry_read_logn(readName,readBrakets);
+        } else if (rv_type=="logn") {
+            rv_ptr = new RBRV_entry_RV_lognormal(rv_name,0,config);
         // } else if (rv_type=="uniform") {
         //     rv_ptr = new RBRV_entry_read_uniform(readName,readBrakets);
         // } else if (rv_type=="gumbel") {

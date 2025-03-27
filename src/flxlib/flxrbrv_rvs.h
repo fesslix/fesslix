@@ -19,7 +19,7 @@
 
 #include "flxrbrv.h"
 
-FlxFunction* parse_py_para(const std::string& para_name, py::dict config);
+FlxFunction* parse_py_para(const std::string& para_name, py::dict config, const bool required=true);
 const bool parse_py_para_as_bool(const std::string& para_name, py::dict config, const bool required, const bool def_val=false);
 
 class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_normal : public RBRV_entry_RV_base {
@@ -91,13 +91,13 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_stdN : public RBRV_entry_RV_ba
 
 class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_lognormal : public RBRV_entry_RV_base {
   protected:
-    const int pid;                // 0:lambda,zeta; 1:mean,sd; 2:mode,sd; 3:median,sd; 4: quantile values; 5: median,C.o.V.; 6: C.o.V,quantile
+    int pid;                // ... see get_paras()
     FlxFunction* p1;
     FlxFunction* p2;
     FlxFunction* p3;
     FlxFunction* p4;
     FlxFunction* epsilon;
-    const bool eval_once;
+    bool eval_once;
     tdouble lambda;
     tdouble zeta;
     tdouble eps;
@@ -105,6 +105,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_lognormal : public RBRV_entry_
     void get_paras();
   public:
     RBRV_entry_RV_lognormal(const std::string& name, const tuint iID, const int pid, FlxFunction* p1, FlxFunction* p2, FlxFunction* p3, FlxFunction* p4, FlxFunction* epsilon, const bool eval_once) : RBRV_entry_RV_base(name,iID), pid(pid), p1(p1), p2(p2), p3(p3), p4(p4), epsilon(epsilon), eval_once(eval_once), lambda(ZERO), zeta(ZERO), eps(ZERO) {}
+    RBRV_entry_RV_lognormal(const std::string& name, const tuint iID, py::dict config);
     ~RBRV_entry_RV_lognormal();
 
     const std::string get_type() const { return "logn"; }

@@ -172,7 +172,7 @@ MARK_AS_ADVANCED(
 #==========================================================
 # pybind11
 #==========================================================
-find_package(Python REQUIRED COMPONENTS Interpreter Development) #Development.Module
+find_package(Python REQUIRED COMPONENTS Interpreter Development.Module Development.Embed) #Development.Module
 find_package(pybind11 CONFIG REQUIRED)
 
 #==========================================================

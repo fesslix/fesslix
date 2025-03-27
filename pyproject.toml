@@ -67,6 +67,7 @@ before-all = [ #"yum install -y gsl-devel",
                #"find ./ -type f -name 'special_functions.hpp'",
                #"find ./ -type f -name 'BoostConfig.cmake'"
 #               ]
+before-build = "python --version"
 test-command = "echo 'installed gsl-devel boost-devel'"
 environment = "Boost_skip_search=1 VCPKG_ROOT=/project/vcpkg/"
 

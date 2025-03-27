@@ -2442,6 +2442,15 @@ const tdouble RBRV_entry_RV_StudentsT::get_HPD(const tdouble p)
   return (ONE-p)/2;
 }
 
+void RBRV_entry_RV_StudentsT::info(std::ostream& os)
+{
+  get_pars();
+  os << "Student's t-distribution" << std::endl;
+  os << "  dof     = " << GlobalVar.Double2String(dof) << std::endl;
+  os << "  mean    = " << GlobalVar.Double2String(get_mean_current_config()) << std::endl;
+  os << "  std.dev = " << GlobalVar.Double2String(get_sd_current_config()) << std::endl;
+}
+
 
 RBRV_entry_RV_StudentsT_generalized::RBRV_entry_RV_StudentsT_generalized(const std::string& name, const tuint iID, FlxFunction* nu, FlxFunction* locf, FlxFunction* scalef)
 :RBRV_entry_RV_base(name,iID), pid(0), p1(nu),p2(locf),p3(scalef), dof(ZERO), loc(ZERO), scale(ZERO)
@@ -2615,6 +2624,16 @@ const tdouble RBRV_entry_RV_StudentsT_generalized::get_HPD(const tdouble p)
 {
   get_pars();
   return (ONE-p)/2;
+}
+
+void RBRV_entry_RV_StudentsT_generalized::info(std::ostream& os)
+{
+  get_pars();
+  os << "generalized Student's t-distribution" << std::endl;
+  os << "  dof     = " << GlobalVar.Double2String(dof) << std::endl;
+  os << "  loc     = " << GlobalVar.Double2String(loc) << std::endl;
+  os << "  scale   = " << GlobalVar.Double2String(scale) << std::endl;
+  os << "  std.dev = " << GlobalVar.Double2String(get_sd_current_config()) << std::endl;
 }
 
 

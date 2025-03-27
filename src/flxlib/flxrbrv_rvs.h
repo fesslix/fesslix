@@ -498,6 +498,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_StudentsT : public RBRV_entry_
     virtual const bool check_x(const tdouble xV) { return true; }
     virtual const bool search_circref(FlxFunction* fcr);
     virtual const tdouble get_HPD(const tdouble p);
+    virtual void info(std::ostream& os);
 };
 
 class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_StudentsT_generalized : public RBRV_entry_RV_base {
@@ -530,6 +531,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_StudentsT_generalized : public
     virtual const bool check_x(const tdouble xV) { return true; }
     virtual const bool search_circref(FlxFunction* fcr);
     virtual const tdouble get_HPD(const tdouble p);
+    virtual void info(std::ostream& os);
 };
 
 class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Laplace : public RBRV_entry_RV_base {

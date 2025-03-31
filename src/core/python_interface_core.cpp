@@ -696,6 +696,11 @@ PYBIND11_MODULE(core, m) {
         m.def("load_engine", &load_engine, "Load the Fesslix Engine");
 
     // ====================================================
+    // Standard functions
+    // ====================================================
+        m.def("cdfn_inv", &rv_InvPhi, "inverse of the CDF of the standard Normal distribution");
+
+    // ====================================================
     // random variables
     // ====================================================
         py::class_<flxPyRV>(m, "rv")

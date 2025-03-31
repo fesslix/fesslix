@@ -430,6 +430,8 @@ install(TARGETS flxlib
     LIBRARY DESTINATION fesslix  # For Linux (.so)
     ARCHIVE DESTINATION fesslix  # For static libs (.lib)
 )
-install(FILES config/gausspoints.dat DESTINATION fesslix)
+install(FILES src/plot.py
+              config/gausspoints.dat
+              DESTINATION fesslix)
 
 

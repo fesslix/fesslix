@@ -535,6 +535,31 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_StudentsT_generalized : public
     virtual py::dict info();
 };
 
+
+class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_logt : public RBRV_entry_RV_StudentsT_generalized {
+  protected:
+
+  public:
+    RBRV_entry_RV_logt(const std::string& name, const tuint iID, FlxFunction* nu, FlxFunction* locf, FlxFunction* scalef);
+    RBRV_entry_RV_logt(const std::string& name, const tuint iID, py::dict config);
+    ~RBRV_entry_RV_logt();
+
+    const std::string get_type() const { return "logt"; }
+    virtual const tdouble transform_y2x(const tdouble y_val);
+    virtual const tdouble transform_x2y(const tdouble& x_val);
+    virtual const tdouble calc_pdf_x(const tdouble& x_val, const bool safeCalc=false);
+    virtual const tdouble calc_cdf_x(const tdouble& x_val, const bool safeCalc=false);
+    virtual const tdouble calc_entropy();
+    virtual const tdouble get_mean_current_config();
+    virtual const tdouble get_sd_current_config();
+    virtual const tdouble get_median_current_config();
+    virtual const tdouble get_mode_current_config();
+    virtual const bool check_x(const tdouble xV) { return true; }
+    virtual const tdouble get_HPD(const tdouble p);
+    virtual py::dict info();
+};
+
+
 class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Laplace : public RBRV_entry_RV_base {
   protected:
     FlxFunction* locf;

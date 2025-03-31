@@ -2708,6 +2708,83 @@ py::dict RBRV_entry_RV_StudentsT_generalized::info()
 }
 
 
+
+RBRV_entry_RV_logt::RBRV_entry_RV_logt(const std::string& name, const tuint iID, FlxFunction* nu, FlxFunction* locf, FlxFunction* scalef)
+:RBRV_entry_RV_StudentsT_generalized(name, iID, nu, locf, scalef)
+{
+
+}
+
+RBRV_entry_RV_logt::RBRV_entry_RV_logt(const std::string& name, const tuint iID, py::dict config)
+:RBRV_entry_RV_StudentsT_generalized(name, iID, config)
+{
+
+}
+
+RBRV_entry_RV_logt::~RBRV_entry_RV_logt()
+{
+
+}
+
+const tdouble RBRV_entry_RV_logt::transform_y2x(const tdouble y_val)
+{
+  const tdouble z = RBRV_entry_RV_StudentsT_generalized::transform_y2x(y_val);
+  return exp(z);
+}
+
+const tdouble RBRV_entry_RV_logt::transform_x2y(const tdouble& x_val)
+{
+  const tdouble z = log(x_val);
+  return RBRV_entry_RV_StudentsT_generalized::transform_x2y(z);
+}
+
+const tdouble RBRV_entry_RV_logt::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
+{
+  return RBRV_entry_RV_StudentsT_generalized::calc_pdf_x(log(x_val),safeCalc)/x_val;
+}
+
+const tdouble RBRV_entry_RV_logt::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
+{
+  return RBRV_entry_RV_StudentsT_generalized::calc_cdf_x(log(x_val),safeCalc);
+}
+
+const tdouble RBRV_entry_RV_logt::calc_entropy()
+{
+  throw FlxException_NotImplemented("RBRV_entry_RV_logt::calc_entropy");
+  // in principle, this should be not too difficult to implement, if integration by substitution is used.
+}
+
+const tdouble RBRV_entry_RV_logt::get_mean_current_config()
+{
+  return std::numeric_limits<tdouble>::infinity();
+}
+
+const tdouble RBRV_entry_RV_logt::get_sd_current_config()
+{
+  return std::numeric_limits<tdouble>::infinity();
+}
+
+const tdouble RBRV_entry_RV_logt::get_median_current_config()
+{
+  return exp(RBRV_entry_RV_StudentsT_generalized::get_median_current_config());
+}
+
+const tdouble RBRV_entry_RV_logt::get_mode_current_config()
+{
+  throw FlxException_NotImplemented("RBRV_entry_RV_logt::get_mode_current_config");
+}
+
+const tdouble RBRV_entry_RV_logt::get_HPD(const tdouble p)
+{
+  throw FlxException_NotImplemented("RBRV_entry_RV_logt::get_HPD");
+}
+
+py::dict RBRV_entry_RV_logt::info()
+{
+  return RBRV_entry_RV_StudentsT_generalized::info();
+}
+
+
 RBRV_entry_RV_Laplace::RBRV_entry_RV_Laplace(const std::string& name, const tuint iID, FlxFunction* locf, FlxFunction* scalef)
 :RBRV_entry_RV_base(name,iID), locf(locf),scalef(scalef), loc(ZERO), scale(ZERO)
 {

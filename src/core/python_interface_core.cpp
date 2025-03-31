@@ -550,6 +550,8 @@ flxPyRV::flxPyRV(py::dict config)
             rv_ptr = new RBRV_entry_RV_StudentsT(rv_name,0,config);
         } else if (rv_type=="studentstgen") {
             rv_ptr = new RBRV_entry_RV_StudentsT_generalized(rv_name,0,config);
+        } else if (rv_type=="logt") {
+            rv_ptr = new RBRV_entry_RV_logt(rv_name,0,config);
         // } else if (rv_type=="laplace") {
         //     rv_ptr = new RBRV_entry_read_Laplace(readName,readBrakets);
         // } else if (rv_type=="usertransform") {

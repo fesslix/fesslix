@@ -23,6 +23,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/numpy.h>  // For NumPy support
 
 namespace py = pybind11;
 
@@ -148,6 +149,8 @@ class flxPyRV {
     const tdouble y2x(const tdouble y_val);
 
     const tdouble pdf(const tdouble x_val, const bool safeCalc);
+    py::array_t<tdouble> pdf_array(py::array_t<tdouble> arr, const bool safeCalc);
+
     const tdouble pdf_log(const tdouble x_val, const bool safeCalc);
     const tdouble cdf(const tdouble x_val, const bool safeCalc);
     const tdouble icdf(const tdouble p);

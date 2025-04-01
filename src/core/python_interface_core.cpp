@@ -575,6 +575,11 @@ flxPyRV::~flxPyRV()
     delete rv_ptr;
 }
 
+const std::string flxPyRV::get_name() const
+{
+    return rv_ptr->name;
+}
+
 const std::string flxPyRV::get_type() const
 {
     return rv_ptr->get_type();
@@ -732,6 +737,7 @@ PYBIND11_MODULE(core, m) {
     // ====================================================
         py::class_<flxPyRV>(m, "rv")
             .def(py::init<py::dict>())
+            .def("get_name", &flxPyRV::get_name, "get name of random variable")
             .def("get_type", &flxPyRV::get_type, "get type of random variable")
             .def("x2y", &flxPyRV::x2y, "transformation from 'original space' to standard normal space")
             .def("y2x", &flxPyRV::y2x, "transformation from standard normal space into 'original space'")

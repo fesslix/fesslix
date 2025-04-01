@@ -144,6 +144,7 @@ class flxPyRV {
     flxPyRV(py::dict config);
     ~flxPyRV();
 
+    const std::string get_name() const;
     const std::string get_type() const;
     const tdouble x2y(const tdouble x_val);
     const tdouble y2x(const tdouble y_val);

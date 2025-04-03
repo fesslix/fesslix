@@ -585,24 +585,34 @@ const std::string flxPyRV::get_type() const
     return rv_ptr->get_type();
 }
 
+const tdouble flxPyRV::get_value() const
+{
+    return rv_ptr->get_value();
+}
+
 const tdouble flxPyRV::x2y(const tdouble x_val)
 {
+    rv_ptr->eval_para();
     return rv_ptr->transform_x2y(x_val);
 }
 
 const tdouble flxPyRV::y2x(const tdouble y_val)
 {
+    rv_ptr->eval_para();
     return rv_ptr->transform_y2x(y_val);
 }
 
 const tdouble flxPyRV::sample()
 {
+    rv_ptr->eval_para();
     const tdouble y = FlxEngine->dataBox.RndCreator.gen_smp();
     return rv_ptr->transform_y2x(y);
 }
 
 void flxPyRV::sample_array(py::array_t<tdouble> arr)
 {
+    rv_ptr->eval_para();
+
     // Access the data as a raw pointer
     py::buffer_info buf_info = arr.request();
     tdouble* res_ptr = static_cast<tdouble*>(buf_info.ptr);
@@ -622,11 +632,13 @@ void flxPyRV::sample_array(py::array_t<tdouble> arr)
 
 const tdouble flxPyRV::pdf(const tdouble x_val, const bool safeCalc)
 {
+    rv_ptr->eval_para();
     return rv_ptr->calc_pdf_x(x_val,safeCalc);
 }
 
 py::array_t<tdouble> flxPyRV::pdf_array(py::array_t<tdouble> arr, const bool safeCalc)
 {
+    rv_ptr->eval_para();
     // Access the input data as a raw pointer
     py::buffer_info buf_info = arr.request();
     tdouble* input_ptr = static_cast<tdouble*>(buf_info.ptr);
@@ -654,16 +666,20 @@ py::array_t<tdouble> flxPyRV::pdf_array(py::array_t<tdouble> arr, const bool saf
 
 const tdouble flxPyRV::pdf_log(const tdouble x_val, const bool safeCalc)
 {
+    rv_ptr->eval_para();
     return rv_ptr->calc_pdf_x_log(x_val,safeCalc);
 }
 
 const tdouble flxPyRV::cdf(const tdouble x_val, const bool safeCalc)
 {
+    rv_ptr->eval_para();
     return rv_ptr->calc_cdf_x(x_val,safeCalc);
 }
 
 py::array_t<tdouble> flxPyRV::cdf_array(py::array_t<tdouble> arr, const bool safeCalc)
 {
+    rv_ptr->eval_para();
+
     // Access the input data as a raw pointer
     py::buffer_info buf_info = arr.request();
     tdouble* input_ptr = static_cast<tdouble*>(buf_info.ptr);
@@ -691,52 +707,62 @@ py::array_t<tdouble> flxPyRV::cdf_array(py::array_t<tdouble> arr, const bool saf
 
 const tdouble flxPyRV::icdf(const tdouble p)
 {
-  const tdouble y = rv_InvPhi_noAlert( p );
-  return rv_ptr->transform_y2x(y);
+    rv_ptr->eval_para();
+    const tdouble y = rv_InvPhi_noAlert( p );
+    return rv_ptr->transform_y2x(y);
 }
 
 const tdouble flxPyRV::sf(const tdouble x_val, const bool safeCalc)
 {
+    rv_ptr->eval_para();
     return rv_ptr->calc_sf_x(x_val,safeCalc);
 }
 
 const tdouble flxPyRV::entropy()
 {
+    rv_ptr->eval_para();
     return rv_ptr->calc_entropy();
 }
 
 const tdouble flxPyRV::mean()
 {
+    rv_ptr->eval_para();
     return rv_ptr->get_mean_current_config();
 }
 
 const tdouble flxPyRV::sd()
 {
+    rv_ptr->eval_para();
     return rv_ptr->get_sd_current_config();
 }
 
 const tdouble flxPyRV::median()
 {
+    rv_ptr->eval_para();
     return rv_ptr->get_median_current_config();
 }
 
 const tdouble flxPyRV::mode()
 {
+    rv_ptr->eval_para();
     return rv_ptr->get_mode_current_config();
 }
 
 const bool flxPyRV::check_x(const tdouble xV)
 {
+    rv_ptr->eval_para();
     return rv_ptr->check_x(xV);
 }
 
 const tdouble flxPyRV::get_HPD(const tdouble p)
 {
+    rv_ptr->eval_para();
     return rv_ptr->get_HPD(p);
 }
 
 py::dict flxPyRV::info()
 {
+    rv_ptr->eval_para();
     return rv_ptr->info();
 }
 
@@ -791,6 +817,7 @@ PYBIND11_MODULE(core, m) {
             .def(py::init<py::dict>())
             .def("get_name", &flxPyRV::get_name, "get name of random variable")
             .def("get_type", &flxPyRV::get_type, "get type of random variable")
+            .def("get_value", &flxPyRV::get_value, "get the value currently assigned to the random variable")
             .def("x2y", &flxPyRV::x2y, "transformation from 'original space' to standard normal space")
             .def("y2x", &flxPyRV::y2x, "transformation from standard normal space into 'original space'")
             .def("sample", &flxPyRV::sample, "generate a random realization of the random variable")

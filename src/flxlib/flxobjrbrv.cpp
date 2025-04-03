@@ -1415,6 +1415,7 @@ FunBase* FunReadFunRBRV_rp::read(bool errSerious)
 
 const tdouble FunPDF::calc()
 {
+  rep->eval_para();
   return rep->calc_pdf_x(fun->calc(),true);
 }
 
@@ -1489,6 +1490,7 @@ FunBase* FunReadFunPDF::read( bool errSerious )
 
 const tdouble FunPDF_log::calc()
 {
+  rep->eval_para();
   return rep->calc_pdf_x_log(fun->calc(),true);
 }
 
@@ -1496,6 +1498,7 @@ const tdouble FunPDF_log::calc()
 
 const tdouble FunCDF::calc()
 {
+  rep->eval_para();
   const tdouble x = fun->calc();
   const tdouble res = rep->calc_cdf_x(x,true);
   return res;
@@ -1505,6 +1508,7 @@ const tdouble FunCDF::calc()
 
 const tdouble FunSF::calc()
 {
+  rep->eval_para();
   const tdouble x = fun->calc();
   const tdouble res = rep->calc_sf_x(x,true);
   return res;
@@ -1514,6 +1518,7 @@ const tdouble FunSF::calc()
 
 const tdouble FunCDF_inv::calc()
 {
+  rep->eval_para();
   const tdouble p = fun->calc();
   const tdouble y = rv_InvPhi_noAlert( p );
   return rep->transform_y2x(y);
@@ -1523,6 +1528,7 @@ const tdouble FunCDF_inv::calc()
 
 const tdouble FunHPD::calc()
 {
+  rep->eval_para();
   return rep->get_HPD( fun->calc() );
 }
 
@@ -1530,6 +1536,7 @@ const tdouble FunHPD::calc()
 
 const tdouble FunRBRV_y2x::calc()
 {
+  rep->eval_para();
   const tdouble y = fun->calc();
   const tdouble res = rep->transform_y2x(y);
   #if FLX_DEBUG
@@ -1544,6 +1551,7 @@ const tdouble FunRBRV_y2x::calc()
 
 const tdouble FunRBRV_x2y::calc()
 {
+  rep->eval_para();
   const tdouble x = fun->calc();
   const tdouble res = rep->transform_x2y(x);
   #if FLX_DEBUG
@@ -1558,6 +1566,7 @@ const tdouble FunRBRV_x2y::calc()
 
 const tdouble FunEntropy::calc()
 {
+  rep->eval_para();
   return rep->calc_entropy();
 }
 
@@ -1565,6 +1574,7 @@ const tdouble FunEntropy::calc()
 
 const tdouble FunRndSample::calc()
 {
+  rep->eval_para();
   const tdouble y = RndCreator->gen_smp();
   return rep->transform_y2x(y);
 }
@@ -1573,6 +1583,7 @@ const tdouble FunRndSample::calc()
 
 const tdouble FunRBRV_mean::calc()
 {
+  rep->eval_para();
   return rep->get_mean_current_config();
 }
 
@@ -1580,6 +1591,7 @@ const tdouble FunRBRV_mean::calc()
 
 const tdouble FunRBRV_sd::calc()
 {
+  rep->eval_para();
   return rep->get_sd_current_config();
 }
 
@@ -1587,6 +1599,7 @@ const tdouble FunRBRV_sd::calc()
 
 const tdouble FunRBRV_coeffofvar::calc()
 {
+  rep->eval_para();
   return rep->get_sd_current_config()/rep->get_mean_current_config();
 }
 
@@ -1594,6 +1607,7 @@ const tdouble FunRBRV_coeffofvar::calc()
 
 const tdouble FunRBRV_median::calc()
 {
+  rep->eval_para();
   return rep->get_median_current_config();
 }
 
@@ -1601,6 +1615,7 @@ const tdouble FunRBRV_median::calc()
 
 const tdouble FunRBRV_mode::calc()
 {
+  rep->eval_para();
   return rep->get_mode_current_config();
 }
 
@@ -1904,6 +1919,8 @@ const tdouble FunRBRV_calc_R_for_rhoPrime::calc()
 
 const tdouble FunRBRV_calc_R_for_rhoPrime::calc_(const bool throwErr)
 {
+  rv1->eval_para();
+  rv2->eval_para();
   last_num = false;
   // initial evaluations
     rho = rhoF->calc();

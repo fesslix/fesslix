@@ -37,6 +37,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry {
     virtual ~RBRV_entry() {}
   
     virtual const std::string get_type() const = 0;
+    virtual void eval_para();
     /**
     * @brief assigns value
     * @param y_vec a vector of random variables of the parent-set
@@ -79,17 +80,19 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_fun : public RBRV_entry {
   protected:
     FlxFunction* fun;
     
+    tdouble fun_val;
   public:
     RBRV_entry_fun(const std::string& name, FlxFunction* fun);
     virtual ~RBRV_entry_fun() { delete fun; }
         
     const std::string get_type() const { return "fun"; }
+    virtual void eval_para();
     virtual void transform_y2x(const tdouble* const y_vec);
     
-    virtual const tdouble get_mean_current_config() { return fun->calc(); }
+    virtual const tdouble get_mean_current_config() { return fun_val; }
     virtual const tdouble get_sd_current_config() { return ZERO; }
-    virtual const tdouble get_median_current_config() { return fun->calc(); }
-    virtual const tdouble get_mode_current_config() { return fun->calc(); }
+    virtual const tdouble get_median_current_config() { return fun_val; }
+    virtual const tdouble get_mode_current_config() { return fun_val; }
     virtual const bool check_x(const tdouble xV);
     virtual const bool search_circref(FlxFunction* fcr) { return fun->search_circref(fcr); }
 };
@@ -102,6 +105,8 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_base : public RBRV_entry {
       FunBase* corr_valF;                // if !NULL: corr_val needs to be re-evaluated every time!
       tdouble corr_val;                        // correlation in underlying standard normal space
       bool throwErrors;
+
+      void init();
   public:
     RBRV_entry_RV_base(const std::string& name, const tuint iID);
     virtual ~RBRV_entry_RV_base();

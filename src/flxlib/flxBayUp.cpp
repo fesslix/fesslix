@@ -7789,6 +7789,7 @@ void RBRV_entry_fun_data::transform_y2x(const tdouble*const y_vec)
     }
   }
   value = res;
+  fun_val = res;
   FunPara::ParaList = tT;
   FunPara::ParaListSize = tTS;
   #if FLX_DEBUG
@@ -8019,6 +8020,7 @@ void flxBayUp_mProb_set::update_model_res(const tuint id)
 {
   tuint c = id;
   for (tuint i=0;i<N_model_res;++i) {
+    model_res_list[i]->eval_para();
     model_res_list[i]->set_x( model_res_map[c]->calc() );
     c += Nmodels;
   }
@@ -8048,6 +8050,7 @@ const flxVec& flxBayUp_mProb_set::propose_y()
 
 void flxBayUp_mProb_set::transform_y2x()
 {
+  p.eval_para();
   p.RBRV_entry_RV_base::transform_y2x(y_total->get_tmp_vptr()+NRV_total); 
   const tuint id = get_model_ID();
   modelVec[id]->transform_y2x();
@@ -8102,9 +8105,11 @@ void flxBayUp_mProb_set::set_x(const tdouble*const x_vec)
   #if FLX_DEBUG
     if (rvc!=NOX_total) throw FlxException_Crude("flxBayUp_mProb_set::set_x");
   #endif
+  p.eval_para();
   p.set_x(x_vec[rvc]);
   ++rvc;
   for (tuint i=0;i<N_model_res;++i) {
+    model_res_list[i]->eval_para();
     model_res_list[i]->set_x(x_vec[rvc]);
     ++rvc;
   }
@@ -8227,21 +8232,6 @@ const tuint flxBayUp_mProb_set::group_dependent_sets(std::vector< RBRV_set_base*
     }
   return removed;
 }
-
-void RBRV_entry_fun_log::transform_y2x(const tdouble*const y_vec)
-{
-  #if FLX_DEBUG
-    if (valid) throw FlxException_Crude("RBRV_entry_fun_log::transform_y2x");
-  #endif
-  value = fun->calc();
-  #if FLX_DEBUG
-    valid = true;
-  #endif
-}
-
-
-
-
 
 
 

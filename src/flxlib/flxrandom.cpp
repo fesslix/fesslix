@@ -64,6 +64,7 @@ FlxRndSamplingSpace_uni::~FlxRndSamplingSpace_uni()
 
 void FlxRndSamplingSpace_uni::y2z(flxVec& y, flxVec& z)
 {
+  rv->eval_para();
   for (tuint i=0;i<z.get_N();++i) {
     z[i] = rv->transform_y2x(y[i]);
   }
@@ -81,6 +82,7 @@ void FlxRndSamplingSpace_uni::print_info(std::ostream& sout, const bool verbose)
 {
   sout << "uniform " ;
   tuint c = 0;
+  rv->eval_para();
   rv->print(sout,"",c,false);
 }
 

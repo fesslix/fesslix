@@ -77,6 +77,7 @@ void FlxObjMCI::output_Bayesian_credible_reliablity(std::ostream& sout, const td
       const tdouble alpha_prior = ONE;
       const tdouble beta_prior = ONE;
       RBRV_entry_RV_beta betad("p",0,false,new FlxFunction(new FunNumber(hits+alpha_prior)),new FlxFunction(new FunNumber(Npd-hits+beta_prior)),NULL,NULL,true); 
+      betad.eval_para();
       sout << "  mean(Pf) (Bayesian):      " << GlobalVar.Double2String(betad.get_mean_current_config()) << std::endl;
       sout << "  C.o.V.(Pf) (Bayesian): " << GlobalVar.Double2String(betad.get_sd_current_config()/betad.get_mean_current_config()) << std::endl;
       sout << "  Estim. C.o.V. (MLE):   " << GlobalVar.Double2String(sqrt((ONE-theResult)/(theResult*Npd))) << std::endl;
@@ -2856,6 +2857,7 @@ FlxObjQQplot::~FlxObjQQplot()
 
 void FlxObjQQplot::task()
 {
+  rep->eval_para();
   // initializations and preparations
     const std::string isname_str = isname->eval_word(true);
     FlxIstream_vector *isv = dynamic_cast<FlxIstream_vector*>(&(data->IstreamBox.get(isname_str)));

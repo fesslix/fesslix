@@ -1338,6 +1338,7 @@ class RBRV_entry_fun_data : public RBRV_entry_fun {
     RBRV_entry_fun_data(const std::string& name, FlxFunction* fun, const tuint paraN, FlxIstream_vector *isv, const tdouble is_log);
     virtual ~RBRV_entry_fun_data();
     
+    virtual void eval_para() {}
     virtual void transform_y2x(const tdouble* const y_vec);
     virtual const tdouble get_value_log() const { return value; }
 };
@@ -1366,7 +1367,6 @@ class RBRV_entry_fun_log : public RBRV_entry_fun {
     RBRV_entry_fun_log(const std::string& name, FlxFunction* fun) : RBRV_entry_fun(name,fun) {}
     virtual ~RBRV_entry_fun_log() { }
     
-    virtual void transform_y2x(const tdouble* const y_vec);
     virtual const tdouble get_value_log() const { return value; }
 };
 

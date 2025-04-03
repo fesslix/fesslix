@@ -36,6 +36,11 @@ RBRV_entry::RBRV_entry(const std::string& name)
    
 }
 
+void RBRV_entry::eval_para()
+{
+
+}
+
 const tdouble RBRV_entry::transform_x2y(const tdouble& x_val)
 {
   std::ostringstream ssV;
@@ -141,9 +146,14 @@ py::dict RBRV_entry::info()
 }
 
 RBRV_entry_fun::RBRV_entry_fun(const std::string& name, FlxFunction* fun)
- : RBRV_entry(name), fun(fun)
+ : RBRV_entry(name), fun(fun), fun_val(ZERO)
 {
+    eval_para();
+}
 
+void RBRV_entry_fun::eval_para()
+{
+  fun_val = fun->calc();
 }
 
 void RBRV_entry_fun::transform_y2x(const tdouble*const y_vec)
@@ -151,7 +161,7 @@ void RBRV_entry_fun::transform_y2x(const tdouble*const y_vec)
   #if FLX_DEBUG
     if (valid) throw FlxException_Crude("RBRV_entry_fun::transform_y2x");
   #endif
-  value = fun->calc();
+  value = fun_val;
   #if FLX_DEBUG
     valid = true;
   #endif
@@ -172,6 +182,12 @@ RBRV_entry_RV_base::RBRV_entry_RV_base(const std::string& name, const tuint iID)
 RBRV_entry_RV_base::~RBRV_entry_RV_base()
 {
   if (corr_valF) delete corr_valF;
+}
+
+void RBRV_entry_RV_base::init()
+{
+  this->eval_para();
+  value = this->transform_y2x(ZERO);
 }
 
 void RBRV_entry_RV_base::transform_y2x(const tdouble*const y_vec)
@@ -418,7 +434,10 @@ void RBRV_set::set_is_valid(const bool is_valid)
 void RBRV_set::transform_y2x()
 {
   const tdouble*const y_vec = y_of_set.get_tmp_vptr_const();
-  for (tuint i=0;i<Nentries;++i) entries[i]->transform_y2x(y_vec);
+  for (tuint i=0;i<Nentries;++i) {
+    entries[i]->eval_para();
+    entries[i]->transform_y2x(y_vec);
+  }
 }
 
 void RBRV_set::transform_x2y()
@@ -463,7 +482,10 @@ void RBRV_set::transform_y2w(const tdouble*const y_vec, tdouble*const w_vec)
 
 void RBRV_set::set_x(const tdouble*const x_vec)
 {
-  for (tuint i=0;i<Nentries;++i) entries[i]->set_x(x_vec[i]);
+  for (tuint i=0;i<Nentries;++i) {
+    entries[i]->eval_para();
+    entries[i]->set_x(x_vec[i]);
+  }
 }
 
 void RBRV_set::get_x(tdouble*const x_vec)
@@ -509,6 +531,7 @@ void RBRV_set::print(std::ostream& sout, const std::string prelim, tuint& counte
 {
   sout << prelim << "- " << name << " (" << get_NRV_only_this() << "/" <<  get_NOX_only_this() << ")" << std::endl;
   for (tuint i=0;i<Nentries;++i) {
+    entries[i]->eval_para();
     entries[i]->print(sout,prelim+"  ",counter,printID);
   }
 }
@@ -573,7 +596,10 @@ void RBRV_set_Nataf::transform_y2x()
     w_of_set = y_of_set;
   }
   const tdouble*const w_vec = w_of_set.get_tmp_vptr_const();
-  for (tuint i=0;i<Nentries;++i) entries[i]->transform_y2x(w_vec);
+  for (tuint i=0;i<Nentries;++i) {
+    entries[i]->eval_para();
+    entries[i]->transform_y2x(w_vec);
+  }
 }
 
 void RBRV_set_Nataf::transform_x2y()
@@ -607,7 +633,10 @@ void RBRV_set_Nataf::transform_y2w(const tdouble*const y_vec, tdouble*const w_ve
 
 void RBRV_set_Nataf::set_x(const tdouble*const x_vec)
 {
-  for (tuint i=0;i<Nentries;++i) entries[i]->set_x(x_vec[i]);
+  for (tuint i=0;i<Nentries;++i) {
+    entries[i]->eval_para();
+    entries[i]->set_x(x_vec[i]);
+  }
 }
 
 void RBRV_set_Nataf::get_x(tdouble*const x_vec)
@@ -714,6 +743,7 @@ void RBRV_set_noise::transform_y2x()
       throw FlxException_Crude("RBRV_set_noise::transform_y2x");
     }
   #endif
+  transf->eval_para();
   for (tuint i=0;i<sRV;++i) {
     #if FLX_DEBUG
       transf->set_is_valid(false);
@@ -765,6 +795,7 @@ void RBRV_set_noise::set_x(const tdouble*const x_vec)
       throw FlxException_Crude("RBRV_set_noise::set_x");
     }
   #endif
+  transf->eval_para();
   flxVec tv(x_vec,sRV);
   x_of_set = tv;
   #if FLX_DEBUG
@@ -840,6 +871,7 @@ void RBRV_set_noise::print(std::ostream& sout, const std::string prelim, tuint& 
     sout << "  ( RV-ID: [" << counter << ";" << counter+get_NOX_only_this() << "[ )";
   }
   sout << std::endl;  
+  transf->eval_para();
   transf->print(sout,prelim+"  ",counter,false);
   counter += get_NOX_only_this();
 }
@@ -975,6 +1007,7 @@ void RBRV_set_proc::transform_y2x()
       }
   }
   // transform from correlated standard normal to original space
+    transf->eval_para();
     for (tuint i=0;i<N;++i) {
       #if FLX_DEBUG
         transf->set_is_valid(false);
@@ -1026,6 +1059,7 @@ void RBRV_set_proc::set_x(const tdouble*const x_vec)
       throw FlxException_Crude("RBRV_set_proc::set_x");
     }
   #endif
+  transf->eval_para();
   flxVec tv(x_vec,N);
   x_of_set = tv;
   #if FLX_DEBUG
@@ -1080,6 +1114,7 @@ void RBRV_set_proc::print(std::ostream& sout, const std::string prelim, tuint& c
     sout << prelim << "  ( RV-ID: [" << counter << ";" << counter+get_NOX_only_this() << "[ )";
   }
   sout << std::endl;  
+  transf->eval_para();
   transf->print(sout,prelim+"  ",counter,false);
   counter += get_NOX_only_this();
 }
@@ -1931,8 +1966,8 @@ const bool RBRV_constructor::check_xVec(const flxVec& xV) const
 
 void RBRV_constructor::calc_Jinv(FlxMtxLTri& dxdy)
 {
-  if (get_NRV()!=get_NOX()) throw FlxException_NotImplemented("RBRV_constructor::calc_Jinv_1");
-  if (get_NRV()!=dxdy.ncols()) throw FlxException_Crude("RBRV_constructor::calc_Jinv_2");
+  if (get_NRV()!=get_NOX()) throw FlxException_NotImplemented("RBRV_constructor::calc_Jinv_01");
+  if (get_NRV()!=dxdy.ncols()) throw FlxException_Crude("RBRV_constructor::calc_Jinv_02");
   dxdy.set_zeroMtx();
   flxVec dxdw(get_NRV());
   tdouble* dxdwp = dxdw.get_tmp_vptr();

@@ -305,6 +305,7 @@ FlxFunction* flxBayDA_likeli::gen_para_fun(const tuint ftype, const tuint pid)
 
 const tdouble flxBayDA_likeli::calc_likeli()
 {
+    rv->eval_para();
     pdouble res;
     const tuint N = data_vec->get_N();
     const tdouble* pdv = data_vec->get_tmp_vptr_const();
@@ -874,6 +875,7 @@ const tdouble flxBayDA::find_MLE(flxBayDA_likeli& likeli, const tdouble step_siz
 
 const tdouble FunRVcheckX::calc()
 {
+    rv->eval_para();
     return rv->check_x(child_1->calc());
 }
 

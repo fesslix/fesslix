@@ -104,7 +104,16 @@ const tdouble RBRV_entry_RV_stdN::get_HPD(const tdouble p)
 RBRV_entry_RV_normal::RBRV_entry_RV_normal(const std::string& name, const tuint iID, const int pid, FlxFunction* p1v, FlxFunction* p2v, FlxFunction* p3v, FlxFunction* p4v, const bool eval_once)
 : RBRV_entry_RV_base(name,iID), pid(pid), p1(p1v), p2(p2v), p3(p3v), p4(p4v), eval_once(eval_once), mu(ZERO), sigma(ZERO)
 {
-
+  try {
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_normal::RBRV_entry_RV_normal_100",1);
+    if (p1) delete p1;
+    if (p2) delete p2;
+    if (p3) delete p3;
+    if (p4) delete p4;
+    throw;
+  }
 }
 
 RBRV_entry_RV_normal::RBRV_entry_RV_normal(const std::string& name, const tuint iID, py::dict config)
@@ -136,6 +145,8 @@ RBRV_entry_RV_normal::RBRV_entry_RV_normal(const std::string& name, const tuint 
     }
 
     eval_once = parse_py_para_as_bool("eval_once", config, false, false);
+
+    this->init();
   } catch (FlxException& e) {
     FLXMSG("RBRV_entry_RV_normal::RBRV_entry_RV_normal_99",1);
     if (p1) delete p1;
@@ -154,7 +165,7 @@ RBRV_entry_RV_normal::~RBRV_entry_RV_normal()
   if (p4) delete p4;
 }
 
-void RBRV_entry_RV_normal::get_paras()
+void RBRV_entry_RV_normal::eval_para()
 {
   if (!eval_once || (eval_once&&p1) ) {
     switch (pid) {
@@ -273,43 +284,36 @@ void RBRV_entry_RV_normal::get_para_from_quantile3(tdouble& meanV, const tdouble
 
 const tdouble RBRV_entry_RV_normal::transform_y2x(const tdouble y_val)
 {
-  get_paras();
   return mu+sigma*y_val;
 }
 
 const tdouble RBRV_entry_RV_normal::transform_x2y(const tdouble& x_val)
 {
-  get_paras();
   return (x_val-mu)/sigma;
 }
 
 const tdouble RBRV_entry_RV_normal::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_paras();
   return rv_phi((x_val-mu)/sigma)/sigma;
 }
 
 const tdouble RBRV_entry_RV_normal::calc_pdf_x_log(const tdouble& x_val, const bool safeCalc)
 {
-  get_paras();
   return rv_phi_log((x_val-mu)/sigma)-log(sigma);
 }
 
 const tdouble RBRV_entry_RV_normal::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_paras();
   return rv_Phi((x_val-mu)/sigma);
 }
 
 const tdouble RBRV_entry_RV_normal::calc_sf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_paras();
   return rv_Phi((mu-x_val)/sigma);
 }
 
 const tdouble RBRV_entry_RV_normal::calc_entropy()
 {
-  get_paras();
   const tdouble s = sigma;
   return log(2*PI*exp(ONE)*pow2(s))/2;
 }
@@ -323,7 +327,6 @@ const bool RBRV_entry_RV_normal::search_circref(FlxFunction* fcr)
 py::dict RBRV_entry_RV_normal::info()
 {
   py::dict res = RBRV_entry_RV_base::info();
-  get_paras();
   res["mean"] = get_mean_current_config();
   res["sd"] = get_sd_current_config();
   res["entropy"] = calc_entropy();
@@ -332,8 +335,23 @@ py::dict RBRV_entry_RV_normal::info()
 
 const tdouble RBRV_entry_RV_normal::get_HPD(const tdouble p)
 {
-  get_paras();
   return (ONE-p)/2;
+}
+
+RBRV_entry_RV_lognormal::RBRV_entry_RV_lognormal(const std::string& name, const tuint iID, const int pid, FlxFunction* p1, FlxFunction* p2, FlxFunction* p3, FlxFunction* p4, FlxFunction* epsilon, const bool eval_once)
+: RBRV_entry_RV_base(name,iID), pid(pid), p1(p1), p2(p2), p3(p3), p4(p4), epsilon(epsilon), eval_once(eval_once), lambda(ZERO), zeta(ZERO), eps(ZERO)
+{
+  try {
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_lognormal::RBRV_entry_RV_lognormal_100",1);
+    if (p1) delete p1;
+    if (p2) delete p2;
+    if (p3) delete p3;
+    if (p4) delete p4;
+    if (epsilon) delete epsilon;
+    throw;
+  }
 }
 
 RBRV_entry_RV_lognormal::RBRV_entry_RV_lognormal(const std::string& name, const tuint iID, py::dict config)
@@ -382,8 +400,10 @@ RBRV_entry_RV_lognormal::RBRV_entry_RV_lognormal(const std::string& name, const 
     epsilon = parse_py_para("epsilon", config, false);
 
     eval_once = parse_py_para_as_bool("eval_once", config, false, false);
+
+    this->init();
   } catch (FlxException& e) {
-    FLXMSG("RBRV_entry_RV_normal::RBRV_entry_RV_normal_99",1);
+    FLXMSG("RBRV_entry_RV_lognormal::RBRV_entry_RV_lognormal_99",1);
     if (p1) delete p1;
     if (p2) delete p2;
     if (p3) delete p3;
@@ -402,7 +422,7 @@ RBRV_entry_RV_lognormal::~RBRV_entry_RV_lognormal()
   if (epsilon) delete epsilon;
 }
 
-void RBRV_entry_RV_lognormal::get_paras()
+void RBRV_entry_RV_lognormal::eval_para()
 {
   if (!eval_once || (eval_once&&p1) ) {
     const tdouble p1d = ((pid==6)?p1->cast2positive():p1->calc());
@@ -531,13 +551,11 @@ void RBRV_entry_RV_lognormal::get_paras()
 
 const tdouble RBRV_entry_RV_lognormal::transform_y2x(const tdouble y_val)
 {
-  get_paras();
   return exp(y_val*zeta+lambda)+eps;
 }
 
 const tdouble RBRV_entry_RV_lognormal::transform_x2y(const tdouble& x_val)
 {
-  get_paras();
   if (x_val<=eps) {
     std::ostringstream ssV;
     ssV << "A value (" << GlobalVar.Double2String(x_val) << ") smaller or equal than '" << GlobalVar.Double2String(eps) << "' is not allowed at this point.";
@@ -548,7 +566,6 @@ const tdouble RBRV_entry_RV_lognormal::transform_x2y(const tdouble& x_val)
 
 const tdouble RBRV_entry_RV_lognormal::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_paras();
   if (x_val<=eps) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -560,7 +577,6 @@ const tdouble RBRV_entry_RV_lognormal::calc_pdf_x(const tdouble& x_val, const bo
 
 const tdouble RBRV_entry_RV_lognormal::calc_pdf_x_log(const tdouble& x_val, const bool safeCalc)
 {
-  get_paras();
   if (x_val<=eps) {
     if (safeCalc) return log(ZERO);
     std::ostringstream ssV;
@@ -572,7 +588,6 @@ const tdouble RBRV_entry_RV_lognormal::calc_pdf_x_log(const tdouble& x_val, cons
 
 const tdouble RBRV_entry_RV_lognormal::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_paras();
   if (x_val<=eps) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -584,7 +599,6 @@ const tdouble RBRV_entry_RV_lognormal::calc_cdf_x(const tdouble& x_val, const bo
 
 const tdouble RBRV_entry_RV_lognormal::calc_sf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_paras();
   if (x_val<=eps) {
     if (safeCalc) return ONE;
     std::ostringstream ssV;
@@ -596,37 +610,31 @@ const tdouble RBRV_entry_RV_lognormal::calc_sf_x(const tdouble& x_val, const boo
 
 const tdouble RBRV_entry_RV_lognormal::calc_entropy()
 {
-  get_paras();
   return (ONE+log(2*PI*pow2(zeta)))/2+lambda;
 }
 
 const tdouble RBRV_entry_RV_lognormal::get_mean_current_config()
 {
-  get_paras();
   return exp(lambda+pow2(zeta)/(ONE*2))+eps;
 }
 
 const tdouble RBRV_entry_RV_lognormal::get_sd_current_config()
 {
-  get_paras();
   return sqrt(exp(pow2(zeta))-ONE)*exp(lambda+pow2(zeta)/(ONE*2));
 }
 
 const tdouble RBRV_entry_RV_lognormal::get_median_current_config()
 {
-  get_paras();
   return exp(lambda)+eps;
 }
 
 const tdouble RBRV_entry_RV_lognormal::get_mode_current_config()
 {
-  get_paras();
   return exp(lambda-pow2(zeta))+eps;
 }
 
 const bool RBRV_entry_RV_lognormal::check_x(const tdouble xV)
 {
-  get_paras();
   return (xV>eps);
 }
 
@@ -639,7 +647,6 @@ const bool RBRV_entry_RV_lognormal::search_circref(FlxFunction* fcr)
 py::dict RBRV_entry_RV_lognormal::info()
 {
   py::dict res = RBRV_entry_RV_base::info();
-  get_paras();
   res["lambda"] = lambda;
   res["zeta"] = zeta;
   res["epsilon"] = eps;
@@ -651,10 +658,22 @@ py::dict RBRV_entry_RV_lognormal::info()
 
 const tdouble RBRV_entry_RV_lognormal::get_CoeffOfVar_withoutEpsilon()
 {
-  get_paras();
   return get_sd_current_config()/(get_mean_current_config()-eps);
 }
 
+
+RBRV_entry_RV_uniform::RBRV_entry_RV_uniform(const std::string& name, const tuint iID, FlxFunction* a, FlxFunction* b, const bool eval_once)
+: RBRV_entry_RV_base(name,iID), a(a), b(b), eval_once(eval_once), av(ZERO), bv(ZERO)
+{
+  try {
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_uniform::RBRV_entry_RV_uniform",1);
+    if (a) delete a;
+    if (b) delete b;
+    throw;
+  }
+}
 
 RBRV_entry_RV_uniform::~RBRV_entry_RV_uniform()
 {
@@ -662,7 +681,7 @@ RBRV_entry_RV_uniform::~RBRV_entry_RV_uniform()
   if (b) delete b;
 }
 
-void RBRV_entry_RV_uniform::get_paras()
+void RBRV_entry_RV_uniform::eval_para()
 {
   if (!eval_once || (eval_once && a) ) {
     av = a->calc();
@@ -681,7 +700,6 @@ void RBRV_entry_RV_uniform::get_paras()
 
 const tdouble RBRV_entry_RV_uniform::transform_y2x(const tdouble y_val)
 {
-  get_paras();
   if (y_val<=-Y_INFTY_2) {
     return av;
   }
@@ -693,7 +711,6 @@ const tdouble RBRV_entry_RV_uniform::transform_y2x(const tdouble y_val)
 
 const tdouble RBRV_entry_RV_uniform::transform_x2y(const tdouble& x_val)
 {
-  get_paras();
   if (x_val>bv || x_val<av) {
     std::ostringstream ssV;
     ssV << "Value (" << GlobalVar.Double2String(x_val) << ") is not within the valid bounds [" << GlobalVar.Double2String(av) << ";" << GlobalVar.Double2String(bv) << "].";
@@ -704,7 +721,6 @@ const tdouble RBRV_entry_RV_uniform::transform_x2y(const tdouble& x_val)
 
 const tdouble RBRV_entry_RV_uniform::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_paras();
   if (x_val>bv || x_val<av) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -716,7 +732,6 @@ const tdouble RBRV_entry_RV_uniform::calc_pdf_x(const tdouble& x_val, const bool
 
 const tdouble RBRV_entry_RV_uniform::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_paras();
   if (x_val>bv || x_val<av) {
     if (safeCalc) {
       if (x_val<av) return ZERO;
@@ -731,7 +746,6 @@ const tdouble RBRV_entry_RV_uniform::calc_cdf_x(const tdouble& x_val, const bool
 
 const tdouble RBRV_entry_RV_uniform::calc_sf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_paras();
   if (x_val>bv || x_val<av) {
     if (safeCalc) {
       if (x_val<av) return ONE;
@@ -746,25 +760,21 @@ const tdouble RBRV_entry_RV_uniform::calc_sf_x(const tdouble& x_val, const bool 
 
 const tdouble RBRV_entry_RV_uniform::calc_entropy()
 {
-  get_paras();
   return log(bv-av);
 }
 
 const tdouble RBRV_entry_RV_uniform::get_mean_current_config()
 {
-  get_paras();
   return (av+bv)/2;
 }
 
 const tdouble RBRV_entry_RV_uniform::get_sd_current_config()
 {
-  get_paras();
   return (bv+av)/sqrt(12*ONE);
 }
 
 const bool RBRV_entry_RV_uniform::check_x(const tdouble xV)
 {
-  get_paras();
   return (xV<=bv&&xV>=av);
 }
 
@@ -776,7 +786,6 @@ const bool RBRV_entry_RV_uniform::search_circref(FlxFunction* fcr)
 
 const tdouble RBRV_entry_RV_uniform::get_HPD(const tdouble p)
 {
-  get_paras();
   return (ONE-p)/2;
 }
 
@@ -789,10 +798,23 @@ const tdouble RBRV_entry_RV_uniform::Inv_cdf_x(const tdouble p)
       throw FlxException("RBRV_entry_RV_uniform::Inv_cdf_x", ssV.str() );
     }
   #endif
-  get_paras();
   return av+p*(bv-av);
 }
 
+RBRV_entry_RV_Gumbel::RBRV_entry_RV_Gumbel(const std::string& name, const tuint iID, const int methID, FlxFunction* p1, FlxFunction* p2, FlxFunction* p3, FlxFunction* p4, const bool eval_once)
+: RBRV_entry_RV_base(name,iID), methID(methID), p1(p1), p2(p2), p3(p3), p4(p4), eval_once(eval_once), u(ZERO), alpha(ZERO)
+{
+  try {
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_Gumbel::RBRV_entry_RV_Gumbel",1);
+    if (p1) delete p1;
+    if (p2) delete p2;
+    if (p3) delete p3;
+    if (p4) delete p4;
+    throw;
+  }
+}
 
 RBRV_entry_RV_Gumbel::~RBRV_entry_RV_Gumbel()
 {
@@ -802,7 +824,7 @@ RBRV_entry_RV_Gumbel::~RBRV_entry_RV_Gumbel()
   if (p4) delete p4;
 }
 
-void RBRV_entry_RV_Gumbel::get_pars()
+void RBRV_entry_RV_Gumbel::eval_para()
 {
   if (!eval_once || (eval_once&&p1) ) {
     switch (methID) {
@@ -866,13 +888,11 @@ void RBRV_entry_RV_Gumbel::get_pars()
 
 const tdouble RBRV_entry_RV_Gumbel::transform_y2x(const tdouble y_val)
 {
-  get_pars();
   return u-(std::log((rv_Phi(y_val)==ONE)?(rv_Phi(-y_val)):(-std::log(rv_Phi(y_val)))))/alpha;
 }
 
 const tdouble RBRV_entry_RV_Gumbel::transform_x2y(const tdouble& x_val)
 {
-  get_pars();
   const tdouble ep = -exp(-alpha*(x_val-u));
   const tdouble p = exp(ep);
   if (p<=0.5) {
@@ -889,50 +909,42 @@ const tdouble RBRV_entry_RV_Gumbel::transform_x2y(const tdouble& x_val)
 
 const tdouble RBRV_entry_RV_Gumbel::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   return alpha*exp(-alpha*(x_val-u)-exp(-alpha*(x_val-u)));
 }
 
 const tdouble RBRV_entry_RV_Gumbel::calc_pdf_x_log(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   const tdouble res = log(alpha)+(-alpha*(x_val-u)-exp(-alpha*(x_val-u)));
   return res;
 }
 
 const tdouble RBRV_entry_RV_Gumbel::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   return exp(-exp(-alpha*(x_val-u)));
 }
 
 const tdouble RBRV_entry_RV_Gumbel::calc_entropy()
 {
-  get_pars();
   return ONE+GAMMA-log(alpha);
 }
 
 const tdouble RBRV_entry_RV_Gumbel::get_mean_current_config()
 {
-  get_pars();
   return u + GAMMA/alpha;
 }
 
 const tdouble RBRV_entry_RV_Gumbel::get_sd_current_config()
 {
-  get_pars();
   return PI/(sqrt(6*ONE)*alpha);
 }
 
 const tdouble RBRV_entry_RV_Gumbel::get_median_current_config()
 {
-  get_pars();
   return u - log(log(2*ONE))/alpha;
 }
 
 const tdouble RBRV_entry_RV_Gumbel::get_mode_current_config()
 {
-  get_pars();
   return u;
 }
 
@@ -945,13 +957,27 @@ const bool RBRV_entry_RV_Gumbel::search_circref(FlxFunction* fcr)
 py::dict RBRV_entry_RV_Gumbel::info()
 {
   py::dict res = RBRV_entry_RV_base::info();
-  get_pars();
   res["u"] = u;
   res["alpha"] = alpha;
   res["mean"] = get_mean_current_config();
   res["sd"] = get_sd_current_config();
   res["entropy"] = calc_entropy();
   return res;
+}
+
+RBRV_entry_RV_normal_trunc::RBRV_entry_RV_normal_trunc(const std::string& name, const tuint iID, FlxFunction* m, FlxFunction* s, FlxFunction* a, FlxFunction* b, const bool eval_once)
+:RBRV_entry_RV_base(name,iID), m(m), s(s), a(a), b(b), eval_once(eval_once), mV(ZERO), sV(ZERO), aV(ZERO), bV(ZERO), alpha(ZERO), beta(ZERO), q(ZERO)
+{
+  try {
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_normal_trunc::RBRV_entry_RV_normal_trunc",1);
+    if (m) delete m;
+    if (s) delete s;
+    if (a) delete a;
+    if (b) delete b;
+    throw;
+  }
 }
 
 RBRV_entry_RV_normal_trunc::~RBRV_entry_RV_normal_trunc()
@@ -962,7 +988,7 @@ RBRV_entry_RV_normal_trunc::~RBRV_entry_RV_normal_trunc()
   if (b) delete b;
 }
 
-void RBRV_entry_RV_normal_trunc::get_pars()
+void RBRV_entry_RV_normal_trunc::eval_para()
 {
   if (!eval_once || (eval_once&&m) ) {
     mV = m->calc();
@@ -986,8 +1012,6 @@ void RBRV_entry_RV_normal_trunc::get_pars()
 
 const tdouble RBRV_entry_RV_normal_trunc::transform_y2x(const tdouble y_val)
 {
-  get_pars();
-  
   tdouble res;
   if (y_val<=ZERO) {
     if (alpha<=ZERO) {
@@ -1022,7 +1046,6 @@ const tdouble RBRV_entry_RV_normal_trunc::transform_y2x(const tdouble y_val)
 
 const tdouble RBRV_entry_RV_normal_trunc::transform_x2y(const tdouble& x_val)
 {
-  get_pars();
   if (x_val>bV || x_val<aV) {
     std::ostringstream ssV;
     ssV << "Value (" << GlobalVar.Double2String(x_val) << ") is not within the valid bounds [" << GlobalVar.Double2String(aV) << ";" << GlobalVar.Double2String(bV) << "].";
@@ -1033,7 +1056,6 @@ const tdouble RBRV_entry_RV_normal_trunc::transform_x2y(const tdouble& x_val)
 
 const tdouble RBRV_entry_RV_normal_trunc::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val>bV || x_val<aV) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -1046,7 +1068,6 @@ const tdouble RBRV_entry_RV_normal_trunc::calc_pdf_x(const tdouble& x_val, const
 
 const tdouble RBRV_entry_RV_normal_trunc::calc_pdf_x_log(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val>bV || x_val<aV) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -1059,7 +1080,6 @@ const tdouble RBRV_entry_RV_normal_trunc::calc_pdf_x_log(const tdouble& x_val, c
 
 const tdouble RBRV_entry_RV_normal_trunc::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val>bV || x_val<aV) {
     if (safeCalc) {
       if (x_val<aV) return ZERO;
@@ -1074,7 +1094,6 @@ const tdouble RBRV_entry_RV_normal_trunc::calc_cdf_x(const tdouble& x_val, const
 
 const tdouble RBRV_entry_RV_normal_trunc::calc_sf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val>bV || x_val<aV) {
     if (safeCalc) {
       if (x_val<aV) return ONE;
@@ -1089,13 +1108,11 @@ const tdouble RBRV_entry_RV_normal_trunc::calc_sf_x(const tdouble& x_val, const 
 
 const tdouble RBRV_entry_RV_normal_trunc::get_mean_current_config()
 {
-  get_pars();
   return mV+(rv_phi(alpha)-rv_phi(beta))/q*sV;
 }
 
 const tdouble RBRV_entry_RV_normal_trunc::get_sd_current_config()
 {
-  get_pars();
   return sV*sqrt(
     ONE
     + (alpha*rv_phi(alpha)-beta*rv_phi(beta))/q
@@ -1105,13 +1122,11 @@ const tdouble RBRV_entry_RV_normal_trunc::get_sd_current_config()
 
 const tdouble RBRV_entry_RV_normal_trunc::get_median_current_config()
 {
-  get_pars();
   return mV+rv_InvPhi((rv_Phi(alpha)+rv_Phi(beta))/2)*sV;
 }
 
 const tdouble RBRV_entry_RV_normal_trunc::get_mode_current_config()
 {
-  get_pars();
   if (mV<alpha) return alpha;
   if (mV>beta) return beta;
   return mV;
@@ -1119,13 +1134,11 @@ const tdouble RBRV_entry_RV_normal_trunc::get_mode_current_config()
 
 const tdouble RBRV_entry_RV_normal_trunc::calc_entropy()
 {
-  get_pars();
   return log(sqrt(2*PI*exp(ONE))*sV*q)+(alpha*rv_phi(alpha)-beta*rv_phi(beta))/(2*q);
 }
 
 const bool RBRV_entry_RV_normal_trunc::check_x(const tdouble xV)
 {
-  get_pars();
   return (xV<=bV&&xV>=aV);
 }
 
@@ -1138,7 +1151,6 @@ const bool RBRV_entry_RV_normal_trunc::search_circref(FlxFunction* fcr)
 py::dict RBRV_entry_RV_normal_trunc::info()
 {
   py::dict res = RBRV_entry_RV_base::info();
-  get_pars();
   res["m"] = mV;
   res["s"] = sV;
   res["a"] = aV;
@@ -1149,6 +1161,21 @@ py::dict RBRV_entry_RV_normal_trunc::info()
   return res;
 }
 
+RBRV_entry_RV_beta::RBRV_entry_RV_beta(const std::string& name, const tuint iID, const bool is_mean, FlxFunction* p1, FlxFunction* p2, FlxFunction* a, FlxFunction* b, const bool eval_once)
+: RBRV_entry_RV_base(name,iID), is_mean(is_mean), p1(p1), p2(p2), a(a), b(b), eval_once(eval_once), alpha(ZERO), beta(ZERO), av(ZERO), bv(ZERO)
+{
+  try {
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_beta::RBRV_entry_RV_beta",1);
+    if (p1) delete p1;
+    if (p2) delete p2;
+    if (a) delete a;
+    if (b) delete b;
+    throw;
+  }
+}
+
 RBRV_entry_RV_beta::~RBRV_entry_RV_beta()
 {
   if (p1) delete p1;
@@ -1157,7 +1184,7 @@ RBRV_entry_RV_beta::~RBRV_entry_RV_beta()
   if (b) delete b;
 }
 
-void RBRV_entry_RV_beta::get_pars()
+void RBRV_entry_RV_beta::eval_para()
 {
   if (!eval_once || (eval_once&&p1) ) {
     const tdouble p1d = (is_mean?p1->calc():p1->cast2positive());
@@ -1199,7 +1226,6 @@ void RBRV_entry_RV_beta::get_pars()
 
 const tdouble RBRV_entry_RV_beta::transform_y2x(const tdouble y_val)
 {
-  get_pars();
   if (y_val<=-Y_INFTY_2) {
     return av;
   }
@@ -1212,7 +1238,6 @@ const tdouble RBRV_entry_RV_beta::transform_y2x(const tdouble y_val)
 
 const tdouble RBRV_entry_RV_beta::transform_x2y(const tdouble& x_val)
 {
-  get_pars();
   if (x_val>bv || x_val<av) {
     std::ostringstream ssV;
     ssV << "Value (" << GlobalVar.Double2String(x_val) << ") is not within the valid bounds [" << GlobalVar.Double2String(av) << ";" << GlobalVar.Double2String(bv) << "].";
@@ -1224,7 +1249,6 @@ const tdouble RBRV_entry_RV_beta::transform_x2y(const tdouble& x_val)
 
 const tdouble RBRV_entry_RV_beta::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val>bv || x_val<av) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -1241,7 +1265,6 @@ const tdouble RBRV_entry_RV_beta::calc_pdf_x(const tdouble& x_val, const bool sa
 
 const tdouble RBRV_entry_RV_beta::calc_pdf_x_log(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val>bv || x_val<av) {
     if (safeCalc) return log(ZERO);
     std::ostringstream ssV;
@@ -1258,7 +1281,6 @@ const tdouble RBRV_entry_RV_beta::calc_pdf_x_log(const tdouble& x_val, const boo
 
 const tdouble RBRV_entry_RV_beta::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val>bv || x_val<av) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -1271,7 +1293,6 @@ const tdouble RBRV_entry_RV_beta::calc_cdf_x(const tdouble& x_val, const bool sa
 
 const tdouble RBRV_entry_RV_beta::calc_sf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val>bv || x_val<av) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -1284,7 +1305,6 @@ const tdouble RBRV_entry_RV_beta::calc_sf_x(const tdouble& x_val, const bool saf
 
 const tdouble RBRV_entry_RV_beta::calc_entropy()
 {
-  get_pars();
   const tdouble lnbetafun = BetaFunLn(alpha,beta);
   const tdouble entropy01 = lnbetafun 
           - (alpha-ONE)*flxdigamma(alpha)
@@ -1295,13 +1315,11 @@ const tdouble RBRV_entry_RV_beta::calc_entropy()
 
 const tdouble RBRV_entry_RV_beta::get_mean_current_config()
 {
-  get_pars();
   return alpha/(alpha+beta)*(bv-av)+av;
 }
 
 const tdouble RBRV_entry_RV_beta::get_sd_current_config()
 {
-  get_pars();
   return sqrt(alpha*beta/(pow2(alpha+beta)*(alpha+beta+ONE))) * (bv-av);
 }
 
@@ -1312,7 +1330,6 @@ const tdouble RBRV_entry_RV_beta::get_median_current_config()
 
 const tdouble RBRV_entry_RV_beta::get_mode_current_config()
 {
-  get_pars();
   if (alpha>ONE && beta>ONE) {
     return (alpha-ONE)/(alpha+beta-2*ONE)*(bv-av)+av;
   }
@@ -1323,7 +1340,6 @@ const tdouble RBRV_entry_RV_beta::get_mode_current_config()
 
 const bool RBRV_entry_RV_beta::check_x(const tdouble xV)
 {
-  get_pars();
   return (xV<=bv&&xV>=av);
 }
 
@@ -1336,7 +1352,6 @@ const bool RBRV_entry_RV_beta::search_circref(FlxFunction* fcr)
 py::dict RBRV_entry_RV_beta::info()
 {
   py::dict res = RBRV_entry_RV_base::info();
-  get_pars();
   res["alpha"] = alpha;
   res["beta"] = beta;
   res["a"] = av;
@@ -1356,21 +1371,37 @@ const tdouble RBRV_entry_RV_beta::Inv_cdf_x(const tdouble p)
       throw FlxException("RBRV_entry_RV_beta::Inv_cdf_x", ssV.str() );
     }
   #endif
-  get_pars();
   const tdouble x = iBeta_reg_inv(alpha,beta,p);
   return x*(bv-av)+av;        // scale x to [a;b]
 }
 
+RBRV_entry_RV_exponential::RBRV_entry_RV_exponential(const std::string& name, const tuint iID, FlxFunction* lambda, FlxFunction* epsilon)
+: RBRV_entry_RV_base(name,iID), lambda(lambda), epsilon(epsilon), lambdaV(ZERO), eps(ZERO)
+{
+  try {
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_exponential::RBRV_entry_RV_exponential",1);
+    if (lambda) delete lambda;
+    if (epsilon) delete epsilon;
+    throw;
+  }
+}
+
 RBRV_entry_RV_exponential::~RBRV_entry_RV_exponential()
 {
-  delete lambda;
+  if (lambda) delete lambda;
   if (epsilon) delete epsilon;
+}
+
+void RBRV_entry_RV_exponential::eval_para()
+{
+  lambdaV = lambda->cast2positive();
+  eps = (epsilon?(epsilon->calc()):ZERO);
 }
 
 const tdouble RBRV_entry_RV_exponential::transform_y2x(const tdouble y_val)
 {
-  const tdouble lambdaV = lambda->cast2positive();
-  const tdouble eps = (epsilon?(epsilon->calc()):ZERO);
   tdouble res = -ONE*std::log((y_val>ZERO)?(rv_Phi(-y_val)):(ONE-rv_Phi(y_val)))/lambdaV;
   res += eps;
   return res;
@@ -1378,8 +1409,6 @@ const tdouble RBRV_entry_RV_exponential::transform_y2x(const tdouble y_val)
 
 const tdouble RBRV_entry_RV_exponential::transform_x2y(const tdouble& x_val)
 {
-  const tdouble lambdaV = lambda->cast2positive();
-  const tdouble eps = (epsilon?(epsilon->calc()):ZERO);
   if (x_val<eps) {
     std::ostringstream ssV;
     ssV << "A negative value (" << GlobalVar.Double2String(x_val) << ") is not allowed at this point.";
@@ -1390,8 +1419,6 @@ const tdouble RBRV_entry_RV_exponential::transform_x2y(const tdouble& x_val)
 
 const tdouble RBRV_entry_RV_exponential::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  const tdouble lambdaV = lambda->cast2positive();
-  const tdouble eps = (epsilon?(epsilon->calc()):ZERO);
   if (x_val<eps) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -1403,8 +1430,6 @@ const tdouble RBRV_entry_RV_exponential::calc_pdf_x(const tdouble& x_val, const 
 
 const tdouble RBRV_entry_RV_exponential::calc_pdf_x_log(const tdouble& x_val, const bool safeCalc)
 {
-  const tdouble lambdaV = lambda->cast2positive();
-  const tdouble eps = (epsilon?(epsilon->calc()):ZERO);
   if (x_val<eps) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -1421,8 +1446,6 @@ const tdouble RBRV_entry_RV_exponential::calc_cdf_x(const tdouble& x_val, const 
 
 const tdouble RBRV_entry_RV_exponential::calc_sf_x(const tdouble& x_val, const bool safeCalc)
 {
-  const tdouble lambdaV = lambda->cast2positive();
-  const tdouble eps = (epsilon?(epsilon->calc()):ZERO);
   if (x_val<eps) {
     if (safeCalc) return ONE;
     std::ostringstream ssV;
@@ -1434,38 +1457,31 @@ const tdouble RBRV_entry_RV_exponential::calc_sf_x(const tdouble& x_val, const b
 
 const tdouble RBRV_entry_RV_exponential::calc_entropy()
 {
-  return ONE - log(lambda->cast2positive());
+  return ONE - log(lambdaV);
 }
 
 const tdouble RBRV_entry_RV_exponential::get_mean_current_config()
 {
-  const tdouble lambdaV = lambda->cast2positive();
-  const tdouble eps = (epsilon?(epsilon->calc()):ZERO);
   return eps+ONE/lambdaV;
 }
 
 const tdouble RBRV_entry_RV_exponential::get_sd_current_config()
 {
-  const tdouble lambdaV = lambda->cast2positive();
   return ONE/lambdaV;
 }
 
 const tdouble RBRV_entry_RV_exponential::get_median_current_config()
 {
-  const tdouble lambdaV = lambda->cast2positive();
-  const tdouble eps = (epsilon?(epsilon->calc()):ZERO);
   return eps+log(2*ONE)/lambdaV;
 }
 
 const tdouble RBRV_entry_RV_exponential::get_mode_current_config()
 {
-  const tdouble eps = (epsilon?(epsilon->calc()):ZERO);
   return eps;
 }
 
 const bool RBRV_entry_RV_exponential::check_x(const tdouble xV)
 {
-  const tdouble eps = (epsilon?(epsilon->calc()):ZERO);
   return (xV>=eps);
 }
 
@@ -1478,8 +1494,7 @@ const bool RBRV_entry_RV_exponential::search_circref(FlxFunction* fcr)
 py::dict RBRV_entry_RV_exponential::info()
 {
   py::dict res = RBRV_entry_RV_base::info();
-  res["lambda"] = lambda->calc();
-  const tdouble eps = (epsilon?(epsilon->calc()):ZERO);
+  res["lambda"] = lambdaV;
   res["epsilon"] = eps;
   res["mean"] = get_mean_current_config();
   res["sd"] = get_sd_current_config();
@@ -1488,6 +1503,19 @@ py::dict RBRV_entry_RV_exponential::info()
 }
 
 
+RBRV_entry_RV_gamma::RBRV_entry_RV_gamma(const std::string& name, const tuint iID, const bool is_mean, FlxFunction* p1, FlxFunction* p2, FlxFunction* epsilon, const bool eval_once)
+: RBRV_entry_RV_base(name,iID), is_mean(is_mean), p1(p1), p2(p2), epsilon(epsilon), eval_once(eval_once), k(ZERO), lambda(ZERO), eps(ZERO)
+{
+  try {
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_gamma::RBRV_entry_RV_gamma",1);
+    if (p2) delete p2;
+    if (p1) delete p1;
+    if (epsilon) delete epsilon;
+    throw;
+  }
+}
 
 RBRV_entry_RV_gamma::~RBRV_entry_RV_gamma()
 {
@@ -1496,7 +1524,7 @@ RBRV_entry_RV_gamma::~RBRV_entry_RV_gamma()
   if (epsilon) delete epsilon;
 }
 
-void RBRV_entry_RV_gamma::get_pars()
+void RBRV_entry_RV_gamma::eval_para()
 {
   if (!eval_once || (eval_once&&p1) ) {
     // compute parameters
@@ -1529,7 +1557,6 @@ void RBRV_entry_RV_gamma::get_pars()
 
 const tdouble RBRV_entry_RV_gamma::transform_y2x(const tdouble y_val)
 {
-  get_pars();
   tdouble res;
   if (y_val<=ZERO) {
     res = flxgamma_rl_inv(k,rv_Phi(y_val));
@@ -1543,7 +1570,6 @@ const tdouble RBRV_entry_RV_gamma::transform_y2x(const tdouble y_val)
 
 const tdouble RBRV_entry_RV_gamma::transform_x2y(const tdouble& x_val)
 {
-  get_pars();
   if (x_val<=eps) {
     std::ostringstream ssV;
     ssV << "A value (" << GlobalVar.Double2String(x_val) << ") smaller than (" << GlobalVar.Double2String(eps) << " is not allowed at this point.";
@@ -1558,7 +1584,6 @@ const tdouble RBRV_entry_RV_gamma::transform_x2y(const tdouble& x_val)
 
 const tdouble RBRV_entry_RV_gamma::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val<=eps) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -1576,7 +1601,6 @@ const tdouble RBRV_entry_RV_gamma::calc_cdf_x(const tdouble& x_val, const bool s
 
 const tdouble RBRV_entry_RV_gamma::calc_sf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val<=eps) {
     if (safeCalc) return ONE;
     std::ostringstream ssV;
@@ -1594,13 +1618,11 @@ const tdouble RBRV_entry_RV_gamma::calc_sf_x(const tdouble& x_val, const bool sa
 
 const tdouble RBRV_entry_RV_gamma::calc_entropy()
 {
-  get_pars();
   return k-log(lambda)+GammaLn(k)+(ONE-k)*flxdigamma(k);
 }
 
 const tdouble RBRV_entry_RV_gamma::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val<=eps) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -1612,7 +1634,6 @@ const tdouble RBRV_entry_RV_gamma::calc_pdf_x(const tdouble& x_val, const bool s
 
 const tdouble RBRV_entry_RV_gamma::calc_pdf_x_log(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val<=eps) {
     if (safeCalc) return log(ZERO);
     std::ostringstream ssV;
@@ -1624,13 +1645,11 @@ const tdouble RBRV_entry_RV_gamma::calc_pdf_x_log(const tdouble& x_val, const bo
 
 const tdouble RBRV_entry_RV_gamma::get_mean_current_config()
 {
-  get_pars();
   return eps+k/lambda;
 }
 
 const tdouble RBRV_entry_RV_gamma::get_sd_current_config()
 {
-  get_pars();
   return sqrt(k)/lambda;
 }
 
@@ -1641,14 +1660,12 @@ const tdouble RBRV_entry_RV_gamma::get_median_current_config()
 
 const tdouble RBRV_entry_RV_gamma::get_mode_current_config()
 {
-  get_pars();
   if (k>=ONE) return eps+(k-ONE)/lambda;
   throw FlxException_NotImplemented("RBRV_entry_RV_gamma::get_mode_current_config");
 }
 
 const bool RBRV_entry_RV_gamma::check_x(const tdouble xV)
 {
-  get_pars();
   return (xV>eps);
 }
 
@@ -1661,7 +1678,6 @@ const bool RBRV_entry_RV_gamma::search_circref(FlxFunction* fcr)
 py::dict RBRV_entry_RV_gamma::info()
 {
   py::dict res = RBRV_entry_RV_base::info();
-  get_pars();
   res["k"] = k;
   res["lambda"] = lambda;
   res["epsilon"] = eps;
@@ -1671,16 +1687,31 @@ py::dict RBRV_entry_RV_gamma::info()
   return res;
 }
 
+RBRV_entry_RV_Poisson::RBRV_entry_RV_Poisson(const std::string& name, const tuint iID, FlxFunction* mean)
+: RBRV_entry_RV_base(name,iID), mean(mean), meanV(ZERO)
+{
+  try {
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_Poisson::RBRV_entry_RV_Poisson",1);
+    if (mean) delete mean;
+    throw;
+  }
+}
 
 RBRV_entry_RV_Poisson::~RBRV_entry_RV_Poisson()
 {
   delete mean;
 }
 
+void RBRV_entry_RV_Poisson::eval_para()
+{
+  meanV = mean->cast2positive();
+}
+
 const tdouble RBRV_entry_RV_Poisson::transform_y2x(const tdouble y_val)
 {
   const tdouble p = rv_Phi(y_val);
-  const tdouble meanV = mean->cast2positive();
   const tuint ns = meanV*2;        // number of steps
   // determin the relevant interval
     tuint lc = 0;                // lower bound (in the set)
@@ -1711,24 +1742,22 @@ const tdouble RBRV_entry_RV_Poisson::transform_y2x(const tdouble y_val)
 
 const tdouble RBRV_entry_RV_Poisson::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  const tdouble lambdat = mean->cast2positive();
-  return flxgamma_ru(std::floor(x_val)+1,lambdat);
+  return flxgamma_ru(std::floor(x_val)+1,meanV);
 }
 
 const tdouble RBRV_entry_RV_Poisson::calc_sf_x(const tdouble& x_val, const bool safeCalc)
 {
-  const tdouble lambdat = mean->cast2positive();
-  return flxgamma_rl(std::floor(x_val)+1,lambdat);
+  return flxgamma_rl(std::floor(x_val)+1,meanV);
 }
 
 const tdouble RBRV_entry_RV_Poisson::get_mean_current_config()
 {
-  return mean->cast2positive();
+  return meanV;
 }
 
 const tdouble RBRV_entry_RV_Poisson::get_sd_current_config()
 {
-  return sqrt(mean->cast2positive());
+  return sqrt(meanV);
 }
 
 const bool RBRV_entry_RV_Poisson::check_x(const tdouble xV)
@@ -1743,13 +1772,26 @@ const bool RBRV_entry_RV_Poisson::search_circref(FlxFunction* fcr)
 }
 
 
+RBRV_entry_RV_Binomial::RBRV_entry_RV_Binomial(const std::string& name, const tuint iID, FlxFunction* p, FlxFunction* N, const bool eval_once)
+: RBRV_entry_RV_base(name,iID), p(p), N(N), eval_once(eval_once), _p(ZERO), _N(0)
+{
+  try {
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_Binomial::RBRV_entry_RV_Binomial",1);
+    if (p) delete p;
+    if (N) delete N;
+    throw;
+  }
+}
+
 RBRV_entry_RV_Binomial::~RBRV_entry_RV_Binomial()
 {
   if (p) delete p;
   if (N) delete N;
 }
 
-void RBRV_entry_RV_Binomial::get_pars()
+void RBRV_entry_RV_Binomial::eval_para()
 {
   if (!eval_once || (eval_once&&p) ) {
     _p = p->cast2positive_or0();
@@ -1769,8 +1811,6 @@ void RBRV_entry_RV_Binomial::get_pars()
 const tdouble RBRV_entry_RV_Binomial::transform_y2x(const tdouble y_val)
 {
   const tdouble cdf_p = rv_Phi(y_val);
-  // get the parameters of the distribution
-    get_pars();
   if (_N==0) {
     return ZERO;
   }
@@ -1795,7 +1835,6 @@ const tdouble RBRV_entry_RV_Binomial::transform_y2x(const tdouble y_val)
 
 const tdouble RBRV_entry_RV_Binomial::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val<ZERO) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -1813,13 +1852,11 @@ const tdouble RBRV_entry_RV_Binomial::calc_cdf_x(const tdouble& x_val, const boo
 
 const tdouble RBRV_entry_RV_Binomial::get_mean_current_config()
 {
-  get_pars();
   return _p*_N;
 }
 
 const tdouble RBRV_entry_RV_Binomial::get_sd_current_config()
 {
-  get_pars();
   return sqrt(_p*_N*(ONE-_p));
 }
 
@@ -1835,13 +1872,26 @@ const bool RBRV_entry_RV_Binomial::search_circref(FlxFunction* fcr)
 }
 
 
+RBRV_entry_RV_Cauchy::RBRV_entry_RV_Cauchy(const std::string& name, const tuint iID, FlxFunction* loc, FlxFunction* scale)
+: RBRV_entry_RV_base(name,iID), loc(loc), scale(scale), locv(ZERO), scalev(ZERO)
+{
+  try {
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_Cauchy::RBRV_entry_RV_Cauchy",1);
+    delete loc;
+    delete scale;
+    throw;
+  }
+}
+
 RBRV_entry_RV_Cauchy::~RBRV_entry_RV_Cauchy()
 {
   delete loc;
   delete scale;
 }
 
-void RBRV_entry_RV_Cauchy::get_paras(tdouble& locv, tdouble& scalev) const
+void RBRV_entry_RV_Cauchy::eval_para()
 {
   locv = loc->calc();
   scalev = scale->cast2positive();
@@ -1859,15 +1909,11 @@ const tdouble RBRV_entry_RV_Cauchy::get_sd_current_config()
 
 const tdouble RBRV_entry_RV_Cauchy::get_median_current_config()
 {
-  tdouble locv, scalev;
-  get_paras(locv,scalev);
   return locv;
 }
 
 const tdouble RBRV_entry_RV_Cauchy::get_mode_current_config()
 {
-  tdouble locv, scalev;
-  get_paras(locv,scalev);
   return locv;
 }
 
@@ -1880,34 +1926,40 @@ const bool RBRV_entry_RV_Cauchy::search_circref(FlxFunction* fcr)
 
 const tdouble RBRV_entry_RV_Cauchy::transform_y2x(const tdouble y_val)
 {
-  tdouble locv, scalev;
-  get_paras(locv,scalev);
   const tdouble p = (y_val>ZERO)?(ONE/2-rv_Phi(-y_val)):(rv_Phi(y_val)-ONE/2);
   return locv+scalev*tan(PI*(p));
 }
 
 const tdouble RBRV_entry_RV_Cauchy::transform_x2y(const tdouble& x_val)
 {
-  tdouble locv, scalev;
-  get_paras(locv,scalev);
   const tdouble p = std::atan((x_val-locv)/scalev)/PI;
   return (p<=ZERO)?(rv_InvPhi_noAlert(p+ONE/2)):(-rv_InvPhi_noAlert(ONE/2-p));
 }
 
 const tdouble RBRV_entry_RV_Cauchy::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  tdouble locv, scalev;
-  get_paras(locv,scalev);
   return (scalev/(pow2(x_val-locv)+pow2(scalev)))/PI;
 }
 
 const tdouble RBRV_entry_RV_Cauchy::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  tdouble locv, scalev;
-  get_paras(locv,scalev);
   return std::atan((x_val-locv)/scalev)/PI+ONE/2;
 }
 
+
+RBRV_entry_RV_Weibull::RBRV_entry_RV_Weibull(const std::string& name, const tuint iID, const bool is_mean, FlxFunction* p1, FlxFunction* p2, FlxFunction* epsilon, const bool eval_once)
+: RBRV_entry_RV_base(name,iID), is_mean(is_mean), p1(p1), p2(p2), epsilon(epsilon), eval_once(eval_once), k(ZERO), lambda(ZERO), eps(ZERO)
+{
+  try {
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_Weibull::RBRV_entry_RV_Weibull",1);
+    if (p2) delete p2;
+    if (p1) delete p1;
+    if (epsilon) delete epsilon;
+    throw;
+  }
+}
 
 RBRV_entry_RV_Weibull::~RBRV_entry_RV_Weibull()
 {
@@ -1916,7 +1968,7 @@ RBRV_entry_RV_Weibull::~RBRV_entry_RV_Weibull()
   if (epsilon) delete epsilon;
 }
 
-void RBRV_entry_RV_Weibull::get_pars()
+void RBRV_entry_RV_Weibull::eval_para()
 {
   if (!eval_once || (eval_once&&p1) ) {
     // compute parameters
@@ -2009,25 +2061,21 @@ void RBRV_entry_RV_Weibull::get_pars()
 
 const tdouble RBRV_entry_RV_Weibull::get_mean_current_config()
 {
-  get_pars();
   return get_mean_help();
 }
 
 const tdouble RBRV_entry_RV_Weibull::get_sd_current_config()
 {
-  get_pars();
   return get_sd_help();
 }
 
 const tdouble RBRV_entry_RV_Weibull::get_median_current_config()
 {
-  get_pars();
   return lambda*pow(log(2*ONE),ONE/k);
 }
 
 const tdouble RBRV_entry_RV_Weibull::get_mode_current_config()
 {
-  get_pars();
   if (k>ONE) return lambda*pow((k-ONE)/k,ONE/k);
   return ZERO;
 }
@@ -2058,7 +2106,6 @@ const tdouble RBRV_entry_RV_Weibull::get_cov_help()
 
 const bool RBRV_entry_RV_Weibull::check_x(const tdouble xV)
 {
-  get_pars();
   return (xV>eps);
 }
 
@@ -2071,7 +2118,6 @@ const bool RBRV_entry_RV_Weibull::search_circref(FlxFunction* fcr)
 py::dict RBRV_entry_RV_Weibull::info()
 {
   py::dict res = RBRV_entry_RV_base::info();
-  get_pars();
   res["k"] = k;
   res["lambda"] = lambda;
   res["epsilon"] = eps;
@@ -2083,7 +2129,6 @@ py::dict RBRV_entry_RV_Weibull::info()
 
 const tdouble RBRV_entry_RV_Weibull::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val<=eps) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -2096,7 +2141,6 @@ const tdouble RBRV_entry_RV_Weibull::calc_pdf_x(const tdouble& x_val, const bool
 
 const tdouble RBRV_entry_RV_Weibull::calc_pdf_x_log(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val<=eps) {
     if (safeCalc) return log(ZERO);
     std::ostringstream ssV;
@@ -2109,7 +2153,6 @@ const tdouble RBRV_entry_RV_Weibull::calc_pdf_x_log(const tdouble& x_val, const 
 
 const tdouble RBRV_entry_RV_Weibull::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val<=eps) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -2126,7 +2169,6 @@ const tdouble RBRV_entry_RV_Weibull::calc_cdf_x(const tdouble& x_val, const bool
 
 const tdouble RBRV_entry_RV_Weibull::calc_sf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val<=eps) {
     if (safeCalc) return ONE;
     std::ostringstream ssV;
@@ -2143,20 +2185,29 @@ const tdouble RBRV_entry_RV_Weibull::calc_sf_x(const tdouble& x_val, const bool 
 
 const tdouble RBRV_entry_RV_Weibull::calc_entropy()
 {
-  get_pars();
   return GAMMA*(ONE-ONE/k)+log(lambda/k)+ONE;
 }
 
 const tdouble RBRV_entry_RV_Weibull::transform_y2x(const tdouble y_val)
 {
-  get_pars();
   return pow(-log(rv_Phi(-y_val)),ONE/k)*lambda+eps;
 }
 
 const tdouble RBRV_entry_RV_Weibull::transform_x2y(const tdouble& x_val)
 {
-  get_pars();
   return -rv_InvPhi_noAlert(exp(-pow((x_val-eps)/lambda,k)));
+}
+
+RBRV_entry_RV_ChiSquared::RBRV_entry_RV_ChiSquared(const std::string& name, const tuint iID, FlxFunction* p1, const bool eval_once)
+: RBRV_entry_RV_base(name,iID), p1(p1), eval_once(eval_once)
+{
+  try {
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_ChiSquared::RBRV_entry_RV_ChiSquared",1);
+    if (p1) delete p1;
+    throw;
+  }
 }
 
 RBRV_entry_RV_ChiSquared::~RBRV_entry_RV_ChiSquared()
@@ -2164,7 +2215,7 @@ RBRV_entry_RV_ChiSquared::~RBRV_entry_RV_ChiSquared()
   if (p1) delete p1;
 }
 
-void RBRV_entry_RV_ChiSquared::get_pars()
+void RBRV_entry_RV_ChiSquared::eval_para()
 {
   if (!eval_once || (eval_once&&p1) ) {
     // compute parameters
@@ -2183,19 +2234,16 @@ const bool RBRV_entry_RV_ChiSquared::search_circref(FlxFunction* fcr)
 
 const bool RBRV_entry_RV_ChiSquared::check_x(const tdouble xV)
 {
-  get_pars();
   return (xV>=ZERO);
 }
 
 const tdouble RBRV_entry_RV_ChiSquared::get_mean_current_config()
 {
-  get_pars();
   return dof;
 }
 
 const tdouble RBRV_entry_RV_ChiSquared::get_sd_current_config()
 {
-  get_pars();
   return sqrt(2*dof);
 }
 
@@ -2206,14 +2254,12 @@ const tdouble RBRV_entry_RV_ChiSquared::get_median_current_config()
 
 const tdouble RBRV_entry_RV_ChiSquared::get_mode_current_config()
 {
-  get_pars();
   if (dof-2>ZERO) return dof-2;
   return ZERO;
 }
 
 const tdouble RBRV_entry_RV_ChiSquared::calc_entropy()
 {
-  get_pars();
   const tdouble dofh = dof/2;
   return dofh 
         + std::log(2*flxgamma(dofh)) 
@@ -2222,7 +2268,6 @@ const tdouble RBRV_entry_RV_ChiSquared::calc_entropy()
 
 const tdouble RBRV_entry_RV_ChiSquared::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val<=ZERO) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -2235,7 +2280,6 @@ const tdouble RBRV_entry_RV_ChiSquared::calc_pdf_x(const tdouble& x_val, const b
 
 const tdouble RBRV_entry_RV_ChiSquared::calc_pdf_x_log(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val<=ZERO) {
     if (safeCalc) return log(ZERO);
     std::ostringstream ssV;
@@ -2248,7 +2292,6 @@ const tdouble RBRV_entry_RV_ChiSquared::calc_pdf_x_log(const tdouble& x_val, con
 
 const tdouble RBRV_entry_RV_ChiSquared::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val<ZERO) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -2260,7 +2303,6 @@ const tdouble RBRV_entry_RV_ChiSquared::calc_cdf_x(const tdouble& x_val, const b
 
 const tdouble RBRV_entry_RV_ChiSquared::calc_sf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val<ZERO) {
     if (safeCalc) return ONE;
     std::ostringstream ssV;
@@ -2272,7 +2314,6 @@ const tdouble RBRV_entry_RV_ChiSquared::calc_sf_x(const tdouble& x_val, const bo
 
 const tdouble RBRV_entry_RV_ChiSquared::transform_y2x(const tdouble y_val)
 {
-  get_pars();
   const tdouble dofh = dof/2;
   if (y_val<=ZERO) {
     return flxgamma_rl_inv(dofh,rv_Phi(y_val))*2;
@@ -2283,11 +2324,22 @@ const tdouble RBRV_entry_RV_ChiSquared::transform_y2x(const tdouble y_val)
 
 const tdouble RBRV_entry_RV_ChiSquared::transform_x2y(const tdouble& x_val)
 {
-  get_pars();
   if (x_val <= dof) {
     return rv_InvPhi_noAlert(flxgamma_rl(dof/2,x_val/2));
   } else {
     return -rv_InvPhi_noAlert(flxgamma_ru(dof/2,x_val/2));
+  }
+}
+
+RBRV_entry_RV_Chi::RBRV_entry_RV_Chi(const std::string& name, const tuint iID, FlxFunction* p1, const bool eval_once)
+: RBRV_entry_RV_base(name,iID), p1(p1), eval_once(eval_once)
+{
+  try {
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_Chi::RBRV_entry_RV_Chi",1);
+    if (p1) delete p1;
+    throw;
   }
 }
 
@@ -2296,7 +2348,7 @@ RBRV_entry_RV_Chi::~RBRV_entry_RV_Chi()
   if (p1) delete p1;
 }
 
-void RBRV_entry_RV_Chi::get_pars()
+void RBRV_entry_RV_Chi::eval_para()
 {
   if (!eval_once || (eval_once&&p1) ) {
     // compute parameters
@@ -2309,7 +2361,6 @@ void RBRV_entry_RV_Chi::get_pars()
 
 const tdouble RBRV_entry_RV_Chi::transform_y2x(const tdouble y_val)
 {
-  get_pars();
   const tdouble dofh = dof/2;
   if (y_val<=ZERO) {
     return sqrt(flxgamma_rl_inv(dofh,rv_Phi(y_val))*2);
@@ -2320,7 +2371,6 @@ const tdouble RBRV_entry_RV_Chi::transform_y2x(const tdouble y_val)
 
 const tdouble RBRV_entry_RV_Chi::transform_x2y(const tdouble& x_val)
 {
-  get_pars();
   if (x_val <= dof) {
     return rv_InvPhi_noAlert(flxgamma_rl(dof/2,pow2(x_val)/2));
   } else {
@@ -2330,7 +2380,6 @@ const tdouble RBRV_entry_RV_Chi::transform_x2y(const tdouble& x_val)
 
 const tdouble RBRV_entry_RV_Chi::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val<=ZERO) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -2343,7 +2392,6 @@ const tdouble RBRV_entry_RV_Chi::calc_pdf_x(const tdouble& x_val, const bool saf
 
 const tdouble RBRV_entry_RV_Chi::calc_pdf_x_log(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val<=ZERO) {
     if (safeCalc) return log(ZERO);
     std::ostringstream ssV;
@@ -2356,7 +2404,6 @@ const tdouble RBRV_entry_RV_Chi::calc_pdf_x_log(const tdouble& x_val, const bool
 
 const tdouble RBRV_entry_RV_Chi::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val<ZERO) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -2368,7 +2415,6 @@ const tdouble RBRV_entry_RV_Chi::calc_cdf_x(const tdouble& x_val, const bool saf
 
 const tdouble RBRV_entry_RV_Chi::calc_sf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val<ZERO) {
     if (safeCalc) return ONE;
     std::ostringstream ssV;
@@ -2380,7 +2426,6 @@ const tdouble RBRV_entry_RV_Chi::calc_sf_x(const tdouble& x_val, const bool safe
 
 const tdouble RBRV_entry_RV_Chi::calc_entropy()
 {
-  get_pars();
   const tdouble dofh = dof/2;
   return GammaLn(dofh)
          + (dof-log(2)-(dof-ONE)*flxdigamma(dofh))/2;
@@ -2388,7 +2433,6 @@ const tdouble RBRV_entry_RV_Chi::calc_entropy()
 
 const tdouble RBRV_entry_RV_Chi::get_mean_current_config()
 {
-  get_pars();
   return sqrt(2*ONE)*flxgamma((dof+ONE)/2)/flxgamma(dof/2);
 }
 
@@ -2405,14 +2449,12 @@ const tdouble RBRV_entry_RV_Chi::get_median_current_config()
 
 const tdouble RBRV_entry_RV_Chi::get_mode_current_config()
 {
-  get_pars();
   if (dof>=ONE) return sqrt(dof-ONE);
   throw FlxException_NotImplemented("RBRV_entry_RV_Chi::get_mode_current_config");
 }
 
 const bool RBRV_entry_RV_Chi::check_x(const tdouble xV)
 {
-  get_pars();
   return (xV>=ZERO);
 }
 
@@ -2423,6 +2465,17 @@ const bool RBRV_entry_RV_Chi::search_circref(FlxFunction* fcr)
 }
 
 
+RBRV_entry_RV_StudentsT::RBRV_entry_RV_StudentsT(const std::string& name, const tuint iID, FlxFunction* p1, const bool eval_once)
+: RBRV_entry_RV_base(name,iID), p1(p1), eval_once(eval_once)
+{
+  try {
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_StudentsT::RBRV_entry_RV_StudentsT_100",1);
+    if (p1) delete p1;
+    throw;
+  }
+}
 
 RBRV_entry_RV_StudentsT::RBRV_entry_RV_StudentsT(const std::string& name, const tuint iID, py::dict config)
 : RBRV_entry_RV_base(name,iID), p1(nullptr), eval_once(false)
@@ -2431,6 +2484,7 @@ RBRV_entry_RV_StudentsT::RBRV_entry_RV_StudentsT(const std::string& name, const 
     p1 = parse_py_para("dof", config);
 
     eval_once = parse_py_para_as_bool("eval_once", config, false, false);
+    this->init();
   } catch (FlxException& e) {
     FLXMSG("RBRV_entry_RV_StudentsT::RBRV_entry_RV_StudentsT_99",1);
     if (p1) delete p1;
@@ -2443,7 +2497,7 @@ RBRV_entry_RV_StudentsT::~RBRV_entry_RV_StudentsT()
   if (p1) delete p1;
 }
 
-void RBRV_entry_RV_StudentsT::get_pars()
+void RBRV_entry_RV_StudentsT::eval_para()
 {
   if (!eval_once || (eval_once&&p1) ) {
     // compute parameters
@@ -2456,7 +2510,6 @@ void RBRV_entry_RV_StudentsT::get_pars()
 
 const tdouble RBRV_entry_RV_StudentsT::transform_y2x(const tdouble y_val)
 {
-  get_pars();
   if (y_val<=ZERO) {
     return rv_InvCDF_Studentst(dof,rv_Phi(y_val));
   } else {
@@ -2466,7 +2519,6 @@ const tdouble RBRV_entry_RV_StudentsT::transform_y2x(const tdouble y_val)
 
 const tdouble RBRV_entry_RV_StudentsT::transform_x2y(const tdouble& x_val)
 {
-  get_pars();
   if (x_val<=ZERO) {
     return rv_InvPhi_noAlert(rv_cdf_Studentst(dof,x_val));
   } else {
@@ -2476,26 +2528,22 @@ const tdouble RBRV_entry_RV_StudentsT::transform_x2y(const tdouble& x_val)
 
 const tdouble RBRV_entry_RV_StudentsT::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   return rv_pdf_Studentst(dof,x_val);
 }
 
 const tdouble RBRV_entry_RV_StudentsT::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   return rv_cdf_Studentst(dof,x_val);
 }
 
 const tdouble RBRV_entry_RV_StudentsT::calc_entropy()
 {
-  get_pars();
   const tdouble h1 = (dof+1)/2;
   return h1*(flxdigamma(h1)-flxdigamma(dof/2)) + log(sqrt(dof)*BetaFun(dof/2,ONE/2));
 }
 
 const tdouble RBRV_entry_RV_StudentsT::get_sd_current_config()
 {
-  get_pars();
   if (dof<2) return std::numeric_limits<tdouble>::infinity();
   else return sqrt(dof/(dof-2));
 }
@@ -2508,14 +2556,12 @@ const bool RBRV_entry_RV_StudentsT::search_circref(FlxFunction* fcr)
 
 const tdouble RBRV_entry_RV_StudentsT::get_HPD(const tdouble p)
 {
-  get_pars();
   return (ONE-p)/2;
 }
 
 py::dict RBRV_entry_RV_StudentsT::info()
 {
   py::dict res = RBRV_entry_RV_base::info();
-  get_pars();
   res["dof"] = dof;
   res["mean"] = get_mean_current_config();
   res["sd"] = get_sd_current_config();
@@ -2526,7 +2572,16 @@ py::dict RBRV_entry_RV_StudentsT::info()
 RBRV_entry_RV_StudentsT_generalized::RBRV_entry_RV_StudentsT_generalized(const std::string& name, const tuint iID, FlxFunction* nu, FlxFunction* locf, FlxFunction* scalef)
 :RBRV_entry_RV_base(name,iID), pid(0), p1(nu),p2(locf),p3(scalef), dof(ZERO), loc(ZERO), scale(ZERO)
 {
-
+  try {
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_StudentsT_generalized::RBRV_entry_RV_StudentsT_generalized_100",1);
+    if (p1) delete p1;
+    if (p2) delete p2;
+    if (p3) delete p3;
+    if (p4) delete p4;
+    throw;
+  }
 }
 
 RBRV_entry_RV_StudentsT_generalized::RBRV_entry_RV_StudentsT_generalized(const std::string& name, const tuint iID, py::dict config)
@@ -2547,6 +2602,7 @@ RBRV_entry_RV_StudentsT_generalized::RBRV_entry_RV_StudentsT_generalized(const s
     } else {
       throw FlxException_NeglectInInteractive("RBRV_entry_RV_StudentsT_generalized::RBRV_entry_RV_StudentsT_generalized_01", "Required parameters to define distribution not found in Python <dict>.");
     }
+    this->init();
   } catch (FlxException& e) {
     FLXMSG("RBRV_entry_RV_StudentsT_generalized::RBRV_entry_RV_StudentsT_generalized_99",1);
     if (p1) delete p1;
@@ -2577,7 +2633,7 @@ tdouble RV_StudentsT_generalized_pid1_root_search_fun(const tdouble scale, void*
   return (rv_cdf_Studentst(dof,x_) - pr_1)/pr_1;
 }
 
-void RBRV_entry_RV_StudentsT_generalized::get_pars()
+void RBRV_entry_RV_StudentsT_generalized::eval_para()
 {
   switch (pid)
   {
@@ -2616,7 +2672,6 @@ void RBRV_entry_RV_StudentsT_generalized::get_pars()
 
 const tdouble RBRV_entry_RV_StudentsT_generalized::transform_y2x(const tdouble y_val)
 {
-  get_pars();
   if (y_val<=ZERO) {
     return loc + rv_InvCDF_Studentst(dof,rv_Phi(y_val))*scale;
   } else {
@@ -2626,7 +2681,6 @@ const tdouble RBRV_entry_RV_StudentsT_generalized::transform_y2x(const tdouble y
 
 const tdouble RBRV_entry_RV_StudentsT_generalized::transform_x2y(const tdouble& x_val)
 {
-  get_pars();
   const tdouble x_ = (x_val-loc)/scale;
   if (x_<=ZERO) {
     return rv_InvPhi_noAlert(rv_cdf_Studentst(dof,x_));
@@ -2637,14 +2691,12 @@ const tdouble RBRV_entry_RV_StudentsT_generalized::transform_x2y(const tdouble& 
 
 const tdouble RBRV_entry_RV_StudentsT_generalized::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   const tdouble x_ = (x_val-loc)/scale;
   return rv_pdf_Studentst(dof,x_)/scale;
 }
 
 const tdouble RBRV_entry_RV_StudentsT_generalized::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   const tdouble x_ = (x_val-loc)/scale;
   return rv_cdf_Studentst(dof,x_);
 }
@@ -2657,26 +2709,22 @@ const tdouble RBRV_entry_RV_StudentsT_generalized::calc_entropy()
 
 const tdouble RBRV_entry_RV_StudentsT_generalized::get_mean_current_config()
 {
-  get_pars();
   return loc;
 }
 
 const tdouble RBRV_entry_RV_StudentsT_generalized::get_sd_current_config()
 {
-  get_pars();
   if (dof<2) return std::numeric_limits<tdouble>::infinity();
   else return sqrt(dof/(dof-2))*scale;
 }
 
 const tdouble RBRV_entry_RV_StudentsT_generalized::get_median_current_config()
 {
-  get_pars();
   return loc;
 }
 
 const tdouble RBRV_entry_RV_StudentsT_generalized::get_mode_current_config()
 {
-  get_pars();
   return loc;
 }
 
@@ -2692,14 +2740,12 @@ const bool RBRV_entry_RV_StudentsT_generalized::search_circref(FlxFunction* fcr)
 
 const tdouble RBRV_entry_RV_StudentsT_generalized::get_HPD(const tdouble p)
 {
-  get_pars();
   return (ONE-p)/2;
 }
 
 py::dict RBRV_entry_RV_StudentsT_generalized::info()
 {
   py::dict res = RBRV_entry_RV_base::info();
-  get_pars();
   res["dof"] = dof;
   res["loc"] = loc;
   res["scale"] = scale;
@@ -2712,13 +2758,13 @@ py::dict RBRV_entry_RV_StudentsT_generalized::info()
 RBRV_entry_RV_logt::RBRV_entry_RV_logt(const std::string& name, const tuint iID, FlxFunction* nu, FlxFunction* locf, FlxFunction* scalef)
 :RBRV_entry_RV_StudentsT_generalized(name, iID, nu, locf, scalef)
 {
-
+  value = exp(value);
 }
 
 RBRV_entry_RV_logt::RBRV_entry_RV_logt(const std::string& name, const tuint iID, py::dict config)
 :RBRV_entry_RV_StudentsT_generalized(name, iID, config)
 {
-
+  value = exp(value);
 }
 
 RBRV_entry_RV_logt::~RBRV_entry_RV_logt()
@@ -2788,7 +2834,14 @@ py::dict RBRV_entry_RV_logt::info()
 RBRV_entry_RV_Laplace::RBRV_entry_RV_Laplace(const std::string& name, const tuint iID, FlxFunction* locf, FlxFunction* scalef)
 :RBRV_entry_RV_base(name,iID), locf(locf),scalef(scalef), loc(ZERO), scale(ZERO)
 {
-
+  try {
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_Laplace::RBRV_entry_RV_Laplace",1);
+    if (locf) delete locf;
+    if (scalef) delete scalef;
+    throw;
+  }
 }
 
 RBRV_entry_RV_Laplace::~RBRV_entry_RV_Laplace()
@@ -2797,7 +2850,7 @@ RBRV_entry_RV_Laplace::~RBRV_entry_RV_Laplace()
   if (scalef) delete scalef;
 }
 
-void RBRV_entry_RV_Laplace::get_pars()
+void RBRV_entry_RV_Laplace::eval_para()
 {
   loc = locf->calc();
   scale = scalef->cast2positive();
@@ -2805,7 +2858,6 @@ void RBRV_entry_RV_Laplace::get_pars()
 
 const tdouble RBRV_entry_RV_Laplace::transform_y2x(const tdouble y_val)
 {
-  get_pars();
   if (y_val<=ZERO) {
     return loc + log(2*rv_Phi(y_val))*scale;
   } else {
@@ -2815,7 +2867,6 @@ const tdouble RBRV_entry_RV_Laplace::transform_y2x(const tdouble y_val)
 
 const tdouble RBRV_entry_RV_Laplace::transform_x2y(const tdouble& x_val)
 {
-  get_pars();
   const tdouble x_ = (x_val-loc)/scale;
   if (x_<=ZERO) {
     const tdouble z = exp(x_)/2;
@@ -2827,21 +2878,18 @@ const tdouble RBRV_entry_RV_Laplace::transform_x2y(const tdouble& x_val)
 
 const tdouble RBRV_entry_RV_Laplace::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   const tdouble x_ = fabs(x_val-loc)/scale;
   return exp(-x_)/(2*scale);
 }
 
 const tdouble RBRV_entry_RV_Laplace::calc_pdf_x_log(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   const tdouble x_ = fabs(x_val-loc)/scale;
   return -x_ - log(2*scale);
 }
 
 const tdouble RBRV_entry_RV_Laplace::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val<=loc) {
     return exp((x_val-loc)/scale)/2;
   } else {
@@ -2851,7 +2899,6 @@ const tdouble RBRV_entry_RV_Laplace::calc_cdf_x(const tdouble& x_val, const bool
 
 const tdouble RBRV_entry_RV_Laplace::calc_sf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val<=loc) {
     return ONE - exp((x_val-loc)/scale)/2;
   } else {
@@ -2861,31 +2908,26 @@ const tdouble RBRV_entry_RV_Laplace::calc_sf_x(const tdouble& x_val, const bool 
 
 const tdouble RBRV_entry_RV_Laplace::calc_entropy()
 {
-  get_pars();
   return ONE+log(2*scale);
 }
 
 const tdouble RBRV_entry_RV_Laplace::get_mean_current_config()
 {
-  get_pars();
   return loc;
 }
 
 const tdouble RBRV_entry_RV_Laplace::get_sd_current_config()
 {
-  get_pars();
   return sqrt(2.)*scale;
 }
 
 const tdouble RBRV_entry_RV_Laplace::get_median_current_config()
 {
-  get_pars();
   return loc;
 }
 
 const tdouble RBRV_entry_RV_Laplace::get_mode_current_config()
 {
-  get_pars();
   return loc;
 }
 
@@ -2897,7 +2939,6 @@ const bool RBRV_entry_RV_Laplace::search_circref(FlxFunction* fcr)
 
 const tdouble RBRV_entry_RV_Laplace::get_HPD(const tdouble p)
 {
-  get_pars();
   return (ONE-p)/2;
 }
 
@@ -2905,7 +2946,17 @@ RBRV_entry_RV_UserTransform::RBRV_entry_RV_UserTransform(const std::string& name
 : RBRV_entry_RV_base(name,iID), is_z2x(is_z2x), t1(t1), t2(t2), dh(dh), checkXf(checkXf), rv_z(rv_z), manage_z(manage_z),
   tPL(1), tPLp(&tPL[0])
 {
-  
+  try {
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_UserTransform::RBRV_entry_RV_UserTransform",1);
+    if (t1) delete t1;
+    if (t2) delete t2;
+    if (dh) delete dh;
+    if (checkXf) delete checkXf;
+    if (manage_z) delete rv_z;
+    throw;
+  }
 }
 
 RBRV_entry_RV_UserTransform::~RBRV_entry_RV_UserTransform()
@@ -3107,7 +3158,15 @@ void RBRV_entry_RV_UserTransform::replace_rv_z(RBRV_entry_RV_base* rv_z_)
 RBRV_entry_RV_Truncated::RBRV_entry_RV_Truncated(const std::string& name, const tuint iID, FlxFunction* a, FlxFunction* b, RBRV_entry_RV_base* rv_z, const bool manage_z)
 : RBRV_entry_RV_base(name,iID), a(a), b(b), rv_z(rv_z), manage_z(manage_z), aV(ZERO), bV(ZERO), q(ONE), aV_cdf(ZERO)
 {
-
+  try {
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_Truncated::RBRV_entry_RV_Truncated",1);
+    if (a) delete a;
+    if (b) delete b;
+    if (manage_z) delete rv_z;
+    throw;
+  }
 }
 
 RBRV_entry_RV_Truncated::~RBRV_entry_RV_Truncated()
@@ -3117,7 +3176,7 @@ RBRV_entry_RV_Truncated::~RBRV_entry_RV_Truncated()
   if (manage_z) delete rv_z;
 }
 
-void RBRV_entry_RV_Truncated::get_pars()
+void RBRV_entry_RV_Truncated::eval_para()
 {
   const tdouble ybound = 1e5;
   aV = a?(a->calc()):rv_z->transform_y2x(-ybound);
@@ -3134,7 +3193,6 @@ void RBRV_entry_RV_Truncated::get_pars()
 
 const tdouble RBRV_entry_RV_Truncated::transform_y2x(const tdouble y_val)
 {
-  get_pars();
   if (y_val<=ZERO || aV_cdf<0.5) {
     const tdouble p_orig = rv_Phi(y_val);
     const tdouble p_transf = p_orig*q+aV_cdf;
@@ -3156,13 +3214,11 @@ const tdouble RBRV_entry_RV_Truncated::transform_y2x(const tdouble y_val)
 
 const tdouble RBRV_entry_RV_Truncated::transform_x2y(const tdouble& x_val)
 {
-  get_pars();
   return rv_InvPhi_noAlert(calc_cdf_x(x_val,false));
 }
 
 const tdouble RBRV_entry_RV_Truncated::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val>bV || x_val<aV) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -3175,7 +3231,6 @@ const tdouble RBRV_entry_RV_Truncated::calc_pdf_x(const tdouble& x_val, const bo
 
 const tdouble RBRV_entry_RV_Truncated::calc_pdf_x_log(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val>bV || x_val<aV) {
     if (safeCalc) return ZERO;
     std::ostringstream ssV;
@@ -3188,7 +3243,6 @@ const tdouble RBRV_entry_RV_Truncated::calc_pdf_x_log(const tdouble& x_val, cons
 
 const tdouble RBRV_entry_RV_Truncated::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (x_val>bV || x_val<aV) {
     if (safeCalc) {
       if (x_val<aV) return ZERO;
@@ -3213,7 +3267,6 @@ const tdouble RBRV_entry_RV_Truncated::get_sd_current_config()
 
 const bool RBRV_entry_RV_Truncated::check_x(const tdouble xV)
 {
-  get_pars();
   if (xV<=bV&&xV>=aV) {
     return rv_z->check_x(xV);
   } else {
@@ -3230,7 +3283,6 @@ const bool RBRV_entry_RV_Truncated::search_circref(FlxFunction* fcr)
 py::dict RBRV_entry_RV_Truncated::info()
 {
   py::dict res = RBRV_entry_RV_base::info();
-  get_pars();
   res["lower"] = aV;
   res["upper"] = bV;
   res["q"] = q;
@@ -3242,7 +3294,14 @@ py::dict RBRV_entry_RV_Truncated::info()
 RBRV_entry_RV_maxminTransform::RBRV_entry_RV_maxminTransform(const std::string& name, const tuint iID, const bool is_max, FlxFunction* n, RBRV_entry_RV_base* rv_z)
 : RBRV_entry_RV_base(name,iID), is_max(is_max), n(n), rv_z(rv_z), nV(ZERO)
 {
-
+  try {
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_maxminTransform::RBRV_entry_RV_maxminTransform",1);
+    if (n) delete n;
+    delete rv_z;
+    throw;
+  }
 }
 
 RBRV_entry_RV_maxminTransform::~RBRV_entry_RV_maxminTransform()
@@ -3251,14 +3310,13 @@ RBRV_entry_RV_maxminTransform::~RBRV_entry_RV_maxminTransform()
   delete rv_z;
 }
 
-void RBRV_entry_RV_maxminTransform::get_pars()
+void RBRV_entry_RV_maxminTransform::eval_para()
 {
   nV = n->cast2positive();
 }
 
 const tdouble RBRV_entry_RV_maxminTransform::transform_y2x(const tdouble y_val)
 {
-  get_pars();
   if (is_max) {
     const tdouble px = pow(rv_Phi(y_val),ONE/nV);
     const tdouble yx = rv_InvPhi_noAlert(px);
@@ -3272,7 +3330,6 @@ const tdouble RBRV_entry_RV_maxminTransform::transform_y2x(const tdouble y_val)
 
 const tdouble RBRV_entry_RV_maxminTransform::transform_x2y(const tdouble& x_val)
 {
-  get_pars();
   const tdouble px = rv_z->calc_cdf_x(x_val);
   if (is_max) {
     const tdouble py = pow(px,nV);
@@ -3285,7 +3342,6 @@ const tdouble RBRV_entry_RV_maxminTransform::transform_x2y(const tdouble& x_val)
 
 const tdouble RBRV_entry_RV_maxminTransform::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   const tdouble px = rv_z->calc_cdf_x(x_val);
   const tdouble qx = rv_z->calc_pdf_x(x_val);
   if (is_max) {
@@ -3297,7 +3353,6 @@ const tdouble RBRV_entry_RV_maxminTransform::calc_pdf_x(const tdouble& x_val, co
 
 const tdouble RBRV_entry_RV_maxminTransform::eval_cdf_sf(const bool is_cdf, const tdouble& x_val, const bool safeCalc)
 {
-  get_pars();
   if (is_max) {
     const tdouble py = pow(rv_z->calc_cdf_x(x_val),nV);
     if (is_cdf) {
@@ -3359,6 +3414,7 @@ tdouble calc_expectation_numerical_1D::calc_expectation(const tulong N_Interv, c
     orig_x_valid = false;
   }
   
+  rnd.eval_para();
   tdouble res = ZERO;
   if ( N<=1 || N_Interv<=1 ) {
     res = calc_Interval(UB,LB,(N<=1)?N_Interv:N,rnd).cast2double();

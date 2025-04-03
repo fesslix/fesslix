@@ -153,7 +153,10 @@ class flxPyRV {
     py::array_t<tdouble> pdf_array(py::array_t<tdouble> arr, const bool safeCalc);
 
     const tdouble pdf_log(const tdouble x_val, const bool safeCalc);
+
     const tdouble cdf(const tdouble x_val, const bool safeCalc);
+    py::array_t<tdouble> cdf_array(py::array_t<tdouble> arr, const bool safeCalc);
+
     const tdouble icdf(const tdouble p);
     const tdouble sf(const tdouble x_val, const bool safeCalc);
     const tdouble entropy();

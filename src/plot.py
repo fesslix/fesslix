@@ -254,3 +254,51 @@ def draw_pdf(ax, rv, config_dict={}, param_dict={}, reverse_axis=False):
     return out
 
 
+##################################################
+# plot CDF                                       #
+##################################################
+
+def draw_cdf(ax, rv, config_dict={}, param_dict={}, reverse_axis=False):
+    """
+    Draws the CDF of rv on ax.
+
+    Parameters
+    ----------
+    ax : axes
+        The axes object to draw onto.
+    rv : rv_base
+        The random variable of which to draw the PDF.
+    config_dict : dictionary
+        A dictionary for plotting properties related to this module.
+    param_dict : dictionary
+        A dictionary for plotting properties related to matplotlib.
+    reverse_axis : bool
+        the horizontal and vertical axes of the plot are switched
+
+    Returns
+    -------
+    the object returned by ax.plot(...)
+    """
+    ## get a full list of all module-related plotting properties
+    ed = _complete_era_dict(config_dict)
+    ## make sure that the bounds on the x-axis are defined
+    detect_bounds_x(rv, ed, q_low=ed['q_low'], q_up=ed['q_up'])
+    ## obtain values for the x-axis
+    x = discretize_x( x_low=ed['x_low'], x_up=ed['x_up'], x_disc_N=ed['x_disc_N'], x_disc_shift=ed['x_disc_shift'], x_disc_on_log=ed['x_disc_on_log'] )
+    ## evaluate values for thy y-axis
+    y = rv.cdf_array(x)
+    ## Colors
+    param_dict_ = param_dict.copy()
+    _assign_color(param_dict_,ed)
+    ## Label
+    if ed["label"] is None:
+        lbl = rv.get_name()
+    else:
+        lbl = ed["label"]
+    ## draw the CDF
+    if reverse_axis:
+        out = ax.plot(y, x, label=lbl, **param_dict_)
+    else:
+        out = ax.plot(x, y, label=lbl, **param_dict_)
+    return out
+

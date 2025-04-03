@@ -149,6 +149,9 @@ class flxPyRV {
     const tdouble x2y(const tdouble x_val);
     const tdouble y2x(const tdouble y_val);
 
+    const tdouble sample();
+    void sample_array(py::array_t<tdouble> arr);
+
     const tdouble pdf(const tdouble x_val, const bool safeCalc);
     py::array_t<tdouble> pdf_array(py::array_t<tdouble> arr, const bool safeCalc);
 

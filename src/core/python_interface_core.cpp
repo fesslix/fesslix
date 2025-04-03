@@ -595,6 +595,31 @@ const tdouble flxPyRV::y2x(const tdouble y_val)
     return rv_ptr->transform_y2x(y_val);
 }
 
+const tdouble flxPyRV::sample()
+{
+    const tdouble y = FlxEngine->dataBox.RndCreator.gen_smp();
+    return rv_ptr->transform_y2x(y);
+}
+
+void flxPyRV::sample_array(py::array_t<tdouble> arr)
+{
+    // Access the data as a raw pointer
+    py::buffer_info buf_info = arr.request();
+    tdouble* res_ptr = static_cast<tdouble*>(buf_info.ptr);
+
+    // Get the size of the input array
+    size_t size = buf_info.size;
+
+    // Generate the samples (in standard Normal space)
+    flxVec res_vec(res_ptr,size,false,false);
+    FlxEngine->dataBox.RndCreator.gen_smp(res_vec);
+
+    // transform the samples to original space
+    for (size_t i = 0; i < size; ++i) {
+        res_ptr[i] = rv_ptr->transform_y2x(res_ptr[i]);    // TODO avoid re-evaluating the parameters of the random variable
+    }
+}
+
 const tdouble flxPyRV::pdf(const tdouble x_val, const bool safeCalc)
 {
     return rv_ptr->calc_pdf_x(x_val,safeCalc);
@@ -768,6 +793,8 @@ PYBIND11_MODULE(core, m) {
             .def("get_type", &flxPyRV::get_type, "get type of random variable")
             .def("x2y", &flxPyRV::x2y, "transformation from 'original space' to standard normal space")
             .def("y2x", &flxPyRV::y2x, "transformation from standard normal space into 'original space'")
+            .def("sample", &flxPyRV::sample, "generate a random realization of the random variable")
+            .def("sample_array", &flxPyRV::sample_array, "generate a vector of random realizations of the random variable")
             .def("pdf", &flxPyRV::pdf, pybind11::arg("x_val"), pybind11::arg("safeCalc") = true, "evaluates the pdf of the random variable at x_val")
             .def("pdf_array", &flxPyRV::pdf_array, pybind11::arg("x_vec"), pybind11::arg("safeCalc") = true, "evaluates the pdf of the random variable for array x_vec")
             .def("pdf_log", &flxPyRV::pdf_log, pybind11::arg("x_val"), pybind11::arg("safeCalc") = true, "evaluates the log-pdf of the random variable at x_val")

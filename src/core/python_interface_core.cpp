@@ -767,6 +767,25 @@ py::dict flxPyRV::info()
 }
 
 
+
+// #################################################################################
+// advanced features
+// #################################################################################
+
+tdouble eval_fun(py::object expr)
+{
+    FlxFunction* fun = parse_function(expr,"parameter 'expr' of 'flx.eval_fun'");
+    tdouble res;
+    try {
+        res = fun->calc();
+    } catch (FlxException& e) {
+        GlobalVar.slogcout(1) << std::endl << e.what() << std::endl;
+        res = std::numeric_limits<tdouble>::quiet_NaN();
+    }
+    return res;
+}
+
+
 // #################################################################################
 // only for debugging purposes
 // #################################################################################
@@ -837,6 +856,11 @@ PYBIND11_MODULE(core, m) {
             .def("check_x", &flxPyRV::check_x, "check if x_val is inside of the valid domain of the random variable")
             .def("get_HPD", &flxPyRV::get_HPD, "returns the lower quantile value of the HPD (highest probability density) interval of the distribution")
             .def("info", &flxPyRV::info, "return information about random variable");
+
+    // ====================================================
+    // Advanced features
+    // ====================================================
+        m.def("eval_fun", &eval_fun, "Evaluates an expression and returns the result.");
 
     // ====================================================
     // only for debugging purposes (TODO remove at some point)

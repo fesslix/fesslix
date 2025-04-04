@@ -578,14 +578,21 @@ const bool FunBaseFun_multPara::optimize(FunBasePtr& optf, const Fun_OptimizeInf
 const tdouble FunBaseFun_Python::calc()
 {
   if (ParaList->size()==0) {
-    py::object result = pyfunc();
+    py::object result;
+    try {
+       result = pyfunc();
+    } catch (const py::error_already_set &e) {
+        std::ostringstream ssV;
+        ssV << "Error in evaluating Python expression: " << e.what();
+        throw FlxException("FunBaseFun_Python::calc_01", ssV.str() );
+    }
     if (py::isinstance<py::float_>(result)) {
         return result.cast<tdouble>();
     } else {
-        throw FlxException("FunBaseFun_Python::calc_01", "Result of Python function has wrong type.");
+        throw FlxException("FunBaseFun_Python::calc_02", "Result of Python function has wrong type.");
     }
   } else {
-    throw FlxException_NotImplemented("FunBaseFun_Python::calc_02");
+    throw FlxException_NotImplemented("FunBaseFun_Python::calc_03");
   }
 }
 

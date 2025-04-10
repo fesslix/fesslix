@@ -510,30 +510,30 @@ RBRV_entry_RV_base * parse_py_obj_as_rv(py::dict config, const bool name_require
             rv_ptr = new RBRV_entry_RV_normal(rv_name,iID,config);
         } else if (rv_type=="logn") {
             rv_ptr = new RBRV_entry_RV_lognormal(rv_name,iID,config);
-        // } else if (rv_type=="uniform") {
-        //     rv_ptr = new RBRV_entry_read_uniform(readName,readBrakets);
+        } else if (rv_type=="uniform") {
+            rv_ptr = new RBRV_entry_RV_uniform(rv_name,iID,config);
         // } else if (rv_type=="gumbel") {
-        //     rv_ptr = new RBRV_entry_read_Gumbel(readName,readBrakets);
+        //     rv_ptr = new RBRV_entry_read_Gumbel(rv_name,iID,config);
         // } else if (rv_type=="normal_trunc") {
-        //     rv_ptr = new RBRV_entry_read_normal_trunc(readName,readBrakets);
-        // } else if (rv_type=="beta") {
-        //     rv_ptr = new RBRV_entry_read_beta(readName,readBrakets);
+        //     rv_ptr = new RBRV_entry_read_normal_trunc(rv_name,iID,config);
+        } else if (rv_type=="beta") {
+            rv_ptr = new RBRV_entry_RV_beta(rv_name,iID,config);
         // } else if (rv_type=="exponential") {
-        //     rv_ptr = new RBRV_entry_read_exponential(readName,readBrakets);
+        //     rv_ptr = new RBRV_entry_read_exponential(rv_name,iID,config);
         // } else if (rv_type=="gamma") {
-        //     rv_ptr = new RBRV_entry_read_gamma(readName,readBrakets);
+        //     rv_ptr = new RBRV_entry_read_gamma(rv_name,iID,config);
         // } else if (rv_type=="poisson") {
-        //     rv_ptr = new RBRV_entry_read_Poisson(readName,readBrakets);
+        //     rv_ptr = new RBRV_entry_read_Poisson(rv_name,iID,config);
         // } else if (rv_type=="binomial") {
-        //     rv_ptr = new RBRV_entry_read_Binomial(readName,readBrakets);
+        //     rv_ptr = new RBRV_entry_read_Binomial(rv_name,iID,config);
         // } else if (rv_type=="cauchy") {
-        //     rv_ptr = new RBRV_entry_read_Cauchy(readName,readBrakets);
+        //     rv_ptr = new RBRV_entry_read_Cauchy(rv_name,iID,config);
         // } else if (rv_type=="weibull") {
-        //     rv_ptr = new RBRV_entry_read_Weibull(readName,readBrakets);
+        //     rv_ptr = new RBRV_entry_read_Weibull(rv_name,iID,config);
         // } else if (rv_type=="chisquared") {
-        //     rv_ptr = new RBRV_entry_read_ChiSquared(true,readName,readBrakets);
+        //     rv_ptr = new RBRV_entry_read_ChiSquared(true,rv_name,iID,config);
         // } else if (rv_type=="chi") {
-        //     rv_ptr = new RBRV_entry_read_ChiSquared(false,readName,readBrakets);
+        //     rv_ptr = new RBRV_entry_read_ChiSquared(false,rv_name,iID,config);
         } else if (rv_type=="studentst") {
             rv_ptr = new RBRV_entry_RV_StudentsT(rv_name,iID,config);
         } else if (rv_type=="studentstgen") {
@@ -541,15 +541,15 @@ RBRV_entry_RV_base * parse_py_obj_as_rv(py::dict config, const bool name_require
         } else if (rv_type=="logt") {
             rv_ptr = new RBRV_entry_RV_logt(rv_name,iID,config);
         // } else if (rv_type=="laplace") {
-        //     rv_ptr = new RBRV_entry_read_Laplace(readName,readBrakets);
+        //     rv_ptr = new RBRV_entry_read_Laplace(rv_name,iID,config);
         // } else if (rv_type=="usertransform") {
-        //     rv_ptr = new RBRV_entry_read_UserTransform(readName,readBrakets);
+        //     rv_ptr = new RBRV_entry_read_UserTransform(rv_name,iID,config);
         // } else if (rv_type=="truncated") {
-        //     rv_ptr = new RBRV_entry_read_Truncated(readName,readBrakets);
+        //     rv_ptr = new RBRV_entry_read_Truncated(rv_name,iID,config);
         // } else if (rv_type=="maxmintransform") {
-        //     rv_ptr = new RBRV_entry_read_maxminTransform(readName,readBrakets);
+        //     rv_ptr = new RBRV_entry_read_maxminTransform(rv_name,iID,config);
         // } else if (rv_type=="bayda") {
-        //     rv_ptr = new RBRV_entry_read_bayDA(readName,readBrakets);
+        //     rv_ptr = new RBRV_entry_read_bayDA(rv_name,iID,config);
         } else {
             std::ostringstream ssV;
             ssV << "Unknown random variable type '" << rv_type << "'.";

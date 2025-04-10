@@ -129,12 +129,13 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_uniform : public RBRV_entry_RV
   protected:
     FlxFunction* a;
     FlxFunction* b;
-    const bool eval_once;
+    bool eval_once;
     tdouble av;
     tdouble bv;
     
   public:
     RBRV_entry_RV_uniform(const std::string& name, const tuint iID, FlxFunction* a, FlxFunction* b, const bool eval_once);
+    RBRV_entry_RV_uniform(const std::string& name, const tuint iID, py::dict config);
     ~RBRV_entry_RV_uniform();
 
     const std::string get_type() const { return "uniform"; }
@@ -224,12 +225,12 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_normal_trunc : public RBRV_ent
 
 class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_beta : public RBRV_entry_RV_base {
   protected:
-    const bool is_mean;                // true if p1=mean and p2=sd
+    bool is_mean;                // true if p1=mean and p2=sd
     FlxFunction* p1;
     FlxFunction* p2;
     FlxFunction* a;
     FlxFunction* b;
-    const bool eval_once;
+    bool eval_once;
     tdouble alpha;
     tdouble beta;
     tdouble av;
@@ -237,6 +238,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_beta : public RBRV_entry_RV_ba
     
   public:
     RBRV_entry_RV_beta(const std::string& name, const tuint iID, const bool is_mean, FlxFunction* p1, FlxFunction* p2, FlxFunction* a, FlxFunction* b, const bool eval_once);
+    RBRV_entry_RV_beta(const std::string& name, const tuint iID, py::dict config);
     ~RBRV_entry_RV_beta();
 
     const std::string get_type() const { return "beta"; }

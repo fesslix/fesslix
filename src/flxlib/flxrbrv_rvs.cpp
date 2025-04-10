@@ -642,6 +642,24 @@ RBRV_entry_RV_uniform::RBRV_entry_RV_uniform(const std::string& name, const tuin
   }
 }
 
+RBRV_entry_RV_uniform::RBRV_entry_RV_uniform(const std::string& name, const tuint iID, py::dict config)
+: RBRV_entry_RV_base(name,iID), a(nullptr), b(nullptr), eval_once(false), av(ZERO), bv(ZERO)
+{
+
+  try {
+    a = parse_py_para("a", config);
+    b = parse_py_para("b", config);
+    eval_once = parse_py_para_as_bool("eval_once", config, false, false);
+
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_uniform::RBRV_entry_RV_uniform_99",1);
+    if (a) delete a;
+    if (b) delete b;
+    throw;
+  }
+}
+
 RBRV_entry_RV_uniform::~RBRV_entry_RV_uniform()
 {
   if (a) delete a;
@@ -1135,6 +1153,35 @@ RBRV_entry_RV_beta::RBRV_entry_RV_beta(const std::string& name, const tuint iID,
     this->init();
   } catch (FlxException& e) {
     FLXMSG("RBRV_entry_RV_beta::RBRV_entry_RV_beta",1);
+    if (p1) delete p1;
+    if (p2) delete p2;
+    if (a) delete a;
+    if (b) delete b;
+    throw;
+  }
+}
+
+RBRV_entry_RV_beta::RBRV_entry_RV_beta(const std::string& name, const tuint iID, py::dict config)
+: RBRV_entry_RV_base(name,iID), is_mean(false), p1(nullptr), p2(nullptr), a(nullptr), b(nullptr), eval_once(false), alpha(ZERO), beta(ZERO), av(ZERO), bv(ZERO)
+{
+  try {
+    if (config.contains("mu")) {          // 0:lambda,zeta;
+      is_mean = true;
+      p1 = parse_py_para("mu", config);
+      p2 = parse_py_para("sd", config);
+    } else if (config.contains("alpha")) {   // 1:mean,sd;
+      is_mean = false;
+      p1 = parse_py_para("alpha", config);
+      p2 = parse_py_para("beta", config);
+    } else {
+      throw FlxException_NeglectInInteractive("RBRV_entry_RV_beta::RBRV_entry_RV_beta_70", "Required parameters to define distribution not found in Python <dict>.");
+    }
+
+    eval_once = parse_py_para_as_bool("eval_once", config, false, false);
+
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_beta::RBRV_entry_RV_beta_99",1);
     if (p1) delete p1;
     if (p2) delete p2;
     if (a) delete a;

@@ -29,23 +29,23 @@ typedef std::mt19937 rng_type;
 /**
 * @brief initializes the random number generator
 */
-void rv_initialize(bool startup, bool user_seed=false, tuint user_seed_int = 0, tuint user_init_calls = 0, rng_type* rngp=NULL, const bool do_output=true);
+FLXLIB_EXPORT void rv_initialize(bool startup, bool user_seed=false, tuint user_seed_int = 0, tuint user_init_calls = 0, rng_type* rngp=NULL, const bool do_output=true);
 
 rng_type& get_rng();
 
 /**
 * @brief realization of a random variable with a uniform distribution [0;1]
 */
-const tdouble rv_uniform();
-const tdouble rv_uniform(rng_type& rng);
+FLXLIB_EXPORT const tdouble rv_uniform();
+FLXLIB_EXPORT const tdouble rv_uniform(rng_type& rng);
 
 /**
 * @brief realization of a random variable with a standard normal distribution
 */
-const tdouble rv_normal();
-const tdouble rv_normal(rng_type& rng);
-void rv_normal(flxVec& y);
-void rv_normal(flxVec& y,rng_type& rng);
+FLXLIB_EXPORT const tdouble rv_normal();
+FLXLIB_EXPORT const tdouble rv_normal(rng_type& rng);
+FLXLIB_EXPORT void rv_normal(flxVec& y);
+FLXLIB_EXPORT void rv_normal(flxVec& y,rng_type& rng);
 
 /**
 * @brief realization of a random variable with a lognormal distribution
@@ -63,21 +63,21 @@ inline const tdouble rv_phi_log(const tdouble &y) { return (-y*y - log(2*PI))/2;
 /**
 * @brief cumulative distribution function of the standard normal distribution: Phi
 */
-const tdouble rv_Phi(const tdouble& y);
+FLXLIB_EXPORT const tdouble rv_Phi(const tdouble& y);
 /**
 * @brief returns rv_Phi(y_b)-rv_Phi(y_a)
 */
-const tdouble rv_Phi_diff(const tdouble& y_a,const tdouble& y_b);
+FLXLIB_EXPORT const tdouble rv_Phi_diff(const tdouble& y_a,const tdouble& y_b);
 
 /**
 * @brief inverse of the cumulative distribution function of the standard normal distribution: Phi^-1
 */
-const tdouble rv_InvPhi(const tdouble& p);
+FLXLIB_EXPORT const tdouble rv_InvPhi(const tdouble& p);
 /**
 * @brief inverse of the cumulative distribution function of the standard normal distribution: Phi^-1
 * ... no alerts
 */
-const tdouble rv_InvPhi_noAlert(const tdouble& p);
+FLXLIB_EXPORT const tdouble rv_InvPhi_noAlert(const tdouble& p);
 
 // -----------------------------------------------------------------------------------------------------
 

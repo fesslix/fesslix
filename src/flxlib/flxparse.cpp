@@ -161,7 +161,7 @@ void parse_py_para_as_word_lst(std::vector<std::string>& res, const std::string&
     if (py::isinstance<py::list>(config[para_name.c_str()])) {
         py::list lst = config[para_name.c_str()].cast<py::list>();
         res.reserve(res.size()+lst.size());
-        for (ssize_t i = 0; i < lst.size(); ++i) {
+        for (pybind11::ssize_t i = 0; i < lst.size(); ++i) {
           py::object obj = lst[i];
           const std::string entry = parse_str_as_word(parse_py_obj_as_string(obj, "list entry"), lowercase, emptyAllow, numbegallow);
           res.push_back(entry);

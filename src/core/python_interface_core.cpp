@@ -989,7 +989,7 @@ flxPySampler::flxPySampler(py::list rvsets)
 {
     std::vector<std::string> set_str_vec;
     set_str_vec.reserve(rvsets.size());
-    for (ssize_t i = 0; i < rvsets.size(); ++i) {
+    for (pybind11::ssize_t i = 0; i < rvsets.size(); ++i) {
         py::object obj = rvsets[i];
         const std::string entry = parse_str_as_word(parse_py_obj_as_string(obj, "list entry"), true);
         set_str_vec.push_back(entry);

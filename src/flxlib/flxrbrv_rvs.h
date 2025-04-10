@@ -20,7 +20,7 @@
 #include "flxrbrv.h"
 
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_normal : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_normal : public RBRV_entry_RV_base {
   protected:
     int pid;        // 0: mean,std.dev; 1: quantile value; 2: C.o.V, quantile value; 3: std.dev, quantile value
     FlxFunction* p1;
@@ -63,7 +63,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_normal : public RBRV_entry_RV_
 };
 
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_stdN : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_stdN : public RBRV_entry_RV_base {
   public:
     RBRV_entry_RV_stdN(const std::string& name, const tuint iID) : RBRV_entry_RV_base(name,iID) { this->init(); }
     RBRV_entry_RV_stdN(const std::string& name, const tuint iID, py::dict config) : RBRV_entry_RV_base(name,iID) { this->init(); }
@@ -87,7 +87,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_stdN : public RBRV_entry_RV_ba
     virtual const tdouble get_HPD(const tdouble p);
 };
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_lognormal : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_lognormal : public RBRV_entry_RV_base {
   protected:
     int pid;                // ... see get_paras()
     FlxFunction* p1;
@@ -125,7 +125,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_lognormal : public RBRV_entry_
     const tdouble get_CoeffOfVar_withoutEpsilon();
 };
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_uniform : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_uniform : public RBRV_entry_RV_base {
   protected:
     FlxFunction* a;
     FlxFunction* b;
@@ -156,7 +156,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_uniform : public RBRV_entry_RV
     const tdouble Inv_cdf_x(const tdouble p);
 };
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Gumbel : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_Gumbel : public RBRV_entry_RV_base {
   protected:
     const int methID;                // 0: p1=location, p2=scale; 1: p1=mean and p2=sd; 2: P(p1)=p2, P(p3)=p4
     FlxFunction* p1;
@@ -188,7 +188,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Gumbel : public RBRV_entry_RV_
     virtual py::dict info();
 };
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_normal_trunc : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_normal_trunc : public RBRV_entry_RV_base {
   protected:
     FlxFunction* m;
     FlxFunction* s;
@@ -223,7 +223,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_normal_trunc : public RBRV_ent
     virtual py::dict info();
 };
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_beta : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_beta : public RBRV_entry_RV_base {
   protected:
     bool is_mean;                // true if p1=mean and p2=sd
     FlxFunction* p1;
@@ -261,7 +261,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_beta : public RBRV_entry_RV_ba
     const tdouble Inv_cdf_x(const tdouble p);
 };
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_exponential : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_exponential : public RBRV_entry_RV_base {
   protected:
     FlxFunction* lambda;
     FlxFunction* epsilon;
@@ -290,7 +290,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_exponential : public RBRV_entr
     virtual py::dict info();
 };
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_gamma : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_gamma : public RBRV_entry_RV_base {
   protected:
     const bool is_mean;                // true if p1=mean and p2=sd
     FlxFunction* p1;
@@ -323,7 +323,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_gamma : public RBRV_entry_RV_b
     virtual py::dict info();
 };
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Poisson : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_Poisson : public RBRV_entry_RV_base {
   protected:
     FlxFunction* mean;
     tdouble meanV;
@@ -342,7 +342,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Poisson : public RBRV_entry_RV
     virtual const bool search_circref(FlxFunction* fcr);
 };
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Binomial : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_Binomial : public RBRV_entry_RV_base {
   protected:
     FlxFunction* p;
     FlxFunction* N;
@@ -364,7 +364,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Binomial : public RBRV_entry_R
     virtual const bool search_circref(FlxFunction* fcr);
 };
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Cauchy : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_Cauchy : public RBRV_entry_RV_base {
   protected:
     FlxFunction* loc;
     FlxFunction* scale;
@@ -389,7 +389,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Cauchy : public RBRV_entry_RV_
     virtual const bool search_circref(FlxFunction* fcr);
 };
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Weibull : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_Weibull : public RBRV_entry_RV_base {
   protected:
     const bool is_mean;                // true if p1=mean and p2=sd
     FlxFunction* p1;
@@ -426,7 +426,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Weibull : public RBRV_entry_RV
     
 };
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_ChiSquared : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_ChiSquared : public RBRV_entry_RV_base {
   protected:
     FlxFunction* p1;
     const bool eval_once;
@@ -453,7 +453,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_ChiSquared : public RBRV_entry
     virtual const bool search_circref(FlxFunction* fcr);
 };
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Chi : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_Chi : public RBRV_entry_RV_base {
   protected:
     FlxFunction* p1;
     const bool eval_once;
@@ -481,7 +481,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Chi : public RBRV_entry_RV_bas
 };
 
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_StudentsT : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_StudentsT : public RBRV_entry_RV_base {
   protected:
     FlxFunction* p1;
     bool eval_once;
@@ -509,7 +509,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_StudentsT : public RBRV_entry_
     virtual py::dict info();
 };
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_StudentsT_generalized : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_StudentsT_generalized : public RBRV_entry_RV_base {
   protected:
     int pid;        // 0: dof, loc, scale; 1: dof, loc, val_1, pr_1
     FlxFunction* p1;
@@ -543,7 +543,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_StudentsT_generalized : public
 };
 
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_logt : public RBRV_entry_RV_StudentsT_generalized {
+class PYBIND11_EXPORT RBRV_entry_RV_logt : public RBRV_entry_RV_StudentsT_generalized {
   protected:
 
   public:
@@ -567,7 +567,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_logt : public RBRV_entry_RV_St
 };
 
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Laplace : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_Laplace : public RBRV_entry_RV_base {
   protected:
     FlxFunction* locf;
     FlxFunction* scalef;
@@ -596,7 +596,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Laplace : public RBRV_entry_RV
     virtual const tdouble get_HPD(const tdouble p);
 };
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_UserTransform : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_UserTransform : public RBRV_entry_RV_base {
   protected:
     const bool is_z2x;
     FlxFunction* t1;                   // z2x or y2z
@@ -631,7 +631,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_UserTransform : public RBRV_en
 };
 
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Truncated : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_Truncated : public RBRV_entry_RV_base {
   protected:
     FlxFunction* a;
     FlxFunction* b;
@@ -661,7 +661,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_Truncated : public RBRV_entry_
 };
 
 
-class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_maxminTransform : public RBRV_entry_RV_base {
+class PYBIND11_EXPORT RBRV_entry_RV_maxminTransform : public RBRV_entry_RV_base {
   protected:
     const bool is_max;
     FlxFunction* n;                   // number of independent observations

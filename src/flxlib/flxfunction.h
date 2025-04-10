@@ -238,7 +238,7 @@ class FLXLIB_EXPORT FunBaseFun_multPara : public FunBaseFun {
 /**
 * @brief The base class for all arithmetic classes of -functions- with multiple parameters.
 */
-class PYBIND11_EXPORT FLXLIB_EXPORT FunBaseFun_Python : public FunBaseFun_multPara {
+class PYBIND11_EXPORT FunBaseFun_Python : public FunBaseFun_multPara {
   protected:
     const std::string pyFunName;
     py::function pyfunc;

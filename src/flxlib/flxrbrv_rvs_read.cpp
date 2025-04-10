@@ -73,11 +73,11 @@ FlxObjRBRV_set_creator::FlxObjRBRV_set_creator( const std::string& set_name, RBR
 
 }
 
-FlxObjRBRV_set_creator::FlxObjRBRV_set_creator( const std::string& set_name, RBRV_set_baseDPtr parents, const tuint Nparents, const bool allow_x2y, std::vector< RBRV_entry_read_base* >& set_entriesV)
+FlxObjRBRV_set_creator::FlxObjRBRV_set_creator( RBRV_set_box& box, const std::string& set_name, RBRV_set_baseDPtr parents, const tuint Nparents, const bool allow_x2y, std::vector< RBRV_entry_read_base* >& set_entriesV)
 : set_name(set_name), is_Nataf(false), is_Nataf_evalOnce(false), parents(parents), Nparents(Nparents), allow_x2y(allow_x2y), rID(0)
 {
   for (size_t i=0;i<set_entriesV.size();++i) {
-    add_entry(set_entriesV[i]);
+    add_entry(box,set_entriesV[i]);
   }
 }
 
@@ -95,7 +95,63 @@ FlxObjRBRV_set_creator::~FlxObjRBRV_set_creator()
   }
 }
 
-void FlxObjRBRV_set_creator::add_entry(RBRV_entry_read_base* entry)
+const bool FlxObjRBRV_set_creator::get_Nataf_evalOnce() const
+{
+  return (is_Nataf && is_Nataf_evalOnce );
+}
+
+void FlxObjRBRV_set_creator::add_entry(RBRV_set_box& box, RBRV_entry_RV_base* ep, FlxFunction* csVal, const std::string csNam, const bool csFix)
+{
+  try {
+    for (tuint i=0;i<set_entries.size();++i) {
+      if (ep->name==set_entries[i]->name) {
+        throw FlxException("FlxObjRBRV_set_creator::add_entry_a01", "An entry with name '" + set_entries[i]->name + "' does already exist.");
+      }
+    }
+    if (ep->get_iID()!=rID) {
+      throw FlxException_Crude("FlxObjRBRV_set_creator::add_entry_a02");
+    }
+    ++rID;  // manually increase the running ID
+    // register correlation (only for Rosenblatt transformation)
+      if (csVal) {
+        // consistency checks
+            if (is_Nataf) {
+                throw FlxException_NeglectInInteractive("FlxObjRBRV_set_creator::add_entry_a03", "Setting a correlation pair is not allowed for sets of random variables based on the Nataf transformation.");
+            }
+            // make sure that the current entry is a true random variable
+                RBRV_entry_RV_base* rv_2 = dynamic_cast<RBRV_entry_RV_base*>(ep);
+                if (rv_2==nullptr) {
+                    throw FlxException("FlxObjRBRV_set_creator::add_entry_a04", "A correlation cannot be specified for'" + ep->name + "'." );
+                }
+        // search the random variable to correlate with
+            RBRV_entry* rv_1b = nullptr;
+            for (tuint i=0;i<set_entries.size();++i) {
+                if (set_entries[i]->name==csNam) {
+                    rv_1b = set_entries[i];
+                    break;
+                }
+            }
+            if (rv_1b==nullptr) {
+                throw FlxException("FlxObjRBRV_set_creator::add_entry_a05", "An entry with name '" + csNam + "' was not found in the set." );
+            }
+        // make sure that it is also a true random variable
+            RBRV_entry_RV_base* rv_1 = dynamic_cast<RBRV_entry_RV_base*>(rv_1b);
+            if (rv_1==nullptr) {
+              throw FlxException("FlxObjRBRV_set_creator::add_entry_a06", "A correlation cannot be specified for'" + rv_1b->name + "'." );
+            }
+        rv_2->set_corr(rv_1,csVal,csFix,true);
+        delete csVal; csVal = nullptr;
+      }
+    box.register_entry(ep);
+    set_entries.push_back(ep); ep=nullptr;
+  } catch (FlxException &e) {
+    if (ep) delete ep;
+    if (csVal) delete csVal;
+    throw;
+  }
+}
+
+void FlxObjRBRV_set_creator::add_entry(RBRV_set_box& box, RBRV_entry_read_base* entry)
 {
   const std::string family = set_name + "::";
   RBRV_entry* ep = NULL;
@@ -104,9 +160,10 @@ void FlxObjRBRV_set_creator::add_entry(RBRV_entry_read_base* entry)
     ep = entry->generate_entry(family,rID);
     for (tuint i=0;i<set_entries.size();++i) {
       if (ep->name==set_entries[i]->name) {
-        throw FlxException("FlxObjRBRV_set_creator::add_entry", "An entry with name '" + set_entries[i]->name + "' does already exist.");
+        throw FlxException("FlxObjRBRV_set_creator::add_entry_b01", "An entry with name '" + set_entries[i]->name + "' does already exist.");
       }
     }
+    box.register_entry(ep);
     set_entries.push_back(ep); ep=NULL;
     entry->generate_corr(set_entries,set_entries.size()-1,is_Nataf);
   } catch (FlxException &e) {
@@ -197,10 +254,6 @@ RBRV_set* FlxObjRBRV_set_creator::register_set_rbrv(RBRV_set_box& box, const boo
   for (tuint i=0;i<Nentries;++i) entries[i] = set_entries[i];
   set_entries.clear();  // memory management handed over to 'entries'
   try {
-    // register all entries
-      for (tuint i=0;i<Nentries;++i) {
-        box.register_entry(entries[i]);
-      }
     // allocate the set
       ts = new RBRV_set(false,rID,set_name,false,Nentries,entries,Nparents,parents,allow_x2y);
       parents = NULL;
@@ -255,10 +308,6 @@ RBRV_set_Nataf* FlxObjRBRV_set_creator::register_set_Nataf(RBRV_set_box& box, co
   for (tuint i=0;i<Nentries;++i) entries[i] = set_entries[i];
   set_entries.clear();  // memory management handed over to 'entries'
   try {
-    // register all entries
-      for (tuint i=0;i<Nentries;++i) {
-        box.register_entry(entries[i]);
-      }
     // allocate the set
       ts = new RBRV_set_Nataf(false,rID,set_name,false,Nentries,entries,L);
       parents = NULL;
@@ -477,22 +526,27 @@ RBRV_entry_RV_base* RBRV_entry_read_base::read_gen_entry(bool errSerious)
   return rep;
 }
 
-void RBRV_entry_read_base::generate_set_base(RBRV_set_box& box, const std::string& name, std::vector< FlxString* > set_parents, RBRV_set_baseDPtr& parents)
+void RBRV_entry_read_base::generate_set_base_check_name(RBRV_set_box& box, const std::string& name)
 {
   // check if a set with that name does already exist
     if (box.get_set(name,false)) {
       std::ostringstream ssV;
       ssV << "A rbrv-set with the same name (" << name << ") is already defined.";
-      throw FlxException("RBRV_entry_read_base::generate_set_base_1", ssV.str() );
+      throw FlxException("RBRV_entry_read_base::generate_set_base_check_name_1", ssV.str() );
     }
   // check if a set with that name is waiting to be created
     if (rbrv_set_creator->get_creator(name,false)) {
       std::ostringstream ssV;
       ssV << "A rbrv-set with the same name (" << name << ") is already declared.";
-      throw FlxException("RBRV_entry_read_base::generate_set_base_2", ssV.str() );
+      throw FlxException("RBRV_entry_read_base::generate_set_base_check_name_2", ssV.str() );
     }
+}
+
+void RBRV_entry_read_base::generate_set_base(RBRV_set_box& box, const std::string& name, std::vector< FlxString* > set_parents, RBRV_set_baseDPtr& parents)
+{
+  RBRV_entry_read_base::generate_set_base_check_name(box,name);
   const tuint Nparents = set_parents.size();
-  parents = ((Nparents==0)?NULL:(new RBRV_set_base*[Nparents]));
+  parents = ((Nparents==0)?nullptr:(new RBRV_set_base*[Nparents]));
   try {
     // get the parents
       for (tuint i=0;i<Nparents;++i) {
@@ -500,10 +554,29 @@ void RBRV_entry_read_base::generate_set_base(RBRV_set_box& box, const std::strin
         parents[i] = box.get_set(pn,true);
       }
   } catch (FlxException& e) {
-    FLXMSG("RBRV_entry_read_base::generate_set_base_3",1);
+    FLXMSG("RBRV_entry_read_base::generate_set_base_a01",1);
     if (parents) {
       delete [] parents;
-      parents = NULL;
+      parents = nullptr;
+    }
+    throw;
+  }
+}
+
+void RBRV_entry_read_base::generate_set_base(RBRV_set_box& box, std::vector<std::string> set_parents, RBRV_set_baseDPtr& parents)
+{
+  const tuint Nparents = set_parents.size();
+  parents = ((Nparents==0)?nullptr:(new RBRV_set_base*[Nparents]));
+  try {
+    // get the parents
+      for (tuint i=0;i<Nparents;++i) {
+        parents[i] = box.get_set(set_parents[i],true);
+      }
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_read_base::generate_set_base_b01",1);
+    if (parents) {
+      delete [] parents;
+      parents = nullptr;
     }
     throw;
   }

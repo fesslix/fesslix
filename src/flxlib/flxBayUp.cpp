@@ -1520,7 +1520,8 @@ flxBayUp::flxBayUp(const std::string& nameID, const tdouble& scaleconst, const t
   updater(data->RndCreator)
 {
   // resolve dependencies of the parents
-    RBRV_constructor::find_dependent_sets(parentsetstr,setvec,data->rbrv_box);
+    const std::vector<std::string> set_str_vec = parse_strseq_as_vec(parentsetstr);
+    RBRV_constructor::find_dependent_sets(set_str_vec,setvec,data->rbrv_box);
 }
 
 flxBayUp::flxBayUp(const std::string& parentsetstr)
@@ -1528,7 +1529,8 @@ flxBayUp::flxBayUp(const std::string& parentsetstr)
   updater(data->RndCreator)
 {
   // resolve dependencies of the parents
-    RBRV_constructor::find_dependent_sets(parentsetstr,setvec,data->rbrv_box);
+    const std::vector<std::string> set_str_vec = parse_strseq_as_vec(parentsetstr);
+    RBRV_constructor::find_dependent_sets(set_str_vec,setvec,data->rbrv_box);
 }
 
 flxBayUp::~flxBayUp()

@@ -94,11 +94,11 @@ void FlxObjRBRV_set_new::task()
 {
   const std::string name = set_name->eval_word(true);
   const tuint Nparents = set_parents.size();
-  RBRV_set_baseDPtr parents; 
-  RBRV_entry_read_base::generate_set_base(data->rbrv_box,name,set_parents,parents);
   if (is_Nataf) {
     rbrv_set_creator.create_new(name,new FlxObjRBRV_set_creator(name,is_Nataf_evalOnce));
   } else {
+    RBRV_set_baseDPtr parents = nullptr;
+    RBRV_entry_read_base::generate_set_base(data->rbrv_box,name,set_parents,parents);
     rbrv_set_creator.create_new(name,new FlxObjRBRV_set_creator(name,parents,Nparents,allow_x2y));
   }
 }
@@ -144,7 +144,7 @@ void FlxObjRBRV_set_addRV::task()
 {
   const std::string name = set_name->eval_word(true);
   FlxObjRBRV_set_creator* crtr = rbrv_set_creator.get_creator(name);
-  crtr->add_entry(entry);
+  crtr->add_entry(data->rbrv_box, entry);
 }
 
 
@@ -252,9 +252,9 @@ void FlxObjRBRV_set::task()
 {
   const std::string name = set_name->eval_word(true);
   const tuint Nparents = set_parents.size();
-  RBRV_set_baseDPtr parents; 
+  RBRV_set_baseDPtr parents = nullptr;
   RBRV_entry_read_base::generate_set_base(data->rbrv_box,name,set_parents,parents);
-  FlxObjRBRV_set_creator crtr(name,parents,Nparents,allow_x2y,set_entries);
+  FlxObjRBRV_set_creator crtr(data->rbrv_box,name,parents,Nparents,allow_x2y,set_entries);
   crtr.register_set(data->rbrv_box,true);
 }
 
@@ -304,7 +304,7 @@ FlxObjRBRV_noise::~FlxObjRBRV_noise()
 void FlxObjRBRV_noise::task()
 {
   const std::string name = set_name->eval_word(true);
-  RBRV_set_baseDPtr parents; 
+  RBRV_set_baseDPtr parents = nullptr;
   RBRV_entry_read_base::generate_set_base(data->rbrv_box,name,set_parents,parents);
   const tuint Nparents = set_parents.size();
   RBRV_set_noise* ts = NULL;
@@ -367,7 +367,7 @@ FlxObjRBRV_proc::~FlxObjRBRV_proc()
 void FlxObjRBRV_proc::task()
 {
   const std::string name = set_name->eval_word(true);
-  RBRV_set_baseDPtr parents; 
+  RBRV_set_baseDPtr parents = nullptr;
   RBRV_entry_read_base::generate_set_base(data->rbrv_box,name,set_parents,parents);
   const tuint Nparents = set_parents.size();
   RBRV_set_proc* ts = NULL;
@@ -743,7 +743,7 @@ void FlxObjRBRV_psd::task()
   if (ub<=lb) {
     throw FlxException("FlxObjRBRV_psd::task","Lower bound must be smaller than upper bound.");
   }
-  RBRV_set_baseDPtr parents; 
+  RBRV_set_baseDPtr parents = nullptr;
   RBRV_entry_read_base::generate_set_base(data->rbrv_box,name,set_parents,parents);
   const tuint Nparents = set_parents.size();
   RBRV_set_psd* ts = NULL;
@@ -823,7 +823,7 @@ FlxObjRBRV_sphere::~FlxObjRBRV_sphere()
 void FlxObjRBRV_sphere::task()
 {
   const std::string name = set_name->eval_word(true);
-  RBRV_set_baseDPtr parents; 
+  RBRV_set_baseDPtr parents = nullptr;
   RBRV_entry_read_base::generate_set_base(data->rbrv_box,name,set_parents,parents);
   const tuint Nparents = set_parents.size();
   RBRV_set_sphere* ts = NULL;
@@ -891,7 +891,7 @@ FlxObjRBRV_vfset::~FlxObjRBRV_vfset()
 void FlxObjRBRV_vfset::task()
 {
   const std::string name = set_name->eval_word(true);
-  RBRV_set_baseDPtr parents; 
+  RBRV_set_baseDPtr parents = nullptr;
   RBRV_entry_read_base::generate_set_base(data->rbrv_box,name,set_parents,parents);
   const tuint Nparents = set_parents.size();
   RBRV_set_parents* ts = NULL;
@@ -914,7 +914,7 @@ void FlxObjRBRV_vfset::task()
       default:
         throw FlxException_Crude("FlxObjRBRV_vfset::task_01");
     }
-    parents = NULL;
+    parents = nullptr;
     data->rbrv_box.register_set(ts);
     GlobalVar.slog(4) << "rbrv_noise: created new set '" << name << "'." << std::endl;
   } catch (FlxException& e) {
@@ -963,7 +963,8 @@ void FlxObjRBRV_print::task()
   if (rbstr) {
     // create the constructor
       const std::string setstr = rbstr->eval(true);
-      RBRV_constructor* constr = new RBRV_constructor(setstr,data->rbrv_box);
+      const std::vector<std::string> set_str_vec = parse_strseq_as_vec(setstr);
+      RBRV_constructor* constr = new RBRV_constructor(set_str_vec,data->rbrv_box);
     try {
       sout() << "RBRV-sets: " << setstr << std::endl;
       constr->print_info(sout());
@@ -1041,7 +1042,8 @@ void FlxObjRBRV_vec_get::task()
         }
       } else {
         const std::string setstr = rbstr->eval(true);
-        constr = new RBRV_constructor(setstr,data->rbrv_box);
+        const std::vector<std::string> set_str_vec = parse_strseq_as_vec(setstr);
+        constr = new RBRV_constructor(set_str_vec,data->rbrv_box);
         NOX = constr->get_NOX();
         NRV = constr->get_NRV();
         if ( (gType==y&&NRV==0) || NOX==0) {
@@ -1153,7 +1155,8 @@ void FlxObjRBRV_vec_set::task()
         }
       } else {
         const std::string setstr = rbstr->eval(true);
-        constr = new RBRV_constructor(setstr,data->rbrv_box);
+        const std::vector<std::string> set_str_vec = parse_strseq_as_vec(setstr);
+        constr = new RBRV_constructor(set_str_vec,data->rbrv_box);
         NOX = constr->get_NOX();
         NRV = constr->get_NRV();
         if ( (sType==y&&NRV==0) || NOX==0) {
@@ -1769,7 +1772,8 @@ FunExpectation_mci::~FunExpectation_mci()
 const tdouble FunExpectation_mci::calc()
 {
   if (rndBox==NULL) {
-    rndBox = new RBRV_constructor(rbrv_sets->eval(true),data->rbrv_box);
+    const std::vector<std::string> set_str_vec = parse_strseq_as_vec(rbrv_sets->eval(true));
+    rndBox = new RBRV_constructor(set_str_vec,data->rbrv_box);
     delete rbrv_sets; rbrv_sets = NULL;
   }
   calc_expectation_numerical_MCI en;

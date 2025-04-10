@@ -52,9 +52,7 @@ class FLXLIB_EXPORT FlxReadManager : public FlxReaderBase2 {
 
 
 FLXLIB_EXPORT void set_ReadManager(FlxReadManager* readManager_ptr_);
-FLXLIB_EXPORT FlxFunction* parse_function(const std::string& funStr);
-PYBIND11_EXPORT FLXLIB_EXPORT FlxFunction* parse_function(py::object pyobj, std::string descr="");
-
+FLXLIB_EXPORT FlxReadManager* get_ReadManager();
 
 /**
 * @brief A class for storing output-streams (ostream&)

@@ -1806,9 +1806,9 @@ RBRV_constructor::RBRV_constructor(const std::vector< RBRV_set_base* >& setvec)
   }
 }
 
-RBRV_constructor::RBRV_constructor(const std::string& set_str, RBRV_set_box &rbrv_box)
+RBRV_constructor::RBRV_constructor(const std::vector<std::string>& set_str_vec, RBRV_set_box &rbrv_box)
 {
-  RBRV_constructor::find_dependent_sets(set_str,setvec,rbrv_box);
+  RBRV_constructor::find_dependent_sets(set_str_vec,setvec,rbrv_box);
   NRV = count_NRV(setvec);
   NOX = count_NOX(setvec);
   Nsets = setvec.size();
@@ -2003,30 +2003,23 @@ void RBRV_constructor::transform_y2w(const tdouble* const y_vec, tdouble* const 
 }
 
 
-void RBRV_constructor::find_dependent_sets(const std::string& setstr, std::vector< RBRV_set_base* >& setvec, RBRV_set_box& RBRVbox)
+void RBRV_constructor::find_dependent_sets(const std::vector<std::string>& set_str_vec, std::vector< RBRV_set_base* >& setvec, RBRV_set_box& RBRVbox)
 {
-  if (setstr.empty()) {
+  if (set_str_vec.empty()) {
     std::ostringstream ssV;
     ssV << "An empty list of sets is not allowed.";
     throw FlxException("RBRV_constructor::find_dependent_sets_1", ssV.str() );
   }
-  std::size_t posLast = 0;
-  std::size_t pos;
-  do {
-    pos = setstr.find(',',posLast);
-    // extract the set
-      std::string sn = setstr.substr(posLast,pos-posLast);
-      trim(sn);
-      RBRV_set_base* sp = RBRVbox.get_set(sn,true);
-    sp->find_dependent_sets(setvec);
-    // get the next position
-      posLast = pos + 1;
-  } while ( pos != std::string::npos );
+  // collect all relevant sets of random variables
+    for (size_t i=0;i<set_str_vec.size();++i) {
+      RBRV_set_base* sp = RBRVbox.get_set(set_str_vec[i],true);
+      sp->find_dependent_sets(setvec);
+    }
   // count the number of random variables
     const tuint NRVt = count_NRV_long(setvec);
     if (NRVt==0) {
       std::ostringstream ssV;
-      ssV << "The set '" << setstr << "' does not contain any random variables.";
+      ssV << "The set does not contain any random variables.";
       throw FlxException("RBRV_constructor::find_dependent_sets_2", ssV.str() );
     }
   tuint i;

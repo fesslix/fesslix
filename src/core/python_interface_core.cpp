@@ -18,6 +18,7 @@
 #include "python_interface_core.h"
 #include "fesslix.h"
 #include "flxfunction_data.h"
+#include "flxrbrv_rvs_read.h"
 #include <iostream>
 
 void check_engine_state()
@@ -495,33 +496,20 @@ static ModuleCleanup module_cleanup;
 // random variables
 // #################################################################################
 
-flxPyRV::flxPyRV(py::dict config)
-: rv_ptr(nullptr)
+RBRV_entry_RV_base * parse_py_obj_as_rv(py::dict config, const bool name_required, const tuint iID, const std::string family, std::string descr)
 {
+    RBRV_entry_RV_base* rv_ptr = nullptr;
     // retrieve type
-        if (config.contains("type")==false) {
-            throw FlxException_NeglectInInteractive("flxPyRV::flxPyRV_01", "Python <dict> does not contain key 'type'.");
-        }
-        if (py::isinstance<py::str>(config["type"])==false) {
-            throw FlxException_NeglectInInteractive("flxPyRV::flxPyRV_02", "Key 'type' in Python <dict> is not of type 'str'.");
-        }
-        const std::string rv_type = config["type"].cast<std::string>();
+        const std::string rv_type = parse_str_as_word(parse_py_para_as_string("type",config,true),true);
     // retrieve name
-        std::string rv_name = "name_unspecified";
-        if (config.contains("name")) {
-            if (py::isinstance<py::str>(config["name"])) {
-                rv_name = config["name"].cast<std::string>();
-            } else {
-                throw FlxException_NeglectInInteractive("flxPyRV::flxPyRV_03", "Key 'name' in Python <dict> is not of type 'str'.");
-            }
-        }
+        std::string rv_name = family + parse_str_as_word(parse_py_para_as_string("name",config,name_required,"name_unspecified"),true);
     // select rbrv-class based on type
         if (rv_type=="stdn") {
-            rv_ptr = new RBRV_entry_RV_stdN(rv_name,0,config);
+            rv_ptr = new RBRV_entry_RV_stdN(rv_name,iID,config);
         } else if (rv_type=="normal") {
-            rv_ptr = new RBRV_entry_RV_normal(rv_name,0,config);
+            rv_ptr = new RBRV_entry_RV_normal(rv_name,iID,config);
         } else if (rv_type=="logn") {
-            rv_ptr = new RBRV_entry_RV_lognormal(rv_name,0,config);
+            rv_ptr = new RBRV_entry_RV_lognormal(rv_name,iID,config);
         // } else if (rv_type=="uniform") {
         //     rv_ptr = new RBRV_entry_read_uniform(readName,readBrakets);
         // } else if (rv_type=="gumbel") {
@@ -547,11 +535,11 @@ flxPyRV::flxPyRV(py::dict config)
         // } else if (rv_type=="chi") {
         //     rv_ptr = new RBRV_entry_read_ChiSquared(false,readName,readBrakets);
         } else if (rv_type=="studentst") {
-            rv_ptr = new RBRV_entry_RV_StudentsT(rv_name,0,config);
+            rv_ptr = new RBRV_entry_RV_StudentsT(rv_name,iID,config);
         } else if (rv_type=="studentstgen") {
-            rv_ptr = new RBRV_entry_RV_StudentsT_generalized(rv_name,0,config);
+            rv_ptr = new RBRV_entry_RV_StudentsT_generalized(rv_name,iID,config);
         } else if (rv_type=="logt") {
-            rv_ptr = new RBRV_entry_RV_logt(rv_name,0,config);
+            rv_ptr = new RBRV_entry_RV_logt(rv_name,iID,config);
         // } else if (rv_type=="laplace") {
         //     rv_ptr = new RBRV_entry_read_Laplace(readName,readBrakets);
         // } else if (rv_type=="usertransform") {
@@ -567,12 +555,53 @@ flxPyRV::flxPyRV(py::dict config)
             ssV << "Unknown random variable type '" << rv_type << "'.";
             throw FlxException("flxPyRV::flxPyRV_50", ssV.str() );
         }
+    return rv_ptr;
+}
+
+flxPyRV::flxPyRV(py::dict config)
+: rv_ptr(nullptr), mem_managed(true)
+{
+    rv_ptr_ = parse_py_obj_as_rv(config, false, 0, "", "flx.rv");
+    rv_ptr = rv_ptr_;
     finalize_call();
+}
+
+flxPyRV::flxPyRV(RBRV_entry* rv_ptr)
+: rv_ptr(rv_ptr), rv_ptr_(dynamic_cast<RBRV_entry_RV_base*>(rv_ptr)), mem_managed(false)
+{
+
+}
+
+flxPyRV::flxPyRV(flxPyRV& rhs)
+: rv_ptr(rhs.rv_ptr), rv_ptr_(rhs.rv_ptr_), mem_managed(rhs.mem_managed)
+{
+    if (mem_managed) {
+        throw FlxException_NotImplemented("flxPyRV::flxPyRV(flxPyRV& rhs)");
+    }
+}
+
+flxPyRV::flxPyRV(flxPyRV && rhs)
+: rv_ptr(rhs.rv_ptr), rv_ptr_(rhs.rv_ptr_), mem_managed(rhs.mem_managed)
+{
+    rhs.rv_ptr = nullptr;
+    rhs.rv_ptr_ = nullptr;
+    rhs.mem_managed = false;
 }
 
 flxPyRV::~flxPyRV()
 {
-    delete rv_ptr;
+    if (rv_ptr) {
+        if (mem_managed) {
+            delete rv_ptr;
+        }
+    }
+}
+
+void flxPyRV::ensure_is_a_basic_rv()
+{
+    if (rv_ptr_==nullptr) {
+        throw FlxException_NeglectInInteractive("flxPyRV::ensure_is_a_basic_rv", "'" + rv_ptr->name + "' is not a basic random variable.");
+    }
 }
 
 const std::string flxPyRV::get_name() const
@@ -598,20 +627,23 @@ const tdouble flxPyRV::x2y(const tdouble x_val)
 
 const tdouble flxPyRV::y2x(const tdouble y_val)
 {
-    rv_ptr->eval_para();
-    return rv_ptr->transform_y2x(y_val);
+    ensure_is_a_basic_rv();
+    rv_ptr_->eval_para();
+    return rv_ptr_->transform_y2x(y_val);
 }
 
 const tdouble flxPyRV::sample()
 {
-    rv_ptr->eval_para();
+    ensure_is_a_basic_rv();
+    rv_ptr_->eval_para();
     const tdouble y = FlxEngine->dataBox.RndCreator.gen_smp();
-    return rv_ptr->transform_y2x(y);
+    return rv_ptr_->transform_y2x(y);
 }
 
 void flxPyRV::sample_array(py::array_t<tdouble> arr)
 {
-    rv_ptr->eval_para();
+    ensure_is_a_basic_rv();
+    rv_ptr_->eval_para();
 
     // Access the data as a raw pointer
     py::buffer_info buf_info = arr.request();
@@ -626,7 +658,7 @@ void flxPyRV::sample_array(py::array_t<tdouble> arr)
 
     // transform the samples to original space
     for (size_t i = 0; i < size; ++i) {
-        res_ptr[i] = rv_ptr->transform_y2x(res_ptr[i]);    // TODO avoid re-evaluating the parameters of the random variable
+        res_ptr[i] = rv_ptr_->transform_y2x(res_ptr[i]);    // TODO avoid re-evaluating the parameters of the random variable
     }
 }
 
@@ -707,9 +739,10 @@ py::array_t<tdouble> flxPyRV::cdf_array(py::array_t<tdouble> arr, const bool saf
 
 const tdouble flxPyRV::icdf(const tdouble p)
 {
-    rv_ptr->eval_para();
+    ensure_is_a_basic_rv();
+    rv_ptr_->eval_para();
     const tdouble y = rv_InvPhi_noAlert( p );
-    return rv_ptr->transform_y2x(y);
+    return rv_ptr_->transform_y2x(y);
 }
 
 const tdouble flxPyRV::sf(const tdouble x_val, const bool safeCalc)
@@ -756,8 +789,9 @@ const bool flxPyRV::check_x(const tdouble xV)
 
 const tdouble flxPyRV::get_HPD(const tdouble p)
 {
-    rv_ptr->eval_para();
-    return rv_ptr->get_HPD(p);
+    ensure_is_a_basic_rv();
+    rv_ptr_->eval_para();
+    return rv_ptr_->get_HPD(p);
 }
 
 py::dict flxPyRV::info()
@@ -766,6 +800,212 @@ py::dict flxPyRV::info()
     return rv_ptr->info();
 }
 
+
+
+
+// #################################################################################
+// sets of random variables
+// #################################################################################
+
+flxPyRVset::flxPyRVset(flxPyRVset& rhs)
+: rvset_ptr(rhs.rvset_ptr), name_of_set(rhs.name_of_set)
+{
+}
+
+flxPyRVset::flxPyRVset(flxPyRVset&& rhs)
+: rvset_ptr(rhs.rvset_ptr), name_of_set(rhs.name_of_set)
+{
+    rhs.rvset_ptr = nullptr;
+    rhs.name_of_set = "";
+}
+
+flxPyRVset& flxPyRVset::operator=(const flxPyRVset& rhs)
+{
+    rvset_ptr = rhs.rvset_ptr;
+    name_of_set = rhs.name_of_set;
+    return *this;
+}
+
+const std::string flxPyRVset::get_name() const
+{
+    return name_of_set;
+}
+
+py::array_t<tdouble> flxPyRVset::get_values(const std::string mode)
+{
+    // process mode
+        enum RBRVvecGetType { x, y, mean, sd };
+        RBRVvecGetType gType;
+        if (mode=="x") {
+            gType = RBRVvecGetType::x;
+        } else if (mode=="y") {
+            gType = RBRVvecGetType::y;
+        } else if (mode=="mean") {
+            gType = RBRVvecGetType::mean;
+        } else if (mode=="sd") {
+            gType = RBRVvecGetType::sd;
+        } else {
+            throw FlxException_NeglectInInteractive("flxPyRVset::get_values_01","Unkown mode '" + mode + "' for mode.");
+        }
+    // prepare result array
+        const tuint NOX = rvset_ptr->get_NOX_only_this();
+        const tuint NRV = rvset_ptr->get_NRV_only_this();
+        if ( (gType==y&&NRV==0) || NOX==0 ) {
+          std::ostringstream ssV;
+          ssV << "The set '" << name_of_set << "' does not contain any random variables.";
+          throw FlxException("FlxObjRBRV_vec_get::task_2", ssV.str() );
+        }
+        const tuint N = (gType==y)?NRV:NOX;
+        // Allocate memory for the return array
+        auto res_buf = py::array_t<tdouble>(N);
+        // Get the buffer info to access the underlying return data
+        py::buffer_info res_buf_info = res_buf.request();
+        tdouble* res_ptr = static_cast<tdouble*>(res_buf_info.ptr);
+    // assign to the array
+      switch(gType) {
+        case x:
+          rvset_ptr->get_x_only_this(res_ptr);
+          break;
+        case y:
+          rvset_ptr->get_y_only_this(res_ptr);
+          break;
+        case mean:
+          rvset_ptr->get_mean_only_this(res_ptr);
+          break;
+        case sd:
+          rvset_ptr->get_sd_only_this(res_ptr);
+          break;
+      }
+    // Return the array
+    return res_buf;
+}
+
+flxPyRVset rbrv_set(py::dict config, py::list rv_list)
+{
+    // eval and check name
+        std::string set_name = parse_py_para_as_word("name",config,true,true);
+        RBRV_entry_read_base::generate_set_base_check_name(FlxEngine->dataBox.rbrv_box, set_name);
+    // prepare rv-set-creator
+        const bool is_Nataf = parse_py_para_as_bool("is_Nataf", config, false, false);
+        std::optional<FlxObjRBRV_set_creator> crtr;
+        if (is_Nataf==false) {  // Rosenblatt transformation
+            RBRV_set_baseDPtr parents = nullptr;
+            try {
+                // identify parents
+                    std::vector<std::string> set_parents;
+                    parse_py_para_as_word_lst(set_parents,"parents",config,false,true);
+                    const tuint Nparents = set_parents.size();
+                    RBRV_entry_read_base::generate_set_base(FlxEngine->dataBox.rbrv_box, set_parents,parents);
+                const bool allow_x2y = parse_py_para_as_bool("allow_x2y", config, false, false);
+                crtr.emplace(set_name,parents,Nparents,allow_x2y);
+            } catch (FlxException& e) {
+                if (parents) delete [] parents;
+                throw;
+            }
+        } else {    // Nataf transformation
+            if (config.contains("parents")) {
+                throw FlxException_NeglectInInteractive("rbrv_set_01", "Python <dict> of 'rbrv_set' for Nataf transformation MUST NOT contain 'parents'.");
+            }
+            const bool is_Nataf_only_once = parse_py_para_as_bool("is_Nataf_only_once", config, false, true);
+            crtr.emplace(set_name,is_Nataf_only_once);
+        }
+    // create the random variables
+        const tuint Nrv = rv_list.size();
+        RBRV_entry_RV_base* entry = nullptr;
+        FlxFunction* csVal = nullptr;
+        std::string csNam;
+        bool csFix = false;
+        const std::string family = set_name + "::";
+        try {
+            for (tuint i=0;i<Nrv;++i) {
+                // cast config of RV into a dict
+                    std::ostringstream ssV;
+                    ssV << "configuration for random variable " << (i+1);
+                    py::dict rv_config = parse_py_obj_as_dict(rv_list[i], ssV.str());
+                // generate RV from config
+                    if (crtr->get_Nataf_evalOnce()) {
+                        rv_config["eval_once"] = true;
+                    }
+                    entry = parse_py_obj_as_rv(rv_config, true, i, family, ssV.str());
+                // correlation (for Rosenblatt)
+                    if (rv_config.contains("corr")) {
+                        py::dict corr_config = parse_py_obj_as_dict(rv_config["corr"], "'corr' in " + ssV.str());
+                        csNam = family + parse_py_para_as_string("rv_name", corr_config, true);
+                        csVal = parse_py_para("value", corr_config, true);
+                        csFix = parse_py_para_as_bool("fix", corr_config, false, false);
+                    }
+                // register the random variable in the set
+                    try {
+                        crtr->add_entry(FlxEngine->dataBox.rbrv_box,entry, csVal, csNam, csFix);
+                        csVal = nullptr;
+                        entry = nullptr;
+                    } catch (FlxException& e) {
+                        // memory management is taken care of by crtr->add_entry(...)
+                            entry = nullptr;
+                            csVal = nullptr;
+                        throw;
+                    }
+            }
+        } catch (FlxException& e) {
+            if (entry) delete entry;
+            if (csVal) delete csVal;
+            throw;
+        }
+    // set up the correlation matrix (in case of Nataf transformation)
+        if (is_Nataf) {
+            if (config.contains("corr")) {
+                py::list corr_lst = parse_py_obj_as_list(config["corr"],"key 'corr'");
+                const size_t Nc = corr_lst.size();
+                for (size_t i=0; i<Nc;++i) {
+                    std::ostringstream ssV;
+                    ssV << "entry '" << (i+1) << "'";
+                    py::dict corr_entry = parse_py_obj_as_dict( corr_lst[i],ssV.str() );
+                    const std::string rv1 = family + parse_py_para_as_word("rv_1",corr_entry, true, true);
+                    const std::string rv2 = family + parse_py_para_as_word("rv_2",corr_entry, true, true);
+                    const tdouble rho = parse_py_para_as_float("value",corr_entry,true);
+                    const bool corr_approx = parse_py_para_as_bool("corr_approx",corr_entry,false,true);
+                    const bool rhogauss = parse_py_para_as_bool("rhogauss",corr_entry,false,false);
+                    crtr->add_corr(rv1, rv2, rho, corr_approx, rhogauss, false);
+                }
+            }
+        }
+    // register the set in the engine
+        RBRV_set_base* set_ptr = crtr->register_set(FlxEngine->dataBox.rbrv_box,true);
+        flxPyRVset res(set_ptr, set_name);
+    finalize_call();
+    return res;
+}
+
+flxPyRV get_rv_from_set(const std::string& rv_name)
+{
+    RBRV_entry* rv_ptr = FlxEngine->dataBox.rbrv_box.get_entry(rv_name,true);
+    flxPyRV res(rv_ptr);
+    finalize_call();
+    return res;
+}
+
+flxPySampler::flxPySampler(py::list rvsets)
+: RndBox(nullptr)
+{
+    std::vector<std::string> set_str_vec;
+    set_str_vec.reserve(rvsets.size());
+    for (ssize_t i = 0; i < rvsets.size(); ++i) {
+        py::object obj = rvsets[i];
+        const std::string entry = parse_str_as_word(parse_py_obj_as_string(obj, "list entry"), true);
+        set_str_vec.push_back(entry);
+    }
+    RndBox = new RBRV_constructor(set_str_vec,FlxEngine->dataBox.rbrv_box);
+}
+
+flxPySampler::~flxPySampler()
+{
+    if (RndBox) delete RndBox;
+}
+
+void flxPySampler::sample()
+{
+    RndBox->gen_smp();
+}
 
 
 // #################################################################################
@@ -856,6 +1096,20 @@ PYBIND11_MODULE(core, m) {
             .def("check_x", &flxPyRV::check_x, "check if x_val is inside of the valid domain of the random variable")
             .def("get_HPD", &flxPyRV::get_HPD, "returns the lower quantile value of the HPD (highest probability density) interval of the distribution")
             .def("info", &flxPyRV::info, "return information about random variable");
+
+    // ====================================================
+    // sets of random variables
+    // ====================================================
+        py::class_<flxPyRVset>(m, "rvset")
+            .def("get_name", &flxPyRVset::get_name, "get name of set of random variables")
+            .def("get_values", &flxPyRVset::get_values, pybind11::arg("mode")="x", "returns a vector of quantities of all entries contained in the set of random variables");
+
+        m.def("rv_set", &rbrv_set, "creates a set of general random variables");
+        m.def("get_rv_from_set", &get_rv_from_set, "retrieve a random variable from a set of random variables");
+
+        py::class_<flxPySampler>(m, "sampler")
+            .def(py::init<py::list>())
+            .def("sample", &flxPySampler::sample, "generate a random sample for a collection of sets of random variables");
 
     // ====================================================
     // Advanced features

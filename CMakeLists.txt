@@ -355,6 +355,7 @@ add_library(flxlib SHARED   # python_add_library add_library
   src/flxlib/flxfunction_fun.cpp
   src/flxlib/flxfunction_ope.cpp
   src/flxlib/flxfunction.cpp
+  src/flxlib/flxparse.cpp
   src/flxlib/flxrandom_base.cpp
   src/flxlib/flxMtx.cpp
   src/flxlib/flxrbrv.cpp

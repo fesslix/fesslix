@@ -989,7 +989,8 @@ FunBase* FunReadFunLSF_callback::read( bool errSerious )
       rbrvsetn = st.eval(true);
     }
   // get relevant variables
-    RBRV_constructor* RndBox = new RBRV_constructor(rbrvsetn,data->rbrv_box);
+    const std::vector<std::string> set_str_vec = parse_strseq_as_vec(rbrvsetn);
+    RBRV_constructor* RndBox = new RBRV_constructor(set_str_vec,data->rbrv_box);
   try {
     return new FunLSF_callback(lsfp, lsf_name,RndBox, rbrvsetn ); 
   } catch (FlxException &e) {

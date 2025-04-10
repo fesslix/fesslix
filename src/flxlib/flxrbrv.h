@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "flxfunction.h"
+#include "flxparse.h"
 
 
 class RBRV_set;
@@ -122,6 +122,7 @@ class PYBIND11_EXPORT FLXLIB_EXPORT RBRV_entry_RV_base : public RBRV_entry {
     // handle correlation (with a a single RBRV)
       void set_corr(RBRV_entry_RV_base* corr_rv_, FlxFunction* corrVal_, bool corrFixed_, const bool throwErrorsV);
       void eval_corr();
+    const tuint get_iID() const { return iID; }
 };
 
 
@@ -611,7 +612,7 @@ class FLXLIB_EXPORT RBRV_constructor {
   public:
     
     RBRV_constructor(const std::vector<RBRV_set_base*>& setvec);
-    RBRV_constructor(const std::string& set_str, RBRV_set_box &rbrv_box);
+    RBRV_constructor(const std::vector<std::string>& set_str_vec, RBRV_set_box &rbrv_box);
     
     const tuint get_NRV() const { return NRV; }
     const tuint get_NOX() const { return NOX; }
@@ -664,7 +665,7 @@ class FLXLIB_EXPORT RBRV_constructor {
     * @param setstr list of sets - separator ','
     * @param setvec returns vector with dependent sets -> the order does matter!
     */
-    static void find_dependent_sets(const std::string& setstr, std::vector<RBRV_set_base*>& setvec, RBRV_set_box& RBRVbox);
+    static void find_dependent_sets(const std::vector<std::string>& set_str_vec, std::vector<RBRV_set_base*>& setvec, RBRV_set_box& RBRVbox);
     /**
     * @brief counts the number of random variables in the set
     */

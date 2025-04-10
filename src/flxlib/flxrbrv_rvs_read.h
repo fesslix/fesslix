@@ -71,7 +71,12 @@ class FLXLIB_EXPORT RBRV_entry_read_base : public FlxReaderBase2 {
     /**
     * @brief generates the vector with the parent sets and checks if the proposed name is valid and unique
     */
+    static void generate_set_base_check_name(RBRV_set_box& box, const std::string& name);
+    /**
+    * @brief generates the vector with the parent sets and checks if the proposed name is valid and unique
+    */
     static void generate_set_base(RBRV_set_box& box, const std::string& name, std::vector<FlxString*> set_parents, RBRV_set_baseDPtr& parents);
+    static void generate_set_base(RBRV_set_box& box, std::vector<std::string> set_parents, RBRV_set_baseDPtr& parents);
     
     /**
     * @brief this map manages that that are currently being defined ... map defined in 'flxobjrbrv.cpp'
@@ -101,15 +106,21 @@ class FLXLIB_EXPORT FlxObjRBRV_set_creator {
     RBRV_set_Nataf* register_set_Nataf(RBRV_set_box& box, const bool doreg);
   public:
     FlxObjRBRV_set_creator ( const std::string& set_name, RBRV_set_baseDPtr parents, const tuint Nparents, const bool allow_x2y );
-    FlxObjRBRV_set_creator ( const std::string& set_name, RBRV_set_baseDPtr parents, const tuint Nparents, const bool allow_x2y, std::vector<RBRV_entry_read_base*>& set_entriesV );
+    FlxObjRBRV_set_creator ( RBRV_set_box& box, const std::string& set_name, RBRV_set_baseDPtr parents, const tuint Nparents, const bool allow_x2y, std::vector<RBRV_entry_read_base*>& set_entriesV );
     FlxObjRBRV_set_creator ( const std::string& set_name, const bool eval_once );
     ~FlxObjRBRV_set_creator();
     
+    const bool get_Nataf_evalOnce() const;
     /**
     * @brief adds an entry to the set
     * @note the memory of 'entry' is not managed!!!
     */
-    void add_entry(RBRV_entry_read_base* entry);
+    void add_entry(RBRV_set_box& box, RBRV_entry_read_base* entry);
+    /**
+    * @brief adds entry to the set
+    * @note the memory of 'ep' and 'csVal' is managed!!! (also in case of an error)
+    */
+    void add_entry(RBRV_set_box& box, RBRV_entry_RV_base* ep, FlxFunction* csVal=nullptr, const std::string csNam="", const bool csFix=false);
     void add_corr(const std::string& rv1, const std::string& rv2, const tdouble rho, const bool corr_approx, const bool rhogauss, const bool dolog);
     RBRV_set_base* register_set(RBRV_set_box& box, const bool doreg);
     RBRV_set* register_set_rbrv(RBRV_set_box& box, const bool doreg);

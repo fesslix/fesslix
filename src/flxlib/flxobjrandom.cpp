@@ -145,7 +145,8 @@ void FlxObjMCI::output_Bayesian_credible_reliablity(std::ostream& sout, const td
 void FlxObjMCI::task()
 {
   // generate the random_creator
-    RBRV_constructor RndBox(rbrvsets->eval(true),data->rbrv_box);
+    const std::vector<std::string> set_str_vec = parse_strseq_as_vec(rbrvsets->eval(true));
+    RBRV_constructor RndBox(set_str_vec,data->rbrv_box);
   Np = funNp->cast2tulong();
   FirstThingsFirst(RndBox);
   #if FLX_KAHAN_MCI
@@ -619,7 +620,8 @@ void FlxObjLineSmpl::task()
   tulong Nlsf_calls = 0;
   const tdouble eq_tol = 1e-2;
   // generate the random_creator
-    RBRV_constructor RndBox(rbrvsets->eval(true),data->rbrv_box);
+    const std::vector<std::string> set_str_vec = parse_strseq_as_vec(rbrvsets->eval(true));
+    RBRV_constructor RndBox(set_str_vec,data->rbrv_box);
     RndBoxp = &RndBox;
   // evaluate line-search parameters
     const tuint NLS = funNp->cast2tuint();
@@ -1181,7 +1183,8 @@ FlxObjBase* FlxObjReadSus_level_info::read()
 
 void FlxObjFORM_betaSensitivities::task()
 {
-  RBRV_constructor RndBox(rvsets->eval(true),data->rbrv_box);
+  const std::vector<std::string> set_str_vec = parse_strseq_as_vec(rvsets->eval(true));
+  RBRV_constructor RndBox(set_str_vec,data->rbrv_box);
   tuint xN = RndBox.get_NRV();
   flxVec rvyp(data->ConstMtxBox.get_Vec(rvy->eval(),xN),xN,true);
   flxVec svp(data->ConstMtxBox.get_Vec(sv->eval(),xN),xN);
@@ -1351,7 +1354,8 @@ void FlxObjFORM_base::update_Start()
 {
   // generate the random_creator
     if (RndBox) delete RndBox;
-    RndBox = new RBRV_constructor(rbrvsets->eval(true),data->rbrv_box);
+    const std::vector<std::string> set_str_vec = parse_strseq_as_vec(rbrvsets->eval(true));
+    RndBox = new RBRV_constructor(set_str_vec,data->rbrv_box);
   // get DIM
     if (RndBox->get_NRV()!=RndBox->get_NOX()) {
       std::ostringstream ssV;
@@ -1948,7 +1952,8 @@ FlxObjKDE::~FlxObjKDE()
 void FlxObjKDE::task()
 {
   const std::string setstr = rbrvsets->eval(true);
-  RBRV_constructor RndBox(setstr,data->rbrv_box);
+  const std::vector<std::string> set_str_vec = parse_strseq_as_vec(setstr);
+  RBRV_constructor RndBox(set_str_vec,data->rbrv_box);
   
   tdouble dlb = lbound->calc();          // lower bound
   tdouble dub = ubound->calc();                // upper bound

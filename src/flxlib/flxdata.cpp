@@ -41,6 +41,11 @@ void set_ReadManager(FlxReadManager* readManager_ptr_)
   readManager_ptr = readManager_ptr_;
 }
 
+FlxReadManager * get_ReadManager()
+{
+  return readManager_ptr;
+}
+
 
 FlxReadManager::FlxReadManager()
 {
@@ -143,16 +148,6 @@ FlxFunction * FlxReadManager::parse_function(py::object pyobj, std::string descr
     } catch (const py::cast_error &e) {
       throw FlxException("FlxReadManager::parse_function_99", "Unhandled data type of Python object " + descr_);
     }
-}
-
-FlxFunction * parse_function(const std::string& funStr)
-{
-  return readManager_ptr->parse_function(funStr);
-}
-
-FlxFunction * parse_function(py::object pyobj, std::string descr)
-{
-  return readManager_ptr->parse_function(pyobj, descr);
 }
 
 

@@ -25,6 +25,8 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>  // For NumPy support
 
+#define PYBIND11_DETAILED_ERROR_MESSAGES
+
 namespace py = pybind11;
 
 
@@ -137,12 +139,24 @@ int load_engine();
 // random variables
 // #################################################################################
 
+RBRV_entry_RV_base* parse_py_obj_as_rv(py::dict config, const bool name_required, const tuint iID, const std::string family, std::string descr);
+
 class flxPyRV {
   private:
-    RBRV_entry_RV_base* rv_ptr;
+    RBRV_entry* rv_ptr;
+    RBRV_entry_RV_base* rv_ptr_;
+    bool mem_managed;
+
+    void ensure_is_a_basic_rv();
   public:
     flxPyRV(py::dict config);
+    flxPyRV(RBRV_entry* rv_ptr);
+    flxPyRV() = delete;
+    flxPyRV(flxPyRV& rhs);
+    flxPyRV(flxPyRV&& rhs);
     ~flxPyRV();
+
+    flxPyRV& operator=(const flxPyRV& rhs) = delete;
 
     const std::string get_name() const;
     const std::string get_type() const;
@@ -171,6 +185,50 @@ class flxPyRV {
     const bool check_x(const tdouble xV);
     const tdouble get_HPD(const tdouble p);
     py::dict info();
+};
+
+
+// #################################################################################
+// sets of random variables
+// #################################################################################
+
+class flxPyRVset {
+  private:
+    RBRV_set_base* rvset_ptr;   // memory needs to be managed externally
+    std::string name_of_set;
+  public:
+    flxPyRVset(RBRV_set_base* rvset_ptr, const std::string& name_of_set) : rvset_ptr(rvset_ptr), name_of_set(name_of_set) {}
+    flxPyRVset() = delete;
+    flxPyRVset(flxPyRVset& rhs);
+    flxPyRVset(flxPyRVset&& rhs);
+    ~flxPyRVset() {}
+
+    flxPyRVset& operator=(const flxPyRVset& rhs);
+
+    const std::string get_name() const;
+
+    py::array_t<tdouble> get_values(const std::string mode="x");
+    void set_x_vec(py::array_t<tdouble> arr);
+    const tdouble pdf_log(py::array_t<tdouble> arr);
+
+};
+
+flxPyRVset rbrv_set(py::dict config, py::list rv_list);
+flxPyRV get_rv_from_set(const std::string& rv_name);
+
+
+class flxPySampler {
+  private:
+    RBRV_constructor* RndBox;
+  public:
+    flxPySampler(py::list rvsets);
+    flxPySampler() = delete;
+    flxPySampler(flxPySampler& rhs) = delete;
+    ~flxPySampler();
+
+    flxPySampler& operator=(const flxPySampler& rhs) = delete;
+
+    void sample();
 };
 
 

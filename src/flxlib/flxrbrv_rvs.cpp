@@ -17,39 +17,6 @@
 
 #include "flxrbrv_rvs.h"
 
-#include "flxdata.h"
-
-FlxFunction * parse_py_para(const std::string& para_name, py::dict config, const bool required)
-{
-  if (config.contains(para_name.c_str()) == false) {
-    if (required) {
-      std::ostringstream ssV;
-      ssV << "Key '" << para_name << "' not found in Python <dict>.";
-      throw FlxException_NeglectInInteractive("parse_py_para_01", ssV.str());
-    } else {
-      return nullptr;
-    }
-  }
-  return parse_function(config[para_name.c_str()], "key '"+para_name+"' in Python <dict>");
-}
-
-const bool parse_py_para_as_bool(const std::string& para_name, py::dict config, const bool required, const bool def_val)
-{
-  if (config.contains(para_name.c_str())) {
-    try {
-      return py::cast<bool>(config[para_name.c_str()]);
-    } catch (const py::cast_error &e) {
-      throw FlxException_NeglectInInteractive("parse_py_para_as_bool_01", "Key '"+para_name+"' in Python <dict> cannot be cast into type 'bool'.");
-    }
-  } else {
-    if (required) {
-      throw FlxException_NeglectInInteractive("parse_py_para_as_bool_02", "Key '" + para_name + "' not found in Python <dict>.");
-    } else {
-      return def_val;
-    }
-  }
-}
-
 
 const tdouble RBRV_entry_RV_stdN::transform_y2x(const tdouble y_val)
 {
@@ -394,7 +361,7 @@ RBRV_entry_RV_lognormal::RBRV_entry_RV_lognormal(const std::string& name, const 
       p1 = parse_py_para("mode", config);
       p2 = parse_py_para("cov", config);
     } else {
-      throw FlxException_NeglectInInteractive("RBRV_entry_RV_normal::RBRV_entry_RV_normal_70", "Required parameters to define distribution not found in Python <dict>.");
+      throw FlxException_NeglectInInteractive("RBRV_entry_RV_lognormal::RBRV_entry_RV_lognormal_70", "Required parameters to define distribution not found in Python <dict>.");
     }
 
     epsilon = parse_py_para("epsilon", config, false);

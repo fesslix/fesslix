@@ -2558,7 +2558,8 @@ FlxObjRndSmp::~FlxObjRndSmp()
 void FlxObjRndSmp::task() 
 {
   if (rbrvsets) {
-    RndBox = new RBRV_constructor(rbrvsets->eval(true),data->rbrv_box);
+    const std::vector<std::string> set_str_vec = parse_strseq_as_vec(rbrvsets->eval(true));
+    RndBox = new RBRV_constructor(set_str_vec,data->rbrv_box);
     delete rbrvsets;
     rbrvsets = NULL;
   }

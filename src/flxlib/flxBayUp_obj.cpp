@@ -300,7 +300,7 @@ void FlxObjBayUp_uncertobsv::task()
   // Define the RBRV set (the single set)
     const std::string setnameStr = nameBU + "::" + set_name->eval_word(true);
     std::vector<FlxString*> set_parents;                        // just a dummy! -> no parents are allowed
-    FlxObjRBRV_set_creator crtr(setnameStr,NULL,0,false,set_entries);
+    FlxObjRBRV_set_creator crtr(data->rbrv_box,setnameStr,NULL,0,false,set_entries);
     RBRV_set* ts_single = crtr.register_set_rbrv(data->rbrv_box,false);
     try {
       data->rbrv_box.register_set(ts_single);

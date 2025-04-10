@@ -395,7 +395,7 @@ if(GSL_FOUND_STATIC)
 else()
     target_link_libraries(flxlib PRIVATE GSL::gsl)
 endif()
-target_link_libraries(flxlib PRIVATE pybind11::headers )
+target_link_libraries(flxlib PRIVATE pybind11::module )   # pybind11::headers
 if(DEFINED RPATH_STRING)
   set_target_properties(flxlib PROPERTIES INSTALL_RPATH ${RPATH_STRING} )
 endif()
@@ -412,7 +412,7 @@ python_add_library(core MODULE
   src/core/fesslix.cpp
   src/core/python_interface_core.cpp
   WITH_SOABI)
-target_link_libraries(core PRIVATE flxlib PRIVATE pybind11::headers)  #  PRIVATE GSL::gsl
+target_link_libraries(core PRIVATE flxlib PRIVATE pybind11::module)  # pybind11::headers #  PRIVATE GSL::gsl
 if(DEFINED RPATH_STRING)
   set_target_properties(core PROPERTIES INSTALL_RPATH ${RPATH_STRING} )
 endif()

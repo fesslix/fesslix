@@ -69,7 +69,7 @@ class FLXLIB_EXPORT RBRV_entry_read_base : public FlxReaderBase2 {
     static void read_parents(std::vector<FlxString*>& set_parents, const bool errSerious); // reads the parents
     static void read(std::vector<RBRV_entry_read_base*>& set_entries, std::vector<FlxString*>& set_parents, const bool errSerious); // reads an entire set of entries
     /**
-    * @brief generates the vector with the parent sets and checks if the proposed name is valid and unique
+    * @brief ensure that no set of random variables already uses the proposed name
     */
     static void generate_set_base_check_name(RBRV_set_box& box, const std::string& name);
     /**

@@ -976,6 +976,43 @@ flxPyRVset rbrv_set(py::dict config, py::list rv_list)
     return res;
 }
 
+flxPyRVset rbrv_set_noise(py::dict config, py::dict rv_config)
+{
+    // eval and check name
+        std::string set_name = parse_py_para_as_word("name",config,true,true);
+        RBRV_entry_read_base::generate_set_base_check_name(FlxEngine->dataBox.rbrv_box, set_name);
+        const std::string family = set_name + "::";
+    // number of random variables in the set
+        const tuint Ndim = parse_py_para_as_tuintNo0("N", config, true);
+    RBRV_set_baseDPtr parents = nullptr;
+    RBRV_entry_RV_base* entry = nullptr;
+    RBRV_set_noise* ts = NULL;
+    try {
+        // identify parents
+            std::vector<std::string> set_parents;
+            parse_py_para_as_word_lst(set_parents,"parents",config,false,true);
+            const tuint Nparents = set_parents.size();
+            RBRV_entry_read_base::generate_set_base(FlxEngine->dataBox.rbrv_box, set_parents,parents);
+        // retrieve base type / distribution of random variable
+            entry = parse_py_obj_as_rv(rv_config, false, 0, family, "rv_config");
+        // generate set
+            ts = new RBRV_set_noise(false,Ndim,set_name,false,entry,Nparents,parents);
+            parents = nullptr;
+            entry = nullptr;
+            FlxEngine->dataBox.rbrv_box.register_set(ts);
+    } catch (FlxException& e) {
+        FLXMSG("rbrv_set_noise_01",1);
+        if (parents) delete [] parents;
+        if (entry) delete entry;
+        if (ts) delete ts;
+        throw;
+    }
+    // create and return Python-object of generated set
+        flxPyRVset res(ts, set_name);
+        finalize_call();
+        return res;
+}
+
 flxPyRV get_rv_from_set(const std::string& rv_name)
 {
     RBRV_entry* rv_ptr = FlxEngine->dataBox.rbrv_box.get_entry(rv_name,true);
@@ -1105,6 +1142,7 @@ PYBIND11_MODULE(core, m) {
             .def("get_values", &flxPyRVset::get_values, pybind11::arg("mode")="x", "returns a vector of quantities of all entries contained in the set of random variables");
 
         m.def("rv_set", &rbrv_set, "creates a set of general random variables");
+        m.def("rv_set_noise", &rbrv_set_noise, "creates a set of independent random variables that have all the same distribution");
         m.def("get_rv_from_set", &get_rv_from_set, "retrieve a random variable from a set of random variables");
 
         py::class_<flxPySampler>(m, "sampler")

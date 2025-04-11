@@ -21,6 +21,8 @@
 
 PYBIND11_EXPORT FlxFunction* parse_py_para(const std::string& para_name, py::dict config, const bool required=true);
 PYBIND11_EXPORT const bool parse_py_para_as_bool(const std::string& para_name, py::dict config, const bool required, const bool def_val=false);
+PYBIND11_EXPORT const tuint parse_py_para_as_tuint(const std::string& para_name, py::dict config, const bool required, const tuint def_val=0);
+PYBIND11_EXPORT const tuint parse_py_para_as_tuintNo0(const std::string& para_name, py::dict config, const bool required, const tuint def_val=1);
 PYBIND11_EXPORT const tdouble parse_py_para_as_float(const std::string& para_name, py::dict config, const bool required, const tdouble def_val=ZERO);
 PYBIND11_EXPORT std::string parse_py_para_as_string(const std::string& para_name, py::dict config, const bool required, const std::string def_val="");
 PYBIND11_EXPORT std::string parse_py_para_as_word(const std::string& para_name, py::dict config, const bool required, const bool lowercase, const bool emptyAllow=false,const bool numbegallow=false, const std::string def_val="");

@@ -214,6 +214,7 @@ class flxPyRVset {
 };
 
 flxPyRVset rbrv_set(py::dict config, py::list rv_list);
+flxPyRVset rbrv_set_noise(py::dict config, py::dict rv_config);
 flxPyRV get_rv_from_set(const std::string& rv_name);
 
 

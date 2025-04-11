@@ -50,6 +50,33 @@ const bool parse_py_para_as_bool(const std::string& para_name, py::dict config, 
   }
 }
 
+const tuint parse_py_para_as_tuint(const std::string& para_name, py::dict config, const bool required, const tuint def_val)
+{
+  if (config.contains(para_name.c_str())) {
+    try {
+      return py::cast<tuint>(config[para_name.c_str()]);
+    } catch (const py::cast_error &e) {
+      throw FlxException_NeglectInInteractive("parse_py_para_as_tuint_01", "Key '"+para_name+"' in Python <dict> cannot be cast into type 'unsigned int'.");
+    }
+  } else {
+    if (required) {
+      throw FlxException_NeglectInInteractive("parse_py_para_as_tuint_02", "Key '" + para_name + "' not found in Python <dict>.");
+    } else {
+      return def_val;
+    }
+  }
+}
+
+const tuint parse_py_para_as_tuintNo0(const std::string& para_name, py::dict config, const bool required, const tuint def_val)
+{
+  const tuint val = parse_py_para_as_tuint(para_name,config,required,def_val);
+  if (val<1) {
+    throw FlxException_NeglectInInteractive("parse_py_para_as_tuintNo0", "Key '" + para_name + "': Value must not be negative or zero.");
+  }
+  return val;
+}
+
+
 const tdouble parse_py_para_as_float(const std::string& para_name, py::dict config, const bool required, const tdouble def_val)
 {
   if (config.contains(para_name.c_str())) {

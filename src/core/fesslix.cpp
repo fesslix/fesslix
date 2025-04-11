@@ -41,6 +41,8 @@ int FesslixMain::Cinst = 0;      // true, cout is std::cout (otherwise cout is r
 std::ostream* flxcout = nullptr;
 int flx_engine_init_count = 0;        
 
+FesslixMain* FlxEngine_ptr = nullptr;
+
 /**
 * @brief execute this command at the very beginning
 */
@@ -300,7 +302,7 @@ string flx_get_version()
 
 void flxengine_load()
 {
-  FlxEngine = new FesslixMain;
+  FlxEngine_ptr = new FesslixMain;
 }
 
 void flxengine_unload()
@@ -308,10 +310,23 @@ void flxengine_unload()
   if (flx_engine_init_count==0) return;
   flx_engine_init_count--;
   if (flx_engine_init_count>0) return;
-  if (FlxEngine) {
-    delete FlxEngine;
-    FlxEngine = NULL;
+  if (FlxEngine_ptr) {
+    delete FlxEngine_ptr;
+    FlxEngine_ptr = nullptr;
   }
+}
+
+void check_engine_state()
+{
+    if (FlxEngine_ptr==nullptr) {
+        throw FlxException_NeglectInInteractive("check_engine_state","Fesslix Engine is not running", "Please start the engine using load_engine()");
+    }
+}
+
+FesslixMain& FlxEngine()
+{
+  check_engine_state();
+  return *FlxEngine_ptr;
 }
 
 const int flxengine_init()
@@ -339,11 +354,11 @@ const int flxengine_init()
 
   // create main object
     flxengine_load();
-    FlxEngine->initialize(flxcout, GlobalVar.get_cerr(), fesslix_gaussFile);
+    FlxEngine_ptr->initialize(flxcout, GlobalVar.get_cerr(), fesslix_gaussFile);
 
     #if FLX_DEBUG
     // testing
-      FlxEngine->test();
+      FlxEngine_ptr->test();
     #endif
 
   return -1;
@@ -360,7 +375,7 @@ const int flx_parse_file(const string& Expr, const bool is_file, const bool catc
       GlobalVar.slog(3) << "Fesslix: start evaluating the command from the command line: " << Expr << std::endl;
       reader = new ReadStream(Expr, do_log, tabWidth);  
     }
-    FlxEngine->evaluate(reader);
+    FlxEngine_ptr->evaluate(reader);
     delete reader; reader = NULL;
     GlobalVar.logLevel_strong_reset();
   } 
@@ -428,7 +443,7 @@ FlxObjBase* flx_read_file(const string& Expr, const bool is_file, const bool cat
       GlobalVar.slog(3) << "Fesslix: start reading the command from the command line: " << Expr << std::endl;
       reader = new ReadStream(Expr, do_log, tabWidth);  
     }
-    FlxObjBase* ob = FlxEngine->read_objects(reader);
+    FlxObjBase* ob = FlxEngine_ptr->read_objects(reader);
     delete reader; reader = NULL;
     GlobalVar.logLevel_strong_reset();
     return ob;

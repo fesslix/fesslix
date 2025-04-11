@@ -21,12 +21,6 @@
 #include "flxrbrv_rvs_read.h"
 #include <iostream>
 
-void check_engine_state()
-{
-    if (FlxEngine==nullptr) {
-        throw FlxException_NeglectInInteractive("check_engine_state","Fesslix Engine is not running", "Please start the engine using load_engine()");
-    }
-}
 
 void finalize_call()
 {
@@ -636,7 +630,7 @@ const tdouble flxPyRV::sample()
 {
     ensure_is_a_basic_rv();
     rv_ptr_->eval_para();
-    const tdouble y = FlxEngine->dataBox.RndCreator.gen_smp();
+    const tdouble y = FlxEngine().dataBox.RndCreator.gen_smp();
     return rv_ptr_->transform_y2x(y);
 }
 
@@ -654,7 +648,7 @@ void flxPyRV::sample_array(py::array_t<tdouble> arr)
 
     // Generate the samples (in standard Normal space)
     flxVec res_vec(res_ptr,size,false,false);
-    FlxEngine->dataBox.RndCreator.gen_smp(res_vec);
+    FlxEngine().dataBox.RndCreator.gen_smp(res_vec);
 
     // transform the samples to original space
     for (size_t i = 0; i < size; ++i) {
@@ -882,9 +876,10 @@ py::array_t<tdouble> flxPyRVset::get_values(const std::string mode)
 
 flxPyRVset rbrv_set(py::dict config, py::list rv_list)
 {
+    check_engine_state();
     // eval and check name
         std::string set_name = parse_py_para_as_word("name",config,true,true);
-        RBRV_entry_read_base::generate_set_base_check_name(FlxEngine->dataBox.rbrv_box, set_name);
+        RBRV_entry_read_base::generate_set_base_check_name(FlxEngine().dataBox.rbrv_box, set_name);
     // prepare rv-set-creator
         const bool is_Nataf = parse_py_para_as_bool("is_Nataf", config, false, false);
         std::optional<FlxObjRBRV_set_creator> crtr;
@@ -895,7 +890,7 @@ flxPyRVset rbrv_set(py::dict config, py::list rv_list)
                     std::vector<std::string> set_parents;
                     parse_py_para_as_word_lst(set_parents,"parents",config,false,true);
                     const tuint Nparents = set_parents.size();
-                    RBRV_entry_read_base::generate_set_base(FlxEngine->dataBox.rbrv_box, set_parents,parents);
+                    RBRV_entry_read_base::generate_set_base(FlxEngine().dataBox.rbrv_box, set_parents,parents);
                 const bool allow_x2y = parse_py_para_as_bool("allow_x2y", config, false, false);
                 crtr.emplace(set_name,parents,Nparents,allow_x2y);
             } catch (FlxException& e) {
@@ -936,7 +931,7 @@ flxPyRVset rbrv_set(py::dict config, py::list rv_list)
                     }
                 // register the random variable in the set
                     try {
-                        crtr->add_entry(FlxEngine->dataBox.rbrv_box,entry, csVal, csNam, csFix);
+                        crtr->add_entry(FlxEngine().dataBox.rbrv_box,entry, csVal, csNam, csFix);
                         csVal = nullptr;
                         entry = nullptr;
                     } catch (FlxException& e) {
@@ -970,7 +965,7 @@ flxPyRVset rbrv_set(py::dict config, py::list rv_list)
             }
         }
     // register the set in the engine
-        RBRV_set_base* set_ptr = crtr->register_set(FlxEngine->dataBox.rbrv_box,true);
+        RBRV_set_base* set_ptr = crtr->register_set(FlxEngine().dataBox.rbrv_box,true);
         flxPyRVset res(set_ptr, set_name);
     finalize_call();
     return res;
@@ -978,9 +973,10 @@ flxPyRVset rbrv_set(py::dict config, py::list rv_list)
 
 flxPyRVset rbrv_set_noise(py::dict config, py::dict rv_config)
 {
+    check_engine_state();
     // eval and check name
         std::string set_name = parse_py_para_as_word("name",config,true,true);
-        RBRV_entry_read_base::generate_set_base_check_name(FlxEngine->dataBox.rbrv_box, set_name);
+        RBRV_entry_read_base::generate_set_base_check_name(FlxEngine().dataBox.rbrv_box, set_name);
         const std::string family = set_name + "::";
     // number of random variables in the set
         const tuint Ndim = parse_py_para_as_tuintNo0("N", config, true);
@@ -992,14 +988,14 @@ flxPyRVset rbrv_set_noise(py::dict config, py::dict rv_config)
             std::vector<std::string> set_parents;
             parse_py_para_as_word_lst(set_parents,"parents",config,false,true);
             const tuint Nparents = set_parents.size();
-            RBRV_entry_read_base::generate_set_base(FlxEngine->dataBox.rbrv_box, set_parents,parents);
+            RBRV_entry_read_base::generate_set_base(FlxEngine().dataBox.rbrv_box, set_parents,parents);
         // retrieve base type / distribution of random variable
             entry = parse_py_obj_as_rv(rv_config, false, 0, family, "rv_config");
         // generate set
             ts = new RBRV_set_noise(false,Ndim,set_name,false,entry,Nparents,parents);
             parents = nullptr;
             entry = nullptr;
-            FlxEngine->dataBox.rbrv_box.register_set(ts);
+            FlxEngine().dataBox.rbrv_box.register_set(ts);
     } catch (FlxException& e) {
         FLXMSG("rbrv_set_noise_01",1);
         if (parents) delete [] parents;
@@ -1015,7 +1011,8 @@ flxPyRVset rbrv_set_noise(py::dict config, py::dict rv_config)
 
 flxPyRV get_rv_from_set(const std::string& rv_name)
 {
-    RBRV_entry* rv_ptr = FlxEngine->dataBox.rbrv_box.get_entry(rv_name,true);
+    check_engine_state();
+    RBRV_entry* rv_ptr = FlxEngine().dataBox.rbrv_box.get_entry(rv_name,true);
     flxPyRV res(rv_ptr);
     finalize_call();
     return res;
@@ -1031,7 +1028,7 @@ flxPySampler::flxPySampler(py::list rvsets)
         const std::string entry = parse_str_as_word(parse_py_obj_as_string(obj, "list entry"), true);
         set_str_vec.push_back(entry);
     }
-    RndBox = new RBRV_constructor(set_str_vec,FlxEngine->dataBox.rbrv_box);
+    RndBox = new RBRV_constructor(set_str_vec,FlxEngine().dataBox.rbrv_box);
 }
 
 flxPySampler::~flxPySampler()
@@ -1051,6 +1048,7 @@ void flxPySampler::sample()
 
 tdouble eval_fun(py::object expr)
 {
+    check_engine_state();
     FlxFunction* fun = parse_function(expr,"parameter 'expr' of 'flx.eval_fun'");
     tdouble res;
     try {

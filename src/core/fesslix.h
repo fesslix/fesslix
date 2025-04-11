@@ -82,13 +82,6 @@ class FesslixMain : public FlxReaderBase {
       void test ();
     #endif
 };
-#ifdef fesslix_fesslix_CPP
-  FesslixMain* FlxEngine = NULL;
-#else
-  extern FesslixMain* FlxEngine;
-#endif
-
-
 
 std::string flx_get_version();
 void flx_print_current_time(std::ostream& os);
@@ -102,6 +95,12 @@ const int flxengine_init();
 * @brief deallocate the FesslixEngine
 */
 void flxengine_unload();
+/**
+* @brief ensure that the Fesslix engine is up and running; otherwise, an error is thrown
+*/
+void check_engine_state();
+
+FesslixMain& FlxEngine();
 /**
 * @brief must be executed after flxengine_unload
 */

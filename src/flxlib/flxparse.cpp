@@ -94,6 +94,15 @@ const tdouble parse_py_para_as_float(const std::string& para_name, py::dict conf
   }
 }
 
+const tdouble parse_py_para_as_floatPosNo0(const std::string& para_name, py::dict config, const bool required, const tdouble def_val)
+{
+  const tdouble val = parse_py_para_as_float(para_name,config,required,def_val);
+  if (val<=ZERO) {
+    throw FlxException_NeglectInInteractive("parse_py_para_as_floatPosNo0", "Key '" + para_name + "': Value must not be negative or zero.");
+  }
+  return val;
+}
+
 py::dict parse_py_obj_as_dict(py::object obj, std::string descr)
 {
   if (py::isinstance<py::dict>(obj)) {

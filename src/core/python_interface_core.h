@@ -132,6 +132,14 @@ int load_engine();
 
 
 // #################################################################################
+// Standard functions
+// #################################################################################
+
+void set_const(const std::string const_name, const tdouble value);
+void set_var(const std::string var_name, py::object fun);
+
+
+// #################################################################################
 // random variables
 // #################################################################################
 
@@ -211,6 +219,7 @@ class flxPyRVset {
 
 flxPyRVset rbrv_set(py::dict config, py::list rv_list);
 flxPyRVset rbrv_set_noise(py::dict config, py::dict rv_config);
+flxPyRVset rbrv_set_proc(py::dict config, py::dict rv_config);
 flxPyRV get_rv_from_set(const std::string& rv_name);
 
 

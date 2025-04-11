@@ -487,6 +487,27 @@ class ModuleCleanup {
 static ModuleCleanup module_cleanup;
 
 // #################################################################################
+// Standard functions
+// #################################################################################
+
+void set_const(const std::string const_name, const tdouble value)
+{
+    FlxEngine().dataBox.ConstantBox.insert(const_name,value);
+}
+
+void set_var(const std::string var_name, py::object fun)
+{
+    FlxFunction* var_fun = parse_function(fun, "<flxPara> in 'set_var'");
+    try {
+        FlxEngine().dataBox.VarBox.insert(var_name,var_fun);
+    } catch (FlxException& e) {
+        delete var_fun;
+        throw;
+    }
+}
+
+
+// #################################################################################
 // random variables
 // #################################################################################
 
@@ -1009,6 +1030,53 @@ flxPyRVset rbrv_set_noise(py::dict config, py::dict rv_config)
         return res;
 }
 
+flxPyRVset rbrv_set_proc(py::dict config, py::dict rv_config)
+{
+    check_engine_state();
+    // eval and check name
+        std::string set_name = parse_py_para_as_word("name",config,true,true);
+        RBRV_entry_read_base::generate_set_base_check_name(FlxEngine().dataBox.rbrv_box, set_name);
+        const std::string family = set_name + "::";
+    // number of random variables in the set
+        const tuint Ndim = parse_py_para_as_tuintNo0("N", config, true);
+    // "distance" between two points
+        const tdouble dx = parse_py_para_as_floatPosNo0("dx",config,false,ONE);
+    // auto-correlation coefficient function
+        FlxFunction* rho = parse_py_para("rho",config,true);
+    const tuint M = parse_py_para_as_tuint("M", config, false, 0);
+    const tuint evtype = parse_py_para_as_tuint("evtype", config, false, 2);
+    const bool only_once = parse_py_para_as_bool("only_once", config, false, true );
+    const bool rhoGauss = parse_py_para_as_bool("rhogauss", config, false, false );
+    RBRV_set_baseDPtr parents = nullptr;
+    RBRV_entry_RV_base* entry = nullptr;
+    RBRV_set_proc* ts = NULL;
+    try {
+        // identify parents
+            std::vector<std::string> set_parents;
+            parse_py_para_as_word_lst(set_parents,"parents",config,false,true);
+            const tuint Nparents = set_parents.size();
+            RBRV_entry_read_base::generate_set_base(FlxEngine().dataBox.rbrv_box, set_parents,parents);
+        // retrieve base type / distribution of random variable
+            entry = parse_py_obj_as_rv(rv_config, false, 0, family, "rv_config");
+        // generate set
+            ts = new RBRV_set_proc(false,Ndim,M,set_name,false,entry,rho,dx,Nparents,parents,evtype,only_once,rhoGauss);
+            parents = nullptr;
+            entry = nullptr;
+            FlxEngine().dataBox.rbrv_box.register_set(ts);
+    } catch (FlxException& e) {
+        FLXMSG("rbrv_set_proc",1);
+        if (rho) delete rho;
+        if (parents) delete [] parents;
+        if (entry) delete entry;
+        if (ts) delete ts;
+        throw;
+    }
+    // create and return Python-object of generated set
+        flxPyRVset res(ts, set_name);
+        finalize_call();
+        return res;
+}
+
 flxPyRV get_rv_from_set(const std::string& rv_name)
 {
     check_engine_state();
@@ -1102,6 +1170,9 @@ PYBIND11_MODULE(core, m) {
     // ====================================================
     // Standard functions
     // ====================================================
+        m.def("set_const", &set_const, "assigns a value to a const-variable");
+        m.def("set_var", &set_var, "assigns a value to a var-variable");
+
         m.def("cdfn_inv", &rv_InvPhi, "inverse of the CDF of the standard Normal distribution");
 
     // ====================================================
@@ -1141,6 +1212,8 @@ PYBIND11_MODULE(core, m) {
 
         m.def("rv_set", &rbrv_set, "creates a set of general random variables");
         m.def("rv_set_noise", &rbrv_set_noise, "creates a set of independent random variables that have all the same distribution");
+        m.def("rv_set_proc", &rbrv_set_proc, "creates a discrete random process with given correlation structure");
+
         m.def("get_rv_from_set", &get_rv_from_set, "retrieve a random variable from a set of random variables");
 
         py::class_<flxPySampler>(m, "sampler")

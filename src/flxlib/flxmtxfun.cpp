@@ -271,5 +271,49 @@ const bool FunBaseFun_MtxConst::dependOn_Const(const tdouble*const thenumber)
   throw FlxException_NotImplemented("FunBaseFun_MtxConst::dependOn_Const");
 }
 
+FlxMtxFun_const::FlxMtxFun_const(const flxVec& rhs)
+: FlxMtxFun_base(rhs.get_N())
+{
+  res_vec = rhs;
+}
 
+void FlxMtxFun_const::eval()
+{
 
+}
+
+FlxMtxFun_Py::FlxMtxFun_Py(const tuint N, py::function pyfunc)
+: FlxMtxFun_base(N), pyfunc(pyfunc)
+{
+
+}
+
+void FlxMtxFun_Py::eval()
+{
+  py::object result;
+  try {
+      result = pyfunc();
+  } catch (const py::error_already_set &e) {
+      std::ostringstream ssV;
+      ssV << "Error in evaluating Python expression: " << e.what();
+      throw FlxException("FlxMtxFun_Py::eval_01", ssV.str() );
+  }
+  flxVec rhs = parse_py_obj_as_flxVec(result,"Result of Python function");
+  res_vec.assign_save(rhs);
+}
+
+FlxMtxFun_base* parse_FlxMtxFun(const tuint N, py::object pyobj, std::string descr)
+{
+  return get_ReadManager()->parse_FlxMtxFun(N, pyobj, descr);
+}
+
+FlxMtxFun_base* parse_py_para_as_flxMtxFun(const tuint N, const std::string& para_name, py::dict config)
+{
+  if (config.contains(para_name.c_str()) == false) {
+    std::ostringstream ssV;
+    ssV << "Key '" << para_name << "' not found in Python <dict>.";
+    throw FlxException_NeglectInInteractive("parse_py_para_as_flxMtxFun_01", ssV.str());
+  }
+  return parse_FlxMtxFun(N,config[para_name.c_str()], "key '"+para_name+"' in Python <dict>");
+
+}

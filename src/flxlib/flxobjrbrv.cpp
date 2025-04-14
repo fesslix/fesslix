@@ -894,31 +894,35 @@ void FlxObjRBRV_vfset::task()
   RBRV_set_baseDPtr parents = nullptr;
   RBRV_entry_read_base::generate_set_base(data->rbrv_box,name,set_parents,parents);
   const tuint Nparents = set_parents.size();
-  RBRV_set_parents* ts = NULL;
+  RBRV_set_parents* ts = nullptr;
+  FlxMtxFun_MtxConst* vfun = nullptr;
   try {
     const tuint Ndim = Nfun->cast2tuint(false);
     const std::string family = name + "::";
+      vfun = new FlxMtxFun_MtxConst(Ndim,*vecfun);
     switch (type) {
       case 0:
-        ts = new RBRV_vfset(false,name,false,Ndim,new FlxMtxConstFun(*vecfun),Nparents,parents);
+        ts = new RBRV_vfset(false,name,false,Ndim,vfun,Nparents,parents);
         break;
       case 1:
-        ts = new RBRV_dirichlet(false,name,false,Ndim,new FlxMtxConstFun(*vecfun),Nparents,parents);
+        ts = new RBRV_dirichlet(false,name,false,Ndim,vfun,Nparents,parents);
         break;
       case 2:
       {
         const tuint Ntri = Ntrials->cast2tuint(false);
-        ts = new RBRV_multinomial(false,name,false,Ndim,new FlxMtxConstFun(*vecfun),Nparents,parents, Ntri);
+        ts = new RBRV_multinomial(false,name,false,Ndim,vfun,Nparents,parents, Ntri);
         break;
       }
       default:
         throw FlxException_Crude("FlxObjRBRV_vfset::task_01");
     }
+    vfun =  nullptr;
     parents = nullptr;
     data->rbrv_box.register_set(ts);
     GlobalVar.slog(4) << "rbrv_noise: created new set '" << name << "'." << std::endl;
   } catch (FlxException& e) {
     FLXMSG("FlxObjRBRV_vfset::task_02",1);
+    if (vfun) delete vfun;
     if (parents) delete [] parents;
     if (ts) delete ts;
     throw;
@@ -2042,7 +2046,7 @@ const bool FunRBRV_calc_R_for_rhoPrime::search_circref(FlxFunction* fcr)
 
 // ------------------------------------------------------------------------------------------------
 
-RBRV_vfset::RBRV_vfset(const bool internal, const std::string& name, const bool noID, const tuint Nentries, FlxMtxConstFun* vecfun, const tuint Nparents, RBRV_set_base** const parents)
+RBRV_vfset::RBRV_vfset(const bool internal, const std::string& name, const bool noID, const tuint Nentries, FlxMtxFun_base* vecfun, const tuint Nparents, RBRV_set_base** const parents)
 : RBRV_set_parents(internal,0,name,Nparents,parents,noID), Nentries(Nentries), x_of_set(Nentries), vecfun(vecfun)
 {
 
@@ -2050,10 +2054,8 @@ RBRV_vfset::RBRV_vfset(const bool internal, const std::string& name, const bool 
 
 void RBRV_vfset::transform_y2x()
 {
-  const std::string vecName = vecfun->eval();
-  tdouble* vp = data->ConstMtxBox.get_Vec(Nentries,vecName,true);
-  flxVec tv(vp,Nentries);
-  x_of_set = tv;
+  vecfun->eval();
+  x_of_set = vecfun->get_res_vec();
   #if FLX_DEBUG
     valid = true;
   #endif
@@ -2108,7 +2110,7 @@ void RBRV_vfset::print(std::ostream& sout, const std::string prelim, tuint& coun
 
 // ------------------------------------------------------------------------------------------------
 
-RBRV_dirichlet::RBRV_dirichlet(const bool internal, const std::string& name, const bool noID, const tuint Nentries, FlxMtxConstFun* vecfun, const tuint Nparents, RBRV_set_base** const parents, flxVec* avec, const tuint idim)
+RBRV_dirichlet::RBRV_dirichlet(const bool internal, const std::string& name, const bool noID, const tuint Nentries, FlxMtxFun_base* vecfun, const tuint Nparents, RBRV_set_base** const parents, flxVec* avec, const tuint idim)
 : RBRV_set_parents(internal,(idim==0)?Nentries:idim,name,Nparents,parents,noID), Nentries(Nentries), x_of_set(Nentries), alpha_vec(Nentries), vecfun(vecfun)
 {
   if (avec) {
@@ -2135,10 +2137,8 @@ void RBRV_dirichlet::get_pars()
 {
   // get alpha-values (parameters of Dirichlet distribution)
     if (vecfun) {
-      const std::string vecName = vecfun->eval();
-      tdouble* vp = data->ConstMtxBox.get_Vec(Nentries,vecName,true);
-      flxVec tv(vp,Nentries);
-      alpha_vec = tv;
+      vecfun->eval();
+      alpha_vec = vecfun->get_res_vec();
       return;
     }
 }
@@ -2226,7 +2226,7 @@ void RBRV_dirichlet::print(std::ostream& sout, const std::string prelim, tuint& 
 
 // ------------------------------------------------------------------------------------------------
 
-RBRV_multinomial::RBRV_multinomial(const bool internal, const std::string& name, const bool noID, const tuint Nentries, FlxMtxConstFun* vecfun, const tuint Nparents, RBRV_set_base** const parents, const tuint Ntrials, flxVec* avec)
+RBRV_multinomial::RBRV_multinomial(const bool internal, const std::string& name, const bool noID, const tuint Nentries, FlxMtxFun_base* vecfun, const tuint Nparents, RBRV_set_base** const parents, const tuint Ntrials, flxVec* avec)
 : RBRV_dirichlet(internal, name, noID, Nentries, vecfun, Nparents, parents, avec, Ntrials), Ntrials(Ntrials)
 {
   if (avec) {

@@ -109,23 +109,10 @@ const tdouble parse_py_para_as_floatPosNo0(const std::string& para_name, py::dic
 const flxVec parse_py_para_as_flxVec(const std::string& para_name, py::dict config, const bool required, const flxVec def_val)
 {
   if (config.contains(para_name.c_str())) {
-    try {
-      py::array_t<tdouble> arr = py::cast<py::array_t<tdouble>>(config[para_name.c_str()]);
-
-      // Access the input data as a raw pointer
-      py::buffer_info buf_info = arr.request();
-      tdouble* input_ptr = static_cast<tdouble*>(buf_info.ptr);
-
-      // Get the size of the input array
-      size_t size = buf_info.size;
-
-      return flxVec(input_ptr,size,false,false);
-    } catch (const py::cast_error &e) {
-      throw FlxException_NeglectInInteractive("parse_py_para_as_flxVec_01", "Key '"+para_name+"' in Python <dict> cannot be cast into type <numpy.ndarray>.");
-    }
+    return parse_py_obj_as_flxVec(config[para_name.c_str()],"Key '"+para_name+"' in Python <dict>");
   } else {
     if (required) {
-      throw FlxException_NeglectInInteractive("parse_py_para_as_flxVec_02", "Key '" + para_name + "' not found in Python <dict>.");
+      throw FlxException_NeglectInInteractive("parse_py_para_as_flxVec", "Key '" + para_name + "' not found in Python <dict>.");
     } else {
       return def_val;
     }
@@ -147,6 +134,24 @@ py::list parse_py_obj_as_list(py::object obj, std::string descr)
     return obj.cast<py::list>();
   } else {
     throw FlxException_NeglectInInteractive("parse_py_obj_as_list", descr + " cannot be cast into type '<list>'.");
+  }
+}
+
+flxVec parse_py_obj_as_flxVec(py::object obj, std::string descr)
+{
+  try {
+    py::array_t<tdouble> arr = py::cast<py::array_t<tdouble>>(obj);
+
+    // Access the input data as a raw pointer
+    py::buffer_info buf_info = arr.request();
+    tdouble* input_ptr = static_cast<tdouble*>(buf_info.ptr);
+
+    // Get the size of the input array
+    size_t size = buf_info.size;
+
+    return flxVec(input_ptr,size,false,false);
+  } catch (const py::cast_error &e) {
+    throw FlxException_NeglectInInteractive("parse_py_obj_as_flxVec", descr + " cannot be cast into type <numpy.ndarray>.");
   }
 }
 

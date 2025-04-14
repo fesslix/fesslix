@@ -47,6 +47,7 @@ class FLXLIB_EXPORT FlxReadManager : public FlxReaderBase2 {
     
     FlxFunction* parse_function(const std::string& funStr);
     FlxFunction* parse_function(py::object pyobj, std::string descr="");
+    FlxMtxFun_base* parse_FlxMtxFun(const tuint N, py::object pyobj, std::string descr="");
     FlxCodeBlock* parse_code(const std::string& codeStr);
     
     static void set_funReader( FlxFunctionReader* funReaderV) {funReader = funReaderV;};
@@ -418,4 +419,22 @@ template <typename T> class FlxVoidBox {
 template <typename T>
 int FlxVoidBox<T>::Cinst = 0;
 #endif
+
+
+
+
+//=================== flxMtxFun ==========================
+
+
+class FLXLIB_EXPORT FlxMtxFun_MtxConst : public FlxMtxFun_base, public FlxDataBase {
+  protected:
+    FlxMtxConstFun mtxConstFun;
+  public:
+    FlxMtxFun_MtxConst(const tuint N, const char* mtxName_strV, FlxObjBase* block=NULL);
+    FlxMtxFun_MtxConst(const tuint N, FlxMtxConstFun& mtxConstFun_);
+    virtual void eval();
+};
+
+
+
 

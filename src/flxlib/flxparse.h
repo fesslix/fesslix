@@ -37,6 +37,12 @@ PYBIND11_EXPORT void parse_py_para_as_word_lst(std::vector<std::string>& res, co
 
 PYBIND11_EXPORT py::dict parse_py_obj_as_dict(py::object obj, std::string descr);
 PYBIND11_EXPORT py::list parse_py_obj_as_list(py::object obj, std::string descr);
+/**
+* @brief returns a flxVec from a Python object
+*
+* Internally, a reference to the numpy array is returned.
+*/
+PYBIND11_EXPORT flxVec parse_py_obj_as_flxVec(py::object obj, std::string descr);
 PYBIND11_EXPORT std::string parse_py_obj_as_string(py::object obj, std::string descr);
 
 PYBIND11_EXPORT std::string parse_str_as_word(std::string strV, const bool lowercase, const bool emptyAllow=false,const bool numbegallow=false);
@@ -44,6 +50,7 @@ std::vector<std::string> parse_strseq_as_vec(const std::string& strseq, const ch
 
 FLXLIB_EXPORT FlxFunction* parse_function(const std::string& funStr);
 PYBIND11_EXPORT FlxFunction* parse_function(py::object pyobj, std::string descr="");
+
 
 class FlxObjBase;
 PYBIND11_EXPORT FlxObjBase* parse_code(py::object pyobj, std::string descr="");

@@ -33,12 +33,12 @@ class FLXLIB_EXPORT RBRV_vfset : public RBRV_set_parents, public FlxDataBase {
   protected:
     const tuint Nentries;        // number of entries in the set
     flxVec x_of_set;                // current x-vector of the set
-    FlxMtxConstFun* vecfun;        //the function to evaluate
+    FlxMtxFun_base* vecfun;        //the function to evaluate
     #if FLX_DEBUG
       bool valid;
     #endif
   public:
-    RBRV_vfset(const bool internal, const std::string& name, const bool noID, const tuint Nentries, FlxMtxConstFun* vecfun, const tuint Nparents, RBRV_set_base** const parents);
+    RBRV_vfset(const bool internal, const std::string& name, const bool noID, const tuint Nentries, FlxMtxFun_base* vecfun, const tuint Nparents, RBRV_set_base** const parents);
     virtual ~RBRV_vfset() { delete vecfun; }
     virtual const tuint get_NRV() const { return 0; }
     virtual const tuint get_NOX() const { return Nentries; }
@@ -69,14 +69,14 @@ class FLXLIB_EXPORT RBRV_dirichlet : public RBRV_set_parents, public FlxDataBase
     const tuint Nentries;        // number of entries in the set
     flxVec x_of_set;                // current x-vector of the set
     flxVec alpha_vec;                // current x-vector of the set
-    FlxMtxConstFun* vecfun;        //the function to evaluate
+    FlxMtxFun_base* vecfun;        //the function to evaluate
     #if FLX_DEBUG
       bool valid;
     #endif
 
     virtual void get_pars();
   public:
-    RBRV_dirichlet(const bool internal, const std::string& name, const bool noID, const tuint Nentries, FlxMtxConstFun* vecfun, const tuint Nparents, RBRV_set_base** const parents, flxVec* avec=NULL, const tuint idim=0);
+    RBRV_dirichlet(const bool internal, const std::string& name, const bool noID, const tuint Nentries, FlxMtxFun_base* vecfun, const tuint Nparents, RBRV_set_base** const parents, flxVec* avec=NULL, const tuint idim=0);
     virtual ~RBRV_dirichlet();
     virtual const tuint get_NRV() const { return sRV; }
     virtual const tuint get_NOX() const { return Nentries; }
@@ -109,7 +109,7 @@ class FLXLIB_EXPORT RBRV_multinomial : public RBRV_dirichlet {
 
     virtual void get_pars();
   public:
-    RBRV_multinomial(const bool internal, const std::string& name, const bool noID, const tuint Nentries, FlxMtxConstFun* vecfun, const tuint Nparents, RBRV_set_base** const parents, const tuint Ntrials, flxVec* avec=NULL);
+    RBRV_multinomial(const bool internal, const std::string& name, const bool noID, const tuint Nentries, FlxMtxFun_base* vecfun, const tuint Nparents, RBRV_set_base** const parents, const tuint Ntrials, flxVec* avec=NULL);
     virtual ~RBRV_multinomial();
     virtual void transform_y2x();
     virtual const bool check_xVec(const tdouble* xp);

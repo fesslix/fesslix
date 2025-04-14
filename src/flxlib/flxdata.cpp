@@ -151,6 +151,57 @@ FlxFunction* FlxReadManager::parse_function(py::object pyobj, std::string descr)
     }
 }
 
+FlxMtxFun_base * FlxReadManager::parse_FlxMtxFun(const tuint N, py::object pyobj, std::string descr)
+{
+  const std::string descr_ = (descr.empty()?"":(" ("+descr+")"));
+  // ==================================================
+  // function
+  // ==================================================
+  if (py::isinstance<py::function>(pyobj)) {
+      try {
+          // Get the function's __code__ object
+          py::object code_obj = pyobj.attr("__code__");
+          int arg_count = code_obj.attr("co_argcount").cast<int>();
+
+          // Check if it takes zero arguments
+          if (arg_count == 0) {
+              py::function pyfunc = py::reinterpret_borrow<py::function>(pyobj);
+              return new FlxMtxFun_Py(N,pyfunc);
+          } else {
+              std::ostringstream ssV;
+              ssV << "The parameter is a callable function, but it requires " << arg_count << " parameters." << descr_;
+              throw FlxException("FlxReadManager::parse_FlxMtxFun_20", ssV.str());
+          }
+      } catch (const py::error_already_set &e) {
+          std::ostringstream ssV;
+          ssV << "Error retrieving function signature: " << e.what() << descr_;
+          throw FlxException("FlxReadManager::parse_FlxMtxFun_29", ssV.str() );
+      }
+  }
+  // ==================================================
+  // string
+  // ==================================================
+  if (py::isinstance<py::str>(pyobj)) {
+    const std::string val = py::cast<std::string>(pyobj);
+    // extract MtxConstName
+      std::string mtxConstName;
+      std::string blockStr;
+      std::size_t pos = val.find('=');
+      if (pos != std::string::npos) {
+          mtxConstName = val.substr(0, pos);
+          blockStr = val.substr(pos + 1);
+      } else {
+          throw FlxException("FlxReadManager::parse_FlxMtxFun_31", "'=' not found in the string.");
+      }
+    FlxObjBase* block = get_ReadManager()->parse_code(blockStr);
+    return new FlxMtxFun_MtxConst(N, mtxConstName.c_str(), block);
+  }
+  // ==================================================
+  // numpy array
+  // ==================================================
+    return new FlxMtxFun_const( parse_py_obj_as_flxVec(pyobj,"FlxReadManager::parse_FlxMtxFun_42") );
+}
+
 FlxCodeBlock* FlxReadManager::parse_code(const std::string& codeStr)
 {
   ReadStream* rs = new ReadStream(std::string(codeStr));
@@ -608,4 +659,26 @@ std::string& flxStrConstBox::get_ref(const std::string& name)
     return box[name];
   }
 }
+
+
+
+FlxMtxFun_MtxConst::FlxMtxFun_MtxConst(const tuint N, const char* mtxName_strV, FlxObjBase* block)
+: FlxMtxFun_base(N), mtxConstFun(mtxName_strV, block)
+{
+}
+
+FlxMtxFun_MtxConst::FlxMtxFun_MtxConst(const tuint N, FlxMtxConstFun& mtxConstFun_)
+: FlxMtxFun_base(N), mtxConstFun(mtxConstFun_)
+{
+}
+
+void FlxMtxFun_MtxConst::eval()
+{
+  const tuint N = res_vec.get_N();
+  const std::string vecName = mtxConstFun.eval();
+  tdouble* vp = data->ConstMtxBox.get_Vec(N,vecName,true);
+  res_vec = flxVec(vp, N);
+}
+
+
 

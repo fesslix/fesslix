@@ -60,6 +60,8 @@ class FLXLIB_EXPORT FlxMtxConstFun : public FlxReaderBase2, public FlxMtxBoxBase
     const std::string& eval();
     const std::string write();
     const bool search_circref(FlxFunction* fcr);
+
+    FlxObjBase* get_block() { return block; }
 };
 
 
@@ -89,4 +91,32 @@ class FLXLIB_EXPORT FunReadFunBase_MtxConst : public FunReadFunBase {
     virtual ~FunReadFunBase_MtxConst() {};
 };
 
+//=================== flxMtxFun ==========================
 
+class FLXLIB_EXPORT FlxMtxFun_base {
+  protected:
+    flxVec res_vec;
+  public:
+    FlxMtxFun_base(const tuint N) : res_vec(N) {}
+    virtual ~FlxMtxFun_base() {}
+    virtual void eval() = 0;
+
+    const flxVec& get_res_vec() { return res_vec; };
+};
+
+class FLXLIB_EXPORT FlxMtxFun_const : public FlxMtxFun_base {
+  public:
+    FlxMtxFun_const(const flxVec& rhs);
+    virtual void eval();
+};
+
+class PYBIND11_EXPORT FlxMtxFun_Py : public FlxMtxFun_base {
+  protected:
+    py::function pyfunc;
+  public:
+    FlxMtxFun_Py(const tuint N, py::function pyfunc);
+    virtual void eval();
+};
+
+PYBIND11_EXPORT FlxMtxFun_base* parse_FlxMtxFun(const tuint N, py::object pyobj, std::string descr="");
+PYBIND11_EXPORT FlxMtxFun_base* parse_py_para_as_flxMtxFun(const tuint N, const std::string& para_name, py::dict config);

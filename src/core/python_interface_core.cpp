@@ -1291,6 +1291,16 @@ void flxPySampler::sample()
     RndBox->gen_smp();
 }
 
+const tuint flxPySampler::get_NRV() const
+{
+    return RndBox->get_NRV();
+}
+
+const tuint flxPySampler::get_NOX() const
+{
+    return RndBox->get_NOX();
+}
+
 
 // #################################################################################
 // advanced features
@@ -1420,7 +1430,9 @@ PYBIND11_MODULE(core, m) {
 
         py::class_<flxPySampler>(m, "sampler")
             .def(py::init<py::list>())
-            .def("sample", &flxPySampler::sample, "generate a random sample for a collection of sets of random variables");
+            .def("sample", &flxPySampler::sample, "generate a random sample for a collection of sets of random variables")
+            .def("get_NRV", &flxPySampler::get_NRV, "return number of random variables (in standard Normal space) in the collection of random variables")
+            .def("get_NOX", &flxPySampler::get_NOX, "return number of random variables (in original space) in the collection of random variables");
 
     // ====================================================
     // Advanced features

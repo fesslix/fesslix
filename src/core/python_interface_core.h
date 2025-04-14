@@ -245,6 +245,9 @@ class flxPySampler {
     flxPySampler& operator=(const flxPySampler& rhs) = delete;
 
     void sample();
+
+    const tuint get_NRV() const;
+    const tuint get_NOX() const;
 };
 
 

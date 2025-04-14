@@ -707,8 +707,6 @@ py::array_t<tdouble> flxPyRV::pdf_array(py::array_t<tdouble> arr, const bool saf
 
     // Return the array
     return res_buf;
-
-
 }
 
 const tdouble flxPyRV::pdf_log(const tdouble x_val, const bool safeCalc)
@@ -895,6 +893,35 @@ py::array_t<tdouble> flxPyRVset::get_values(const std::string mode)
     return res_buf;
 }
 
+py::array_t<tdouble> flxPyRVset::eval_rp_psd(py::array_t<tdouble> arr)
+{
+    // ensure that process is based on "power spectral density"
+        RBRV_set_psd* sb_psd = dynamic_cast<RBRV_set_psd*>(rvset_ptr);
+        if (sb_psd==nullptr) {
+            std::ostringstream ssV;
+            ssV << "The rbrv-set '" << name_of_set << "' is not a random process (with specified power spectral density function).";
+            throw FlxException_NeglectInInteractive("flxPyRVset::eval_rp_psd_01", ssV.str() );
+        }
+    // prepare input array
+        // Access the input data as a raw pointer
+        py::buffer_info buf_info = arr.request();
+        tdouble* input_ptr = static_cast<tdouble*>(buf_info.ptr);
+        // Get the size of the input array
+        size_t size = buf_info.size;
+    // prepare the output array
+        // Allocate memory for the return array
+        auto res_buf = py::array_t<tdouble>(size);
+        // Get the buffer info to access the underlying return data
+        py::buffer_info res_buf_info = res_buf.request();
+        tdouble* res_ptr = static_cast<tdouble*>(res_buf_info.ptr);
+    // Fill the array with values
+        for (size_t i = 0; i < size; ++i) {
+            res_ptr[i] = sb_psd->eval_realization(input_ptr[i]);    // TODO avoid re-evaluating the parameters of the random variable
+        }
+    // Return the array
+        return res_buf;
+}
+
 flxPyRVset rbrv_set(py::dict config, py::list rv_list)
 {
     check_engine_state();
@@ -1041,16 +1068,17 @@ flxPyRVset rbrv_set_proc(py::dict config, py::dict rv_config)
         const tuint Ndim = parse_py_para_as_tuintNo0("N", config, true);
     // "distance" between two points
         const tdouble dx = parse_py_para_as_floatPosNo0("dx",config,false,ONE);
-    // auto-correlation coefficient function
-        FlxFunction* rho = parse_py_para("rho",config,true);
     const tuint M = parse_py_para_as_tuint("M", config, false, 0);
     const tuint evtype = parse_py_para_as_tuint("evtype", config, false, 2);
     const bool only_once = parse_py_para_as_bool("only_once", config, false, true );
     const bool rhoGauss = parse_py_para_as_bool("rhogauss", config, false, false );
     RBRV_set_baseDPtr parents = nullptr;
     RBRV_entry_RV_base* entry = nullptr;
-    RBRV_set_proc* ts = NULL;
+    RBRV_set_proc* ts = nullptr;
+    FlxFunction* rho = nullptr;
     try {
+        // auto-correlation coefficient function
+            rho = parse_py_para("rho",config,true);
         // identify parents
             std::vector<std::string> set_parents;
             parse_py_para_as_word_lst(set_parents,"parents",config,false,true);
@@ -1062,12 +1090,57 @@ flxPyRVset rbrv_set_proc(py::dict config, py::dict rv_config)
             ts = new RBRV_set_proc(false,Ndim,M,set_name,false,entry,rho,dx,Nparents,parents,evtype,only_once,rhoGauss);
             parents = nullptr;
             entry = nullptr;
+            rho = nullptr;
             FlxEngine().dataBox.rbrv_box.register_set(ts);
     } catch (FlxException& e) {
         FLXMSG("rbrv_set_proc",1);
         if (rho) delete rho;
         if (parents) delete [] parents;
         if (entry) delete entry;
+        if (ts) delete ts;
+        throw;
+    }
+    // create and return Python-object of generated set
+        flxPyRVset res(ts, set_name);
+        finalize_call();
+        return res;
+}
+
+flxPyRVset rbrv_set_psd(py::dict config)
+{
+    check_engine_state();
+    // eval and check name
+        std::string set_name = parse_py_para_as_word("name",config,true,true);
+        RBRV_entry_read_base::generate_set_base_check_name(FlxEngine().dataBox.rbrv_box, set_name);
+        const std::string family = set_name + "::";
+    // number of random variables in the set
+        const tuint N = parse_py_para_as_tuintNo0("N", config, true);
+    // bounds
+        const tdouble lb = parse_py_para_as_float("lb",config,true);
+        const tdouble ub = parse_py_para_as_float("ub",config,true);
+        if (ub<=lb) {
+            throw FlxException("rbrv_set_psd_01", "Lower bound must be smaller than upper bound.");
+        }
+    RBRV_set_baseDPtr parents = nullptr;
+    RBRV_set_psd* ts = NULL;
+    FlxFunction* psd_fun = nullptr;
+    try {
+        // power spectral density function
+            psd_fun = parse_py_para("psd",config,true);
+        // identify parents
+            std::vector<std::string> set_parents;
+            parse_py_para_as_word_lst(set_parents,"parents",config,false,true);
+            const tuint Nparents = set_parents.size();
+            RBRV_entry_read_base::generate_set_base(FlxEngine().dataBox.rbrv_box, set_parents,parents);
+        // generate set
+            ts = new RBRV_set_psd(false,set_name,N,psd_fun,lb,ub,Nparents,parents,FlxEngine().dataBox.ConstantBox.getRef("gx"));
+            parents = nullptr;
+            psd_fun = nullptr;
+            FlxEngine().dataBox.rbrv_box.register_set(ts);
+    } catch (FlxException& e) {
+        FLXMSG("rbrv_set_psd_55",1);
+        if (psd_fun) delete psd_fun;
+        if (parents) delete [] parents;
         if (ts) delete ts;
         throw;
     }
@@ -1208,11 +1281,13 @@ PYBIND11_MODULE(core, m) {
     // ====================================================
         py::class_<flxPyRVset>(m, "rvset")
             .def("get_name", &flxPyRVset::get_name, "get name of set of random variables")
-            .def("get_values", &flxPyRVset::get_values, pybind11::arg("mode")="x", "returns a vector of quantities of all entries contained in the set of random variables");
+            .def("get_values", &flxPyRVset::get_values, pybind11::arg("mode")="x", "returns a vector of quantities of all entries contained in the set of random variables")
+            .def("eval_rp_psd", &flxPyRVset::eval_rp_psd, "evaluates the realization of a random process at time t with given power spectral density function");
 
         m.def("rv_set", &rbrv_set, "creates a set of general random variables");
         m.def("rv_set_noise", &rbrv_set_noise, "creates a set of independent random variables that have all the same distribution");
         m.def("rv_set_proc", &rbrv_set_proc, "creates a discrete random process with given correlation structure");
+        m.def("rv_set_psd", &rbrv_set_psd, "creates a Gaussian process with given power spectral density function");
 
         m.def("get_rv_from_set", &get_rv_from_set, "retrieve a random variable from a set of random variables");
 

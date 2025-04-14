@@ -118,9 +118,14 @@ FlxMtxConstFun::~FlxMtxConstFun()
 }
 const string& FlxMtxConstFun::eval()
 {
-  if (block) block->exec();
-  if (mtxName) {
-    mtxName_str = mtxName->eval_word(true);
+  try {
+    if (block) block->exec();
+    if (mtxName) {
+      mtxName_str = mtxName->eval_word(true);
+    }
+  } catch (FlxException &e) {
+      FLXMSG("FlxMtxConstFun::eval",1);
+      throw;
   }
   return mtxName_str;
 }

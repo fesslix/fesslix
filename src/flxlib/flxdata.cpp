@@ -189,6 +189,7 @@ FlxMtxFun_base * FlxReadManager::parse_FlxMtxFun(const tuint N, py::object pyobj
       std::size_t pos = val.find('=');
       if (pos != std::string::npos) {
           mtxConstName = val.substr(0, pos);
+          trim(mtxConstName);
           blockStr = val.substr(pos + 1);
       } else {
           throw FlxException("FlxReadManager::parse_FlxMtxFun_31", "'=' not found in the string.");
@@ -237,7 +238,7 @@ FlxData::FlxData()
 
 FlxData::~FlxData()
 {
-  
+  FlxDataBase::set_data(nullptr);
 }
 
 const ostreamp& FlxOstreamBox::get ( const string& name ) {
@@ -250,6 +251,19 @@ const ostreamp& FlxOstreamBox::get ( const string& name ) {
     throw FlxException("FlxOstreamBox::get_1", ssV_2.str(), "In oder to use an output-stream, you have to define it first."); 
   }
 }
+
+void FlxDataBase::set_data(FlxData* dataV)
+{
+  if (dataV!=nullptr) {
+    if (data!=nullptr) {
+      if (data!=dataV) {
+        throw FlxException_Crude("FlxDataBase::set_data");
+      }
+    }
+  }
+  data = dataV;
+}
+
 
 const bool FlxOstreamBox::delete_stream(ostreamp& strm)
 {
@@ -665,19 +679,26 @@ std::string& flxStrConstBox::get_ref(const std::string& name)
 FlxMtxFun_MtxConst::FlxMtxFun_MtxConst(const tuint N, const char* mtxName_strV, FlxObjBase* block)
 : FlxMtxFun_base(N), mtxConstFun(mtxName_strV, block)
 {
+  data->ConstMtxBox.declareC(mtxName_strV);
 }
 
 FlxMtxFun_MtxConst::FlxMtxFun_MtxConst(const tuint N, FlxMtxConstFun& mtxConstFun_)
 : FlxMtxFun_base(N), mtxConstFun(mtxConstFun_)
 {
+
 }
 
 void FlxMtxFun_MtxConst::eval()
 {
-  const tuint N = res_vec.get_N();
-  const std::string vecName = mtxConstFun.eval();
-  tdouble* vp = data->ConstMtxBox.get_Vec(N,vecName,true);
-  res_vec = flxVec(vp, N);
+  try {
+    const tuint N = res_vec.get_N();
+    const std::string vecName = mtxConstFun.eval();
+    tdouble* vp = data->ConstMtxBox.get_Vec(N,vecName,true);
+    res_vec = flxVec(vp, N);
+  } catch (FlxException &e) {
+      FLXMSG("FlxMtxFun_MtxConst::eval_99",1);
+      throw;
+  }
 }
 
 

@@ -22,19 +22,25 @@
 
 
 flxVec::flxVec(const tuint N)
-: N(N), vptr((N>0)?(new tdouble[N]):NULL), is_ptr(false)
+: N(N), vptr((N>0)?(new tdouble[N]):nullptr), is_ptr(false)
 {
   set_zero();
 }
 
 flxVec::flxVec(const flxVec& rhs)
-: N(rhs.N), vptr((N>0)?(new tdouble[N]):NULL), is_ptr(false)
+: N(rhs.N), vptr((N>0)?(new tdouble[N]):nullptr), is_ptr(false)
 {
   memcpy(vptr,rhs.vptr,N*sizeof(tdouble));     
 }
 
+flxVec::flxVec(flxVec&& rhs)
+: N(rhs.N), vptr(rhs.vptr), is_ptr(rhs.is_ptr)
+{
+  rhs.vptr = nullptr;
+}
+
 flxVec::flxVec(const flxpVec& rhs)
-: N(rhs.get_N()), vptr((N>0)?(new tdouble[N]):NULL), is_ptr(false)
+: N(rhs.get_N()), vptr((N>0)?(new tdouble[N]):nullptr), is_ptr(false)
 {
   const pdouble* vp = rhs.get_tmp_vptr_const();
   for (tuint i=0;i<N;++i) {
@@ -46,7 +52,7 @@ flxVec::flxVec(tdouble* ptr, const tuint& NV, const bool copy_mem, const bool ma
 : N(NV), vptr(ptr), is_ptr(copy_mem?false:(!manage_mem))
 {
   if (copy_mem) {
-    vptr = (N>0)?(new tdouble[N]):NULL;
+    vptr = (N>0)?(new tdouble[N]):nullptr;
     memcpy(vptr,ptr,N*sizeof(tdouble));    
   }
 }
@@ -55,7 +61,7 @@ flxVec::flxVec(const tdouble* ptr, const tuint& NV, const bool copy_mem)
 :N(NV), vptr(const_cast<tdouble*>(ptr)), is_ptr(!copy_mem)
 {
   if (copy_mem) {
-    vptr = (N>0)?(new tdouble[N]):NULL;
+    vptr = (N>0)?(new tdouble[N]):nullptr;
     memcpy(vptr,ptr,N*sizeof(tdouble));    
   }
 }

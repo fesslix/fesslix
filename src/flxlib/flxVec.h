@@ -33,6 +33,8 @@ class FLXLIB_EXPORT flxVec {
     flxVec(const tuint N);
     flxVec(const flxVec& rhs);
     flxVec(const flxpVec& rhs);
+    flxVec() = delete;
+    flxVec(flxVec&& rhs);
     /**
     * @param copy_mem: true: copy memory, false: memory is only reference (and not managed)
     * @param manage_mem: true: memory is managed; otherwise, not (only relevant if copy_mem is false!)

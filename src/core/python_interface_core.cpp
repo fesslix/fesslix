@@ -1150,6 +1150,43 @@ flxPyRVset rbrv_set_psd(py::dict config)
         return res;
 }
 
+flxPyRVset rbrv_set_sphere(py::dict config)
+{
+    check_engine_state();
+    // eval and check name
+        std::string set_name = parse_py_para_as_word("name",config,true,true);
+        RBRV_entry_read_base::generate_set_base_check_name(FlxEngine().dataBox.rbrv_box, set_name);
+        const std::string family = set_name + "::";
+    // number of random variables in the set
+        const tuint N = parse_py_para_as_tuintNo0("N", config, true);
+    // radius of sphere
+        FlxFunction* radius = parse_py_para("radius",config,true);;
+    RBRV_set_baseDPtr parents = nullptr;
+    RBRV_set_sphere* ts = NULL;
+    try {
+        // identify parents
+            std::vector<std::string> set_parents;
+            parse_py_para_as_word_lst(set_parents,"parents",config,false,true);
+            const tuint Nparents = set_parents.size();
+            RBRV_entry_read_base::generate_set_base(FlxEngine().dataBox.rbrv_box, set_parents,parents);
+        // generate set
+            ts = new RBRV_set_sphere(false,N,set_name,false,Nparents,parents,radius);
+            parents = nullptr;
+            radius = nullptr;
+            FlxEngine().dataBox.rbrv_box.register_set(ts);
+    } catch (FlxException& e) {
+        FLXMSG("rbrv_set_sphere_55",1);
+        if (radius) delete radius;
+        if (parents) delete [] parents;
+        if (ts) delete ts;
+        throw;
+    }
+    // create and return Python-object of generated set
+        flxPyRVset res(ts, set_name);
+        finalize_call();
+        return res;
+}
+
 flxPyRV get_rv_from_set(const std::string& rv_name)
 {
     check_engine_state();
@@ -1288,6 +1325,7 @@ PYBIND11_MODULE(core, m) {
         m.def("rv_set_noise", &rbrv_set_noise, "creates a set of independent random variables that have all the same distribution");
         m.def("rv_set_proc", &rbrv_set_proc, "creates a discrete random process with given correlation structure");
         m.def("rv_set_psd", &rbrv_set_psd, "creates a Gaussian process with given power spectral density function");
+        m.def("rv_set_sphere", &rbrv_set_sphere, "creates a random point that is uniformly distribted in a hyper-sphere");
 
         m.def("get_rv_from_set", &get_rv_from_set, "retrieve a random variable from a set of random variables");
 

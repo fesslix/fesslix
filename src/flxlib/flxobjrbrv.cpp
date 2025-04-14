@@ -2115,7 +2115,7 @@ RBRV_dirichlet::RBRV_dirichlet(const bool internal, const std::string& name, con
     if (vecfun || avec->get_N()!=Nentries) {
       if (vecfun) {
         delete vecfun;
-        vecfun = NULL;
+        vecfun = nullptr;
       }
       throw FlxException_Crude("RBRV_dirichlet::RBRV_dirichlet_01");
     }

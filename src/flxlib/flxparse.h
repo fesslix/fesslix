@@ -25,6 +25,12 @@ PYBIND11_EXPORT const tuint parse_py_para_as_tuint(const std::string& para_name,
 PYBIND11_EXPORT const tuint parse_py_para_as_tuintNo0(const std::string& para_name, py::dict config, const bool required, const tuint def_val=1);
 PYBIND11_EXPORT const tdouble parse_py_para_as_float(const std::string& para_name, py::dict config, const bool required, const tdouble def_val=ZERO);
 PYBIND11_EXPORT const tdouble parse_py_para_as_floatPosNo0(const std::string& para_name, py::dict config, const bool required, const tdouble def_val=ONE);
+/**
+* @brief returns a flxVec from a Python dict
+*
+* Unless def_val is returned, internally, a reference to the numpy array is returned.
+*/
+PYBIND11_EXPORT const flxVec parse_py_para_as_flxVec(const std::string& para_name, py::dict config, const bool required, const flxVec def_val=flxVec(0));
 PYBIND11_EXPORT std::string parse_py_para_as_string(const std::string& para_name, py::dict config, const bool required, const std::string def_val="");
 PYBIND11_EXPORT std::string parse_py_para_as_word(const std::string& para_name, py::dict config, const bool required, const bool lowercase, const bool emptyAllow=false,const bool numbegallow=false, const std::string def_val="");
 PYBIND11_EXPORT void parse_py_para_as_word_lst(std::vector<std::string>& res, const std::string& para_name, py::dict config, const bool required, const bool lowercase, const bool emptyAllow=false,const bool numbegallow=false);

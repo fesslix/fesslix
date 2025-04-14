@@ -18,6 +18,8 @@
 #include "flxparse.h"
 #include "flxdata.h"
 
+#include <pybind11/numpy.h>  // For NumPy support
+
 
 FlxFunction* parse_py_para(const std::string& para_name, py::dict config, const bool required)
 {
@@ -101,6 +103,32 @@ const tdouble parse_py_para_as_floatPosNo0(const std::string& para_name, py::dic
     throw FlxException_NeglectInInteractive("parse_py_para_as_floatPosNo0", "Key '" + para_name + "': Value must not be negative or zero.");
   }
   return val;
+}
+
+const flxVec parse_py_para_as_flxVec(const std::string& para_name, py::dict config, const bool required, const flxVec def_val)
+{
+  if (config.contains(para_name.c_str())) {
+    try {
+      py::array_t<tdouble> arr = py::cast<py::array_t<tdouble>>(config[para_name.c_str()]);
+
+      // Access the input data as a raw pointer
+      py::buffer_info buf_info = arr.request();
+      tdouble* input_ptr = static_cast<tdouble*>(buf_info.ptr);
+
+      // Get the size of the input array
+      size_t size = buf_info.size;
+
+      return flxVec(input_ptr,size,false,false);
+    } catch (const py::cast_error &e) {
+      throw FlxException_NeglectInInteractive("parse_py_para_as_flxVec_01", "Key '"+para_name+"' in Python <dict> cannot be cast into type <numpy.ndarray>.");
+    }
+  } else {
+    if (required) {
+      throw FlxException_NeglectInInteractive("parse_py_para_as_flxVec_02", "Key '" + para_name + "' not found in Python <dict>.");
+    } else {
+      return def_val;
+    }
+  }
 }
 
 py::dict parse_py_obj_as_dict(py::object obj, std::string descr)

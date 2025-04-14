@@ -19,6 +19,8 @@
 #include "fesslix.h"
 #include "flxfunction_data.h"
 #include "flxrbrv_rvs_read.h"
+#include "flxobjrbrv.h"
+
 #include <iostream>
 
 
@@ -595,7 +597,7 @@ flxPyRV::flxPyRV(flxPyRV& rhs)
     }
 }
 
-flxPyRV::flxPyRV(flxPyRV && rhs)
+flxPyRV::flxPyRV(flxPyRV&& rhs)
 : rv_ptr(rhs.rv_ptr), rv_ptr_(rhs.rv_ptr_), mem_managed(rhs.mem_managed)
 {
     rhs.rv_ptr = nullptr;
@@ -1160,7 +1162,7 @@ flxPyRVset rbrv_set_sphere(py::dict config)
     // number of random variables in the set
         const tuint N = parse_py_para_as_tuintNo0("N", config, true);
     // radius of sphere
-        FlxFunction* radius = parse_py_para("radius",config,true);;
+        FlxFunction* radius = parse_py_para("radius",config,true);
     RBRV_set_baseDPtr parents = nullptr;
     RBRV_set_sphere* ts = NULL;
     try {
@@ -1177,6 +1179,39 @@ flxPyRVset rbrv_set_sphere(py::dict config)
     } catch (FlxException& e) {
         FLXMSG("rbrv_set_sphere_55",1);
         if (radius) delete radius;
+        if (parents) delete [] parents;
+        if (ts) delete ts;
+        throw;
+    }
+    // create and return Python-object of generated set
+        flxPyRVset res(ts, set_name);
+        finalize_call();
+        return res;
+}
+
+flxPyRVset rbrv_set_dirichlet(py::dict config)
+{
+    check_engine_state();
+    // eval and check name
+        std::string set_name = parse_py_para_as_word("name",config,true,true);
+        RBRV_entry_read_base::generate_set_base_check_name(FlxEngine().dataBox.rbrv_box, set_name);
+        const std::string family = set_name + "::";
+    // number of random variables in the set
+        flxVec alpha_vec = parse_py_para_as_flxVec("alpha",config,true);
+    RBRV_set_baseDPtr parents = nullptr;
+    RBRV_dirichlet* ts = NULL;
+    try {
+        // identify parents
+            std::vector<std::string> set_parents;
+            parse_py_para_as_word_lst(set_parents,"parents",config,false,true);
+            const tuint Nparents = set_parents.size();
+            RBRV_entry_read_base::generate_set_base(FlxEngine().dataBox.rbrv_box, set_parents,parents);
+        // generate set
+            ts = new RBRV_dirichlet(false,set_name,false,alpha_vec.get_N(),nullptr,Nparents,parents,&alpha_vec);
+            parents = nullptr;
+            FlxEngine().dataBox.rbrv_box.register_set(ts);
+    } catch (FlxException& e) {
+        FLXMSG("rbrv_set_sphere_55",1);
         if (parents) delete [] parents;
         if (ts) delete ts;
         throw;
@@ -1326,6 +1361,7 @@ PYBIND11_MODULE(core, m) {
         m.def("rv_set_proc", &rbrv_set_proc, "creates a discrete random process with given correlation structure");
         m.def("rv_set_psd", &rbrv_set_psd, "creates a Gaussian process with given power spectral density function");
         m.def("rv_set_sphere", &rbrv_set_sphere, "creates a random point that is uniformly distribted in a hyper-sphere");
+        m.def("rv_set_dirichlet", &rbrv_set_dirichlet, "creates a vector that is the outcome of a Dirichlet distributed random variable");
 
         m.def("get_rv_from_set", &get_rv_from_set, "retrieve a random variable from a set of random variables");
 

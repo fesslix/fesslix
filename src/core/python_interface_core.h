@@ -227,6 +227,7 @@ flxPyRVset rbrv_set_noise(py::dict config, py::dict rv_config);
 flxPyRVset rbrv_set_proc(py::dict config, py::dict rv_config);
 flxPyRVset rbrv_set_psd(py::dict config);
 flxPyRVset rbrv_set_sphere(py::dict config);
+flxPyRVset rbrv_set_dirichlet(py::dict config);
 
 flxPyRV get_rv_from_set(const std::string& rv_name);
 

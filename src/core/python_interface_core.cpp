@@ -1266,11 +1266,26 @@ tdouble eval_fun(py::object expr)
     tdouble res;
     try {
         res = fun->calc();
+        delete fun;
     } catch (FlxException& e) {
+        delete fun;
         GlobalVar.slogcout(1) << std::endl << e.what() << std::endl;
         res = std::numeric_limits<tdouble>::quiet_NaN();
     }
     return res;
+}
+
+void eval_code(py::object expr)
+{
+    check_engine_state();
+    FlxObjBase* code = parse_code(expr,"parameter 'expr' of 'flx.eval_code'");
+    try {
+        code->exec();
+        delete code;
+    } catch (FlxException& e) {
+        delete code;
+        throw;
+    }
 }
 
 
@@ -1373,6 +1388,7 @@ PYBIND11_MODULE(core, m) {
     // Advanced features
     // ====================================================
         m.def("eval_fun", &eval_fun, "Evaluates an expression and returns the result.");
+        m.def("eval_code", &eval_code, "Evaluates code in the Fesslix engine.");
 
     // ====================================================
     // only for debugging purposes (TODO remove at some point)

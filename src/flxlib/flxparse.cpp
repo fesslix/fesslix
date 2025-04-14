@@ -17,6 +17,7 @@
 
 #include "flxparse.h"
 #include "flxdata.h"
+#include "flxobjects.h"
 
 #include <pybind11/numpy.h>  // For NumPy support
 
@@ -253,13 +254,24 @@ std::vector<std::string> parse_strseq_as_vec(const std::string& strseq, const ch
   return res;
 }
 
-FlxFunction * parse_function(const std::string& funStr)
+FlxFunction* parse_function(const std::string& funStr)
 {
   return get_ReadManager()->parse_function(funStr);
 }
 
-FlxFunction * parse_function(py::object pyobj, std::string descr)
+FlxFunction* parse_function(py::object pyobj, std::string descr)
 {
   return get_ReadManager()->parse_function(pyobj, descr);
 }
+
+FlxObjBase* parse_code(py::object pyobj, std::string descr)
+{
+  try {
+    const std::string val = py::cast<std::string>(pyobj);
+    return get_ReadManager()->parse_code(val);
+  } catch (const py::cast_error &e) {
+    throw FlxException_NeglectInInteractive("parse_code_01", descr + " cannot be cast into type 'float'.");
+  }
+}
+
 

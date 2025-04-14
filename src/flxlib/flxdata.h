@@ -23,6 +23,7 @@
 
 
 class FlxObjBase;
+class FlxCodeBlock;
 
 class FLXLIB_EXPORT FlxReadManager : public FlxReaderBase2 {
   private:
@@ -46,6 +47,7 @@ class FLXLIB_EXPORT FlxReadManager : public FlxReaderBase2 {
     
     FlxFunction* parse_function(const std::string& funStr);
     FlxFunction* parse_function(py::object pyobj, std::string descr="");
+    FlxCodeBlock* parse_code(const std::string& codeStr);
     
     static void set_funReader( FlxFunctionReader* funReaderV) {funReader = funReaderV;};
 };

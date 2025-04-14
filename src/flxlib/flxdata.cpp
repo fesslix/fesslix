@@ -18,6 +18,7 @@
 #define fesslix_fxldata_CPP
 
 #include "flxdata.h"
+#include "flxobjects.h"
 
 #include <fstream>
 
@@ -104,7 +105,7 @@ FlxFunction* FlxReadManager::parse_function(const std::string& funStr)
   return value;
 }
 
-FlxFunction * FlxReadManager::parse_function(py::object pyobj, std::string descr)
+FlxFunction* FlxReadManager::parse_function(py::object pyobj, std::string descr)
 {
   const std::string descr_ = (descr.empty()?"":(" ("+descr+")"));
   // ==================================================
@@ -148,6 +149,24 @@ FlxFunction * FlxReadManager::parse_function(py::object pyobj, std::string descr
     } catch (const py::cast_error &e) {
       throw FlxException("FlxReadManager::parse_function_99", "Unhandled data type of Python object " + descr_);
     }
+}
+
+FlxCodeBlock* FlxReadManager::parse_code(const std::string& codeStr)
+{
+  ReadStream* rs = new ReadStream(std::string(codeStr));
+  push(rs);
+  FlxCodeBlock* block = nullptr;
+  try {
+    block = FlxObjReadCodeBlock::read_block(true);
+  } catch (FlxException &e) {
+    FLXMSG("FlxReadManager::parse_code_01",1);
+    pop();
+    delete rs;
+    throw;
+  }
+  pop();
+  delete rs;
+  return block;
 }
 
 

@@ -252,4 +252,4 @@ class flxPySampler {
 // #################################################################################
 
 tdouble eval_fun(py::object expr);
-
+void eval_code(py::object expr);

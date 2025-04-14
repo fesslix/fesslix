@@ -45,4 +45,7 @@ std::vector<std::string> parse_strseq_as_vec(const std::string& strseq, const ch
 FLXLIB_EXPORT FlxFunction* parse_function(const std::string& funStr);
 PYBIND11_EXPORT FlxFunction* parse_function(py::object pyobj, std::string descr="");
 
+class FlxObjBase;
+PYBIND11_EXPORT FlxObjBase* parse_code(py::object pyobj, std::string descr="");
+
 

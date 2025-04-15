@@ -1374,6 +1374,30 @@ void eval_code(py::object expr)
     }
 }
 
+py::array_t<tdouble> eval_vfun(const tuint N, py::object expr)
+{
+    check_engine_state();
+    FlxMtxFun_base* vfun = parse_FlxMtxFun(N,expr,"parameter 'expr' of 'flx.eval_vfun'");
+    try {
+        vfun->eval();
+        const flxVec& res_ = vfun->get_res_vec();
+        // Allocate memory for the return array
+        auto res_buf = py::array_t<tdouble>(N);
+
+        // Get the buffer info to access the underlying return data
+        py::buffer_info res_buf_info = res_buf.request();
+        tdouble* res_ptr = static_cast<tdouble*>(res_buf_info.ptr);
+        flxVec res(res_ptr,N);
+
+        // copy values into result vector
+        res = res_;
+        delete vfun;
+        return res_buf;
+    } catch (FlxException& e) {
+        delete vfun;
+        throw;
+    }
+}
 
 // #################################################################################
 // only for debugging purposes
@@ -1479,6 +1503,7 @@ PYBIND11_MODULE(core, m) {
     // ====================================================
         m.def("eval_fun", &eval_fun, "Evaluates an expression and returns the result.");
         m.def("eval_code", &eval_code, "Evaluates code in the Fesslix engine.");
+        m.def("eval_vfun", &eval_vfun, "Evaluates an expression and returns a vector.");
 
     // ====================================================
     // only for debugging purposes (TODO remove at some point)

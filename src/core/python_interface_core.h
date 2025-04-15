@@ -258,3 +258,4 @@ class flxPySampler {
 
 tdouble eval_fun(py::object expr);
 void eval_code(py::object expr);
+py::array_t<tdouble> eval_vfun(const tuint N, py::object expr);

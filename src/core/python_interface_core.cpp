@@ -1214,7 +1214,7 @@ flxPyRVset rbrv_set_vfun(py::dict config)
             parents = nullptr;
             FlxEngine().dataBox.rbrv_box.register_set(ts);
     } catch (FlxException& e) {
-        FLXMSG("rbrv_set_sphere_55",1);
+        FLXMSG("rbrv_set_vfun_55",1);
         if (vecfun) delete vecfun;
         if (parents) delete [] parents;
         if (ts) delete ts;
@@ -1248,7 +1248,46 @@ flxPyRVset rbrv_set_dirichlet(py::dict config)
             parents = nullptr;
             FlxEngine().dataBox.rbrv_box.register_set(ts);
     } catch (FlxException& e) {
-        FLXMSG("rbrv_set_sphere_55",1);
+        FLXMSG("rbrv_set_vfun_55",1);
+        if (parents) delete [] parents;
+        if (ts) delete ts;
+        throw;
+    }
+    // create and return Python-object of generated set
+        flxPyRVset res(ts, set_name);
+        finalize_call();
+        return res;
+}
+
+flxPyRVset rbrv_set_multinomial(py::dict config)
+{
+    check_engine_state();
+    // eval and check name
+        std::string set_name = parse_py_para_as_word("name",config,true,true);
+        RBRV_entry_read_base::generate_set_base_check_name(FlxEngine().dataBox.rbrv_box, set_name);
+        const std::string family = set_name + "::";
+    // number of random variables in the set
+        const tuint N = parse_py_para_as_tuintNo0("N", config, true);
+    // number of random variables in the set
+        const tuint Ntrial = parse_py_para_as_tuintNo0("Ntrial", config, true);
+    // flxMtxFun
+        FlxMtxFun_base* vecfun = parse_py_para_as_flxMtxFun(N,"pvec",config);
+    RBRV_set_baseDPtr parents = nullptr;
+    RBRV_multinomial* ts = NULL;
+    try {
+        // identify parents
+            std::vector<std::string> set_parents;
+            parse_py_para_as_word_lst(set_parents,"parents",config,false,true);
+            const tuint Nparents = set_parents.size();
+            RBRV_entry_read_base::generate_set_base(FlxEngine().dataBox.rbrv_box, set_parents,parents);
+        // generate set
+            ts = new RBRV_multinomial(false,set_name,false,N,vecfun,Nparents,parents,Ntrial);
+            vecfun = nullptr;
+            parents = nullptr;
+            FlxEngine().dataBox.rbrv_box.register_set(ts);
+    } catch (FlxException& e) {
+        FLXMSG("rbrv_set_multinomial_55",1);
+        if (vecfun) delete vecfun;
         if (parents) delete [] parents;
         if (ts) delete ts;
         throw;
@@ -1425,6 +1464,7 @@ PYBIND11_MODULE(core, m) {
         m.def("rv_set_sphere", &rbrv_set_sphere, "creates a random point that is uniformly distribted in a hyper-sphere");
         m.def("rv_set_vfun", &rbrv_set_vfun, "creates a vector that is an explicit function of random variables");
         m.def("rv_set_dirichlet", &rbrv_set_dirichlet, "creates a vector that is the outcome of a Dirichlet distributed random variable");
+        m.def("rv_set_multinomial", &rbrv_set_multinomial, "creates a vector that is the outcome of a multinomial distributed random variable");
 
         m.def("get_rv_from_set", &get_rv_from_set, "retrieve a random variable from a set of random variables");
 

@@ -33,6 +33,7 @@ typedef std::valarray<tuint> iVec;
 typedef std::valarray<tnlong> lVec;
 
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>  // For NumPy support
 namespace py = pybind11;
 
 FLXLIB_EXPORT size_t bVec_NumbTrue(const bVec& bv);

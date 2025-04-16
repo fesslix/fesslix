@@ -279,4 +279,20 @@ FlxObjBase* parse_code(py::object pyobj, std::string descr)
   }
 }
 
+py::array_t<tdouble> py_wrap_array_no_ownership(tdouble* ptr, size_t N)
+{
+    // Dummy capsule — ensures py::array holds on to a base object,
+    // but does not delete ptr
+    py::capsule dummy_capsule(ptr, [](void* /*f*/) {
+        // No deletion, memory is managed elsewhere
+    });
+
+    return py::array_t<tdouble>(
+        {N},             // shape
+        {sizeof(tdouble)}, // stride (in bytes)
+        ptr,             // raw data pointer
+        dummy_capsule    // base object
+    );
+}
+
 

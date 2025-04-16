@@ -110,11 +110,22 @@ class FLXLIB_EXPORT FlxMtxFun_const : public FlxMtxFun_base {
     virtual void eval();
 };
 
+class PYBIND11_EXPORT FlxMtxFun_FlxFunction_list : public FlxMtxFun_base {
+  protected:
+    FlxFunctionPtr* func_lst;
+  public:
+    FlxMtxFun_FlxFunction_list(const tuint N, FlxFunctionPtr* func_lst);
+    ~FlxMtxFun_FlxFunction_list();
+    virtual void eval();
+};
+
 class PYBIND11_EXPORT FlxMtxFun_Py : public FlxMtxFun_base {
   protected:
     py::function pyfunc;
+    const bool has_arg;
+    py::array_t<tdouble> py_array;
   public:
-    FlxMtxFun_Py(const tuint N, py::function pyfunc);
+    FlxMtxFun_Py(const tuint N, py::function pyfunc, const bool has_arg);
     virtual void eval();
 };
 

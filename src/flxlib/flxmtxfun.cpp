@@ -287,24 +287,53 @@ void FlxMtxFun_const::eval()
 
 }
 
-FlxMtxFun_Py::FlxMtxFun_Py(const tuint N, py::function pyfunc)
-: FlxMtxFun_base(N), pyfunc(pyfunc)
+FlxMtxFun_FlxFunction_list::FlxMtxFun_FlxFunction_list(const tuint N, FlxFunctionPtr* func_lst)
+: FlxMtxFun_base(N), func_lst(func_lst)
 {
+}
 
+FlxMtxFun_FlxFunction_list::~FlxMtxFun_FlxFunction_list()
+{
+    const tuint N = res_vec.get_N();
+    for (size_t i=0;i<N;++i) {
+        if (func_lst[i]) delete func_lst[i];
+    }
+    delete [] func_lst;
+}
+
+void FlxMtxFun_FlxFunction_list::eval()
+{
+    const tuint N = res_vec.get_N();
+    tdouble* vptr = res_vec.get_tmp_vptr();
+    for (size_t i=0;i<N;++i) {
+        vptr[i] = func_lst[i]->calc();
+    }
+}
+
+FlxMtxFun_Py::FlxMtxFun_Py(const tuint N, py::function pyfunc, const bool has_arg)
+: FlxMtxFun_base(N), pyfunc(pyfunc), has_arg(has_arg)
+{
+  if (has_arg) {
+    py_array = py_wrap_array_no_ownership(res_vec.get_tmp_vptr(),N);
+  }
 }
 
 void FlxMtxFun_Py::eval()
 {
-  py::object result;
-  try {
-      result = pyfunc();
-  } catch (const py::error_already_set &e) {
-      std::ostringstream ssV;
-      ssV << "Error in evaluating Python expression: " << e.what();
-      throw FlxException("FlxMtxFun_Py::eval_01", ssV.str() );
+  if (has_arg) {
+    pyfunc(py_array);
+  } else {
+    py::object result;
+    try {
+        result = pyfunc();
+    } catch (const py::error_already_set &e) {
+        std::ostringstream ssV;
+        ssV << "Error in evaluating Python expression: " << e.what();
+        throw FlxException("FlxMtxFun_Py::eval_01", ssV.str() );
+    }
+    flxVec rhs = parse_py_obj_as_flxVec(result,"Result of Python function");
+    res_vec.assign_save(rhs);
   }
-  flxVec rhs = parse_py_obj_as_flxVec(result,"Result of Python function");
-  res_vec.assign_save(rhs);
 }
 
 FlxMtxFun_base* parse_FlxMtxFun(const tuint N, py::object pyobj, std::string descr)

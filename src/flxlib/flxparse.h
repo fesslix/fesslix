@@ -19,6 +19,7 @@
 
 #include "flxfunction.h"
 
+
 PYBIND11_EXPORT FlxFunction* parse_py_para(const std::string& para_name, py::dict config, const bool required=true);
 PYBIND11_EXPORT const bool parse_py_para_as_bool(const std::string& para_name, py::dict config, const bool required, const bool def_val=false);
 PYBIND11_EXPORT const tuint parse_py_para_as_tuint(const std::string& para_name, py::dict config, const bool required, const tuint def_val=0);
@@ -55,4 +56,7 @@ PYBIND11_EXPORT FlxFunction* parse_function(py::object pyobj, std::string descr=
 class FlxObjBase;
 PYBIND11_EXPORT FlxObjBase* parse_code(py::object pyobj, std::string descr="");
 
-
+/**
+* @brief returns a numpy array that is based on a pointer whose memory is managed externally
+*/
+py::array_t<tdouble> py_wrap_array_no_ownership(tdouble* ptr, size_t N);

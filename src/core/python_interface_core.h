@@ -20,6 +20,7 @@
 
 #include "flxmath.h"
 #include "flxrbrv_rvs.h"
+#include "flxobjrandom.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -142,54 +143,6 @@ void set_var(const std::string var_name, py::object fun);
 // #################################################################################
 // random variables
 // #################################################################################
-
-RBRV_entry_RV_base* parse_py_obj_as_rv(py::dict config, const bool name_required, const tuint iID, const std::string family, std::string descr);
-
-class flxPyRV {
-  private:
-    RBRV_entry* rv_ptr;
-    RBRV_entry_RV_base* rv_ptr_;
-    bool mem_managed;
-
-    void ensure_is_a_basic_rv();
-  public:
-    flxPyRV(py::dict config);
-    flxPyRV(RBRV_entry* rv_ptr);
-    flxPyRV() = delete;
-    flxPyRV(flxPyRV& rhs);
-    flxPyRV(flxPyRV&& rhs);
-    ~flxPyRV();
-
-    flxPyRV& operator=(const flxPyRV& rhs) = delete;
-
-    const std::string get_name() const;
-    const std::string get_type() const;
-    const tdouble get_value() const;
-    const tdouble x2y(const tdouble x_val);
-    const tdouble y2x(const tdouble y_val);
-
-    const tdouble sample();
-    void sample_array(py::array_t<tdouble> arr);
-
-    const tdouble pdf(const tdouble x_val, const bool safeCalc);
-    py::array_t<tdouble> pdf_array(py::array_t<tdouble> arr, const bool safeCalc);
-
-    const tdouble pdf_log(const tdouble x_val, const bool safeCalc);
-
-    const tdouble cdf(const tdouble x_val, const bool safeCalc);
-    py::array_t<tdouble> cdf_array(py::array_t<tdouble> arr, const bool safeCalc);
-
-    const tdouble icdf(const tdouble p);
-    const tdouble sf(const tdouble x_val, const bool safeCalc);
-    const tdouble entropy();
-    const tdouble mean();
-    const tdouble sd();
-    const tdouble median();
-    const tdouble mode();
-    const bool check_x(const tdouble xV);
-    const tdouble get_HPD(const tdouble p);
-    py::dict info();
-};
 
 
 // #################################################################################

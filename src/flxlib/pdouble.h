@@ -193,6 +193,8 @@ class qdouble {
       increase_it();
       return *this;
     }
+
+    size_t get_N() const { return c_total; }
 };
 
 /**

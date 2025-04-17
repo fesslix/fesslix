@@ -27,10 +27,10 @@
 
 #include <fstream>
 
-flxBayUp* FlxObjReadSuS::lastSuS = NULL;
+flxBayUp* FlxObjReadSuS::lastSuS = nullptr;
 FlxVoidBox<flx_sensi_s1o> sensi_s1o_box;
 
-
+FlxRndCreator* flxPyRV::RndCreator_ptr = nullptr;
 
 void FlxCreateObjReaders_RND::createObjReaders(FlxObjectReadBox* objReadBox) {
   objReadBox->insert("mci", new FlxObjReadMCI());
@@ -63,6 +63,323 @@ void FlxCreateObjReaders_RND::createFunReaders(FlxData* dataBox)
 
 
 // #################################################################################
+// random variables
+// #################################################################################
+
+RBRV_entry_RV_base * parse_py_obj_as_rv(py::dict config, const bool name_required, const tuint iID, const std::string family, std::string descr)
+{
+    RBRV_entry_RV_base* rv_ptr = nullptr;
+    // retrieve type
+        const std::string rv_type = parse_str_as_word(parse_py_para_as_string("type",config,true),true);
+    // retrieve name
+        std::string rv_name = family + parse_str_as_word(parse_py_para_as_string("name",config,name_required,"name_unspecified"),true);
+    // select rbrv-class based on type
+        if (rv_type=="stdn") {
+            rv_ptr = new RBRV_entry_RV_stdN(rv_name,iID,config);
+        } else if (rv_type=="normal") {
+            rv_ptr = new RBRV_entry_RV_normal(rv_name,iID,config);
+        } else if (rv_type=="logn") {
+            rv_ptr = new RBRV_entry_RV_lognormal(rv_name,iID,config);
+        } else if (rv_type=="uniform") {
+            rv_ptr = new RBRV_entry_RV_uniform(rv_name,iID,config);
+        // } else if (rv_type=="gumbel") {
+        //     rv_ptr = new RBRV_entry_read_Gumbel(rv_name,iID,config);
+        // } else if (rv_type=="normal_trunc") {
+        //     rv_ptr = new RBRV_entry_read_normal_trunc(rv_name,iID,config);
+        } else if (rv_type=="beta") {
+            rv_ptr = new RBRV_entry_RV_beta(rv_name,iID,config);
+        // } else if (rv_type=="exponential") {
+        //     rv_ptr = new RBRV_entry_read_exponential(rv_name,iID,config);
+        // } else if (rv_type=="gamma") {
+        //     rv_ptr = new RBRV_entry_read_gamma(rv_name,iID,config);
+        // } else if (rv_type=="poisson") {
+        //     rv_ptr = new RBRV_entry_read_Poisson(rv_name,iID,config);
+        // } else if (rv_type=="binomial") {
+        //     rv_ptr = new RBRV_entry_read_Binomial(rv_name,iID,config);
+        // } else if (rv_type=="cauchy") {
+        //     rv_ptr = new RBRV_entry_read_Cauchy(rv_name,iID,config);
+        // } else if (rv_type=="weibull") {
+        //     rv_ptr = new RBRV_entry_read_Weibull(rv_name,iID,config);
+        // } else if (rv_type=="chisquared") {
+        //     rv_ptr = new RBRV_entry_read_ChiSquared(true,rv_name,iID,config);
+        // } else if (rv_type=="chi") {
+        //     rv_ptr = new RBRV_entry_read_ChiSquared(false,rv_name,iID,config);
+        } else if (rv_type=="studentst") {
+            rv_ptr = new RBRV_entry_RV_StudentsT(rv_name,iID,config);
+        } else if (rv_type=="studentstgen") {
+            rv_ptr = new RBRV_entry_RV_StudentsT_generalized(rv_name,iID,config);
+        } else if (rv_type=="logt") {
+            rv_ptr = new RBRV_entry_RV_logt(rv_name,iID,config);
+        // } else if (rv_type=="laplace") {
+        //     rv_ptr = new RBRV_entry_read_Laplace(rv_name,iID,config);
+        // } else if (rv_type=="usertransform") {
+        //     rv_ptr = new RBRV_entry_read_UserTransform(rv_name,iID,config);
+        // } else if (rv_type=="truncated") {
+        //     rv_ptr = new RBRV_entry_read_Truncated(rv_name,iID,config);
+        // } else if (rv_type=="maxmintransform") {
+        //     rv_ptr = new RBRV_entry_read_maxminTransform(rv_name,iID,config);
+        // } else if (rv_type=="bayda") {
+        //     rv_ptr = new RBRV_entry_read_bayDA(rv_name,iID,config);
+        } else {
+            std::ostringstream ssV;
+            ssV << "Unknown random variable type '" << rv_type << "'.";
+            throw FlxException("flxPyRV::flxPyRV_50", ssV.str() );
+        }
+    return rv_ptr;
+}
+
+
+flxPyRV::flxPyRV(py::dict config)
+: rv_ptr(nullptr), mem_managed(true)
+{
+    rv_ptr_ = parse_py_obj_as_rv(config, false, 0, "", "flx.rv");
+    rv_ptr = rv_ptr_;
+}
+
+flxPyRV::flxPyRV(RBRV_entry* rv_ptr, const bool mem_managed)
+: rv_ptr(rv_ptr), rv_ptr_(dynamic_cast<RBRV_entry_RV_base*>(rv_ptr)), mem_managed(mem_managed)
+{
+
+}
+
+flxPyRV::flxPyRV(flxPyRV& rhs)
+: rv_ptr(rhs.rv_ptr), rv_ptr_(rhs.rv_ptr_), mem_managed(rhs.mem_managed)
+{
+    if (mem_managed) {
+        throw FlxException_NotImplemented("flxPyRV::flxPyRV(flxPyRV& rhs)");
+    }
+}
+
+flxPyRV::flxPyRV(flxPyRV&& rhs)
+: rv_ptr(rhs.rv_ptr), rv_ptr_(rhs.rv_ptr_), mem_managed(rhs.mem_managed)
+{
+    rhs.rv_ptr = nullptr;
+    rhs.rv_ptr_ = nullptr;
+    rhs.mem_managed = false;
+}
+
+flxPyRV::~flxPyRV()
+{
+    if (rv_ptr) {
+        if (mem_managed) {
+            delete rv_ptr;
+        }
+    }
+}
+
+void flxPyRV::ensure_is_a_basic_rv()
+{
+    if (rv_ptr_==nullptr) {
+        throw FlxException_NeglectInInteractive("flxPyRV::ensure_is_a_basic_rv", "'" + rv_ptr->name + "' is not a basic random variable.");
+    }
+}
+
+const std::string flxPyRV::get_name() const
+{
+    return rv_ptr->name;
+}
+
+const std::string flxPyRV::get_type() const
+{
+    return rv_ptr->get_type();
+}
+
+const tdouble flxPyRV::get_value() const
+{
+    return rv_ptr->get_value();
+}
+
+const tdouble flxPyRV::x2y(const tdouble x_val)
+{
+    rv_ptr->eval_para();
+    return rv_ptr->transform_x2y(x_val);
+}
+
+const tdouble flxPyRV::y2x(const tdouble y_val)
+{
+    ensure_is_a_basic_rv();
+    rv_ptr_->eval_para();
+    return rv_ptr_->transform_y2x(y_val);
+}
+
+const tdouble flxPyRV::sample()
+{
+    ensure_is_a_basic_rv();
+    rv_ptr_->eval_para();
+    const tdouble y = get_RndCreator().gen_smp();
+    return rv_ptr_->transform_y2x(y);
+}
+
+void flxPyRV::sample_array(py::array_t<tdouble> arr)
+{
+    ensure_is_a_basic_rv();
+    rv_ptr_->eval_para();
+
+    // Access the data as a raw pointer
+    py::buffer_info buf_info = arr.request();
+    tdouble* res_ptr = static_cast<tdouble*>(buf_info.ptr);
+
+    // Get the size of the input array
+    size_t size = buf_info.size;
+
+    // Generate the samples (in standard Normal space)
+    flxVec res_vec(res_ptr,size,false,false);
+    get_RndCreator().gen_smp(res_vec);
+
+    // transform the samples to original space
+    for (size_t i = 0; i < size; ++i) {
+        res_ptr[i] = rv_ptr_->transform_y2x(res_ptr[i]);    // TODO avoid re-evaluating the parameters of the random variable
+    }
+}
+
+const tdouble flxPyRV::pdf(const tdouble x_val, const bool safeCalc)
+{
+    rv_ptr->eval_para();
+    return rv_ptr->calc_pdf_x(x_val,safeCalc);
+}
+
+py::array_t<tdouble> flxPyRV::pdf_array(py::array_t<tdouble> arr, const bool safeCalc)
+{
+    rv_ptr->eval_para();
+    // Access the input data as a raw pointer
+    py::buffer_info buf_info = arr.request();
+    tdouble* input_ptr = static_cast<tdouble*>(buf_info.ptr);
+
+    // Get the size of the input array
+    size_t size = buf_info.size;
+
+    // Allocate memory for the return array
+    auto res_buf = py::array_t<tdouble>(size);
+
+    // Get the buffer info to access the underlying return data
+    py::buffer_info res_buf_info = res_buf.request();
+    tdouble* res_ptr = static_cast<tdouble*>(res_buf_info.ptr);
+
+    // Fill the array with values
+    for (size_t i = 0; i < size; ++i) {
+        res_ptr[i] = rv_ptr->calc_pdf_x(input_ptr[i],safeCalc);    // TODO avoid re-evaluating the parameters of the random variable
+    }
+
+    // Return the array
+    return res_buf;
+}
+
+const tdouble flxPyRV::pdf_log(const tdouble x_val, const bool safeCalc)
+{
+    rv_ptr->eval_para();
+    return rv_ptr->calc_pdf_x_log(x_val,safeCalc);
+}
+
+const tdouble flxPyRV::cdf(const tdouble x_val, const bool safeCalc)
+{
+    rv_ptr->eval_para();
+    return rv_ptr->calc_cdf_x(x_val,safeCalc);
+}
+
+py::array_t<tdouble> flxPyRV::cdf_array(py::array_t<tdouble> arr, const bool safeCalc)
+{
+    rv_ptr->eval_para();
+
+    // Access the input data as a raw pointer
+    py::buffer_info buf_info = arr.request();
+    tdouble* input_ptr = static_cast<tdouble*>(buf_info.ptr);
+
+    // Get the size of the input array
+    size_t size = buf_info.size;
+
+    // Allocate memory for the return array
+    auto res_buf = py::array_t<tdouble>(size);
+
+    // Get the buffer info to access the underlying return data
+    py::buffer_info res_buf_info = res_buf.request();
+    tdouble* res_ptr = static_cast<tdouble*>(res_buf_info.ptr);
+
+    // Fill the array with values
+    for (size_t i = 0; i < size; ++i) {
+        res_ptr[i] = rv_ptr->calc_cdf_x(input_ptr[i],safeCalc);    // TODO avoid re-evaluating the parameters of the random variable
+    }
+
+    // Return the array
+    return res_buf;
+
+
+}
+
+const tdouble flxPyRV::icdf(const tdouble p)
+{
+    ensure_is_a_basic_rv();
+    rv_ptr_->eval_para();
+    const tdouble y = rv_InvPhi_noAlert( p );
+    return rv_ptr_->transform_y2x(y);
+}
+
+const tdouble flxPyRV::sf(const tdouble x_val, const bool safeCalc)
+{
+    rv_ptr->eval_para();
+    return rv_ptr->calc_sf_x(x_val,safeCalc);
+}
+
+const tdouble flxPyRV::entropy()
+{
+    rv_ptr->eval_para();
+    return rv_ptr->calc_entropy();
+}
+
+const tdouble flxPyRV::mean()
+{
+    rv_ptr->eval_para();
+    return rv_ptr->get_mean_current_config();
+}
+
+const tdouble flxPyRV::sd()
+{
+    rv_ptr->eval_para();
+    return rv_ptr->get_sd_current_config();
+}
+
+const tdouble flxPyRV::median()
+{
+    rv_ptr->eval_para();
+    return rv_ptr->get_median_current_config();
+}
+
+const tdouble flxPyRV::mode()
+{
+    rv_ptr->eval_para();
+    return rv_ptr->get_mode_current_config();
+}
+
+const bool flxPyRV::check_x(const tdouble xV)
+{
+    rv_ptr->eval_para();
+    return rv_ptr->check_x(xV);
+}
+
+const tdouble flxPyRV::get_HPD(const tdouble p)
+{
+    ensure_is_a_basic_rv();
+    rv_ptr_->eval_para();
+    return rv_ptr_->get_HPD(p);
+}
+
+py::dict flxPyRV::info()
+{
+    rv_ptr->eval_para();
+    return rv_ptr->info();
+}
+
+FlxRndCreator& flxPyRV::get_RndCreator()
+{
+  if (RndCreator_ptr) {
+    return *RndCreator_ptr;
+  } else {
+    throw FlxException("flxPyRV::get_RndCreator","Please start the engine.");
+  }
+}
+
+
+
+// #################################################################################
 // post-processors
 // #################################################################################
 
@@ -87,6 +404,109 @@ py::dict post_proc_mean_double::eval()
     return res;
 }
 
+post_proc_mean_pdouble::post_proc_mean_pdouble(const tuint colID)
+: N(0), colID(colID)
+{
+
+}
+
+void post_proc_mean_pdouble::append_data(const flxVec& vec_full)
+{
+  sum += vec_full[colID];
+  ++N;
+}
+
+py::dict post_proc_mean_pdouble::eval()
+{
+    py::dict res;
+    res["N"] = N;
+    res["mean"] = sum.cast2double()/N;
+
+    return res;
+}
+
+post_proc_mean_qdouble::post_proc_mean_qdouble(const tuint colID, const size_t NpV,const bool ppb)
+: sum(NpV,ppb), colID(colID)
+{
+
+}
+
+void post_proc_mean_qdouble::append_data(const flxVec& vec_full)
+{
+  sum += vec_full[colID];
+}
+
+py::dict post_proc_mean_qdouble::eval()
+{
+    py::dict res;
+    res["mean"] = sum.get_average();
+    res["N"] = sum.get_N();
+    return res;
+}
+
+post_proc_mean_vdouble::post_proc_mean_vdouble(const tuint colID)
+: colID(colID)
+{
+
+}
+
+void post_proc_mean_vdouble::append_data(const flxVec& vec_full)
+{
+  sum += vec_full[colID];
+}
+
+py::dict post_proc_mean_vdouble::eval()
+{
+    py::dict res;
+    const tdouble mu = sum.get_mean();
+    res["mean"] = mu;
+    const tdouble var = sum.get_variance();
+    res["var"] = var;
+    const tdouble sd  = sqrt(var);
+    res["sd"] = sd;
+    const size_t N = sum.get_size();
+    res["N"] = N;
+    // assembe distribution of mean
+      py::dict rv_mean_config;
+      rv_mean_config["dof"] = tdouble(N)-ONE;
+      rv_mean_config["loc"] = mu;
+      rv_mean_config["scale"] = sd;
+      rv_mean_config["eval_once"] = true;
+      RBRV_entry_RV_StudentsT_generalized* rv_mean = new RBRV_entry_RV_StudentsT_generalized("unspecified",0,rv_mean_config);
+      res["rv_mean"] = flxPyRV(rv_mean,true);
+    return res;
+}
+
+post_proc_mean_reliability::post_proc_mean_reliability(const tuint colID)
+: N(0), H(0), colID(colID)
+{
+
+}
+
+void post_proc_mean_reliability::append_data(const flxVec& vec_full)
+{
+  ++N;
+  if (vec_full[colID]<=ZERO) {
+    ++H;
+  }
+}
+
+py::dict post_proc_mean_reliability::eval()
+{
+    py::dict res;
+    res["N"] = N;
+    res["H"] = H;
+    res["mean_freq"] = tdouble(H)/tdouble(N);
+    // assembe distribution of pf
+      py::dict rv_pf_config;
+      rv_pf_config["alpha"] = tdouble(H)+ONE;
+      rv_pf_config["beta"] = tdouble(N-H)+ONE;
+      rv_pf_config["eval_once"] = true;
+      RBRV_entry_RV_beta* rv_pf = new RBRV_entry_RV_beta("unspecified",0,rv_pf_config);
+      res["rv_pf"] = flxPyRV(rv_pf,true);
+    res["mean_bayes"] = rv_pf->get_mean_current_config();
+    return res;
+}
 
 // #################################################################################
 // dataBox
@@ -355,6 +775,20 @@ post_proc_base& flxDataBox::register_post_processor(py::dict config)
       if (pp_type=="mean_double") {
         const tuint colID = extract_colID_(config);
         pp_ptr = new post_proc_mean_double(colID);
+      } else if (pp_type=="mean_pdouble") {
+        const tuint colID = extract_colID_(config);
+        pp_ptr = new post_proc_mean_pdouble(colID);
+      } else if (pp_type=="mean_qdouble") {
+        const tuint colID = extract_colID_(config);
+        const tuint NpV = parse_py_para_as_tuintNo0("NpV",config,false,10000000);
+        const bool ppb = parse_py_para_as_bool("bbp",config,false,false);
+        pp_ptr = new post_proc_mean_qdouble(colID,NpV,ppb);
+      } else if (pp_type=="vdouble") {
+        const tuint colID = extract_colID_(config);
+        pp_ptr = new post_proc_mean_vdouble(colID);
+      } else if (pp_type=="reliability") {
+        const tuint colID = extract_colID_(config);
+        pp_ptr = new post_proc_mean_reliability(colID);
       } else {
         throw FlxException("flxDataBox::register_post_processor_99","Unknown type ('" + pp_type + "' for post-processor.");
       }

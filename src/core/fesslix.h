@@ -101,6 +101,7 @@ void flxengine_unload();
 void check_engine_state();
 
 FesslixMain& FlxEngine();
+FesslixMain* get_FlxEngine_ptr();
 /**
 * @brief must be executed after flxengine_unload
 */

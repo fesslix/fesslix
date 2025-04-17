@@ -18,6 +18,7 @@
 #define fesslix_fesslix_CPP
 
 #include "fesslix.h"
+#include "flxobjrandom.h"
 #include "flxobjrbrv.h"
 #include "flxobjmtx.h"
 #include "flxdefault.h"
@@ -70,6 +71,7 @@ FesslixMain::FesslixMain() : initialized(false)
     funReader = new FlxFunctionReader();
       FlxReadManager::set_funReader(funReader);
     set_ReadManager(&(dataBox.ReadManager));
+  flxPyRV::RndCreator_ptr = &(dataBox.RndCreator);
   // FlxObjReadLoadLib::AddOnManager = &AddOnManager;
 
   // create the evaluation class
@@ -87,6 +89,7 @@ FesslixMain::FesslixMain() : initialized(false)
       load_FlxReaders( new FlxCreateObjReaders_RBRV() );
     // FlxString Objects
       load_FlxReaders( new FlxCreateObjReaders_FlxString() );
+
 }
 
 void FesslixMain::initialize(const ostreamp coutV, const ostreamp cerrV, const string& gaussFile)
@@ -328,6 +331,12 @@ FesslixMain& FlxEngine()
   check_engine_state();
   return *FlxEngine_ptr;
 }
+
+FesslixMain* get_FlxEngine_ptr()
+{
+  return FlxEngine_ptr;
+}
+
 
 const int flxengine_init()
 {

@@ -27,6 +27,62 @@ class FLXLIB_EXPORT FlxCreateObjReaders_RND : public FlxCreateObjReaders {
 };
 
 // #################################################################################
+// random variables
+// #################################################################################
+
+PYBIND11_EXPORT RBRV_entry_RV_base* parse_py_obj_as_rv(py::dict config, const bool name_required, const tuint iID, const std::string family, std::string descr);
+
+class PYBIND11_EXPORT flxPyRV {
+  private:
+    RBRV_entry* rv_ptr;
+    RBRV_entry_RV_base* rv_ptr_;
+    bool mem_managed;
+
+    void ensure_is_a_basic_rv();
+  public:
+    flxPyRV(py::dict config);
+    flxPyRV(RBRV_entry* rv_ptr, const bool mem_managed=false);
+    flxPyRV() = delete;
+    flxPyRV(flxPyRV& rhs);
+    flxPyRV(flxPyRV&& rhs);
+    ~flxPyRV();
+
+    flxPyRV& operator=(const flxPyRV& rhs) = delete;
+
+    const std::string get_name() const;
+    const std::string get_type() const;
+    const tdouble get_value() const;
+    const tdouble x2y(const tdouble x_val);
+    const tdouble y2x(const tdouble y_val);
+
+    const tdouble sample();
+    void sample_array(py::array_t<tdouble> arr);
+
+    const tdouble pdf(const tdouble x_val, const bool safeCalc);
+    py::array_t<tdouble> pdf_array(py::array_t<tdouble> arr, const bool safeCalc);
+
+    const tdouble pdf_log(const tdouble x_val, const bool safeCalc);
+
+    const tdouble cdf(const tdouble x_val, const bool safeCalc);
+    py::array_t<tdouble> cdf_array(py::array_t<tdouble> arr, const bool safeCalc);
+
+    const tdouble icdf(const tdouble p);
+    const tdouble sf(const tdouble x_val, const bool safeCalc);
+    const tdouble entropy();
+    const tdouble mean();
+    const tdouble sd();
+    const tdouble median();
+    const tdouble mode();
+    const bool check_x(const tdouble xV);
+    const tdouble get_HPD(const tdouble p);
+    py::dict info();
+
+    static FlxRndCreator& get_RndCreator();
+    static FlxRndCreator* RndCreator_ptr;
+};
+
+
+// #################################################################################
 // post-processors
 // #################################################################################
 
@@ -50,6 +106,53 @@ class PYBIND11_EXPORT post_proc_mean_double : public post_proc_base {
     virtual void append_data(const flxVec& vec_full);
     virtual py::dict eval();
 };
+
+class PYBIND11_EXPORT post_proc_mean_pdouble : public post_proc_base {
+  private:
+    pdouble sum;
+    tulong N;
+    const tuint colID;
+  public:
+    post_proc_mean_pdouble(const tuint colID);
+
+    virtual void append_data(const flxVec& vec_full);
+    virtual py::dict eval();
+};
+
+class PYBIND11_EXPORT post_proc_mean_qdouble : public post_proc_base {
+  private:
+    qdouble sum;
+    const tuint colID;
+  public:
+    post_proc_mean_qdouble(const tuint colID, const size_t NpV,const bool ppb);
+
+    virtual void append_data(const flxVec& vec_full);
+    virtual py::dict eval();
+};
+
+class PYBIND11_EXPORT post_proc_mean_vdouble : public post_proc_base {
+  private:
+    vdouble sum;
+    const tuint colID;
+  public:
+    post_proc_mean_vdouble(const tuint colID);
+
+    virtual void append_data(const flxVec& vec_full);
+    virtual py::dict eval();
+};
+
+class PYBIND11_EXPORT post_proc_mean_reliability : public post_proc_base {
+  private:
+    tulong N;  // total number of samples
+    tulong H;  // number of hits (failed samples)
+    const tuint colID;
+  public:
+    post_proc_mean_reliability(const tuint colID);
+
+    virtual void append_data(const flxVec& vec_full);
+    virtual py::dict eval();
+};
+
 
 
 // #################################################################################

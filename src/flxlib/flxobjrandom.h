@@ -26,6 +26,30 @@ class FLXLIB_EXPORT FlxCreateObjReaders_RND : public FlxCreateObjReaders {
     void createFunReaders (FlxData* dataBox );
 };
 
+// #################################################################################
+// post-processors
+// #################################################################################
+
+class PYBIND11_EXPORT post_proc_base {
+  public:
+    virtual ~post_proc_base() {}
+    post_proc_base& operator=(const post_proc_base& rhs) = delete;
+
+    virtual void append_data(const flxVec& vec_full) = 0;
+    virtual py::dict eval() = 0;
+};
+
+class PYBIND11_EXPORT post_proc_mean_double : public post_proc_base {
+  private:
+    tdouble sum;
+    tulong N;
+    const tuint colID;
+  public:
+    post_proc_mean_double(const tuint colID);
+
+    virtual void append_data(const flxVec& vec_full);
+    virtual py::dict eval();
+};
 
 
 // #################################################################################
@@ -53,9 +77,12 @@ class PYBIND11_EXPORT flxDataBox {
       tfloat* mem_ptr;
       tuint mem_N_col;
       tuint* mem_cols;
+    // for managing post-processors
+      std::vector<post_proc_base*> pp_vec;
 
     tuint* process_col_input(tuint& N_col, py::dict config);
-
+    const tuint extract_colID(py::object col);
+    const tuint extract_colID_(py::dict config);
   public:
     flxDataBox(const tuint M_in, const tuint M_out);
     flxDataBox() = delete;
@@ -64,27 +91,34 @@ class PYBIND11_EXPORT flxDataBox {
 
     flxDataBox& operator=(const flxDataBox& rhs) = delete;
 
-    void write2mem(py::dict config);
-    py::array_t<tfloat> extract_col_from_mem(py::object obj);
-    void free_mem();
+    // for storing data in memory
+      void write2mem(py::dict config);
+      py::array_t<tfloat> extract_col_from_mem(py::object col);
+      void free_mem();
 
-    void write2file(py::dict config);
-    void close_file();
+    // for writing into a file
+      void write2file(py::dict config);
+      void close_file();
 
-    const tuint get_M_in() const { return M_in; }
-    const tuint get_M_out() const { return M_out; }
-    /**
-    * @brief ensure M == M_
-    */
-    void ensure_M(const tuint M_) const;
-    /**
-    * @brief ensure M_in == M_
-    */
-    void ensure_M_in(const tuint M_) const;
-    /**
-    * @brief ensure M_in == M_
-    */
-    void ensure_M_out(const tuint M_) const;
+    // for managing post-processors
+      post_proc_base& register_post_processor(py::dict config);
+
+    // for consistency checks
+      const tuint get_M_in() const { return M_in; }
+      const tuint get_M_out() const { return M_out; }
+      /**
+      * @brief ensure M == M_
+      */
+      void ensure_M(const tuint M_) const;
+      /**
+      * @brief ensure M_in == M_
+      */
+      void ensure_M_in(const tuint M_) const;
+      /**
+      * @brief ensure M_in == M_
+      */
+      void ensure_M_out(const tuint M_) const;
+
     /**
     * @brief registers a data point in the box
     *

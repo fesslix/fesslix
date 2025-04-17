@@ -1517,6 +1517,9 @@ PYBIND11_MODULE(core, m) {
     // ====================================================
     // dataBox
     // ====================================================
+        py::class_<post_proc_base>(m, "postProc")
+            .def("eval", &post_proc_base::eval,"retrieve the state of the post-processor")
+            ;
         py::class_<flxDataBox>(m, "dataBox")
             .def(py::init<tuint, tuint>())
             .def("write2mem", &flxDataBox::write2mem, "allocate memory for storing data")
@@ -1524,6 +1527,7 @@ PYBIND11_MODULE(core, m) {
             .def("free_mem", &flxDataBox::free_mem, "free the allocated memory for storing data")
             .def("write2file", &flxDataBox::write2file, "send samples to a file")
             .def("close_file", &flxDataBox::close_file, "close the file stream")
+            .def("register_post_processor", &flxDataBox::register_post_processor, py::return_value_policy::reference_internal, "register a new post-processor")
             ;
 
     // ====================================================

@@ -63,6 +63,32 @@ void FlxCreateObjReaders_RND::createFunReaders(FlxData* dataBox)
 
 
 // #################################################################################
+// post-processors
+// #################################################################################
+
+post_proc_mean_double::post_proc_mean_double(const tuint colID)
+: sum(ZERO), N(0), colID(colID)
+{
+
+}
+
+void post_proc_mean_double::append_data(const flxVec& vec_full)
+{
+  sum += vec_full[colID];
+  ++N;
+}
+
+py::dict post_proc_mean_double::eval()
+{
+    py::dict res;
+    res["N"] = N;
+    res["mean"] = sum/N;
+
+    return res;
+}
+
+
+// #################################################################################
 // dataBox
 // #################################################################################
 
@@ -79,7 +105,11 @@ flxDataBox::flxDataBox(const tuint M_in, const tuint M_out)
 
 flxDataBox::~flxDataBox()
 {
+  free_mem();
   close_file();
+  for (post_proc_base* pp_ptr : pp_vec) {
+      if (pp_ptr) delete pp_ptr;
+  }
 }
 
 void flxDataBox::ensure_M(const tuint M_) const
@@ -134,6 +164,10 @@ void flxDataBox::append_data()
       ++mem_N;
     }
 
+  // handle post-processors
+    for (post_proc_base* pp_ptr : pp_vec) {
+        pp_ptr->append_data(vec_full);
+    }
 }
 
 tuint * flxDataBox::process_col_input(tuint& N_col, py::dict config)
@@ -197,6 +231,28 @@ tuint * flxDataBox::process_col_input(tuint& N_col, py::dict config)
   return col_ptr;
 }
 
+const tuint flxDataBox::extract_colID(py::object col)
+{
+  tuint colID = 0;
+  // type: dict
+    // TODO
+  // type: tuint
+    colID = parse_py_obj_as_tuint(col, "Value of key 'cols' in <dict> config.");
+    if (colID>=M) {
+      throw FlxException("flxDataBox::extract_col_from_mem", "colID exceeds dimension of data-points.");
+    }
+  return colID;
+}
+
+const tuint flxDataBox::extract_colID_(py::dict config)
+{
+  if (config.contains("col")) {
+    return extract_colID(config["col"]);
+  } else {
+    throw FlxException("flxDataBox::extract_colID_", "'col' not in <dict> 'config'.");
+  }
+}
+
 void flxDataBox::write2mem(py::dict config)
 {
   // checks
@@ -213,10 +269,7 @@ void flxDataBox::write2mem(py::dict config)
 
 py::array_t<tfloat> flxDataBox::extract_col_from_mem(py::object col)
 {
-  const tuint colID = parse_py_obj_as_tuint(col, "Value of key 'cols' in <dict> config.");
-  if (colID>=M) {
-    throw FlxException("flxDataBox::extract_col_from_mem", "colID exceeds dimension of data-points.");
-  }
+  const tuint colID = extract_colID(col);
   tfloat* mem_ptr_pos = mem_ptr + colID*mem_N_reserved;
   return py_wrap_array_no_ownership<tfloat>(mem_ptr_pos,mem_N);
 }
@@ -278,6 +331,28 @@ void flxDataBox::close_file()
       delete [] fs_cols;
       fs_cols = nullptr;
     }
+}
+
+post_proc_base& flxDataBox::register_post_processor(py::dict config)
+{
+  // extract type from config
+    const std::string pp_type = parse_py_para_as_word("type",config,true,true);
+  // define the post-processor
+    post_proc_base* pp_ptr = nullptr;
+    try {
+      if (pp_type=="mean_double") {
+        const tuint colID = extract_colID_(config);
+        pp_ptr = new post_proc_mean_double(colID);
+      } else {
+        throw FlxException("flxDataBox::register_post_processor_99","Unknown type ('" + pp_type + "' for post-processor.");
+      }
+    } catch (FlxException& e) {
+      if (pp_ptr) delete pp_ptr;
+      throw;
+    }
+  // append it to pp_vec
+    pp_vec.push_back(pp_ptr);
+  return *pp_ptr;
 }
 
 

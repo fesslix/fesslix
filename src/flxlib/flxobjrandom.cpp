@@ -235,13 +235,25 @@ const tuint flxDataBox::extract_colID(py::object col)
 {
   tuint colID = 0;
   // type: dict
-    // TODO
+    if (py::isinstance<py::dict>(col)) {
+      py::dict dict = py::cast<py::dict>(col);
+      const std::string set_str = parse_py_para_as_word("set",dict,true,true);
+      const tuint id = parse_py_para_as_tuint("id",dict,true);
+      if (set_str=="full") colID=id;
+      else if (set_str=="out") colID=id;
+      else if (set_str=="in") colID=id+M_out;
+      else {
+        throw FlxException("flxDataBox::extract_colID_01","Unknown keyword in 'set'");
+      }
   // type: tuint
-    colID = parse_py_obj_as_tuint(col, "Value of key 'cols' in <dict> config.");
-    if (colID>=M) {
-      throw FlxException("flxDataBox::extract_col_from_mem", "colID exceeds dimension of data-points.");
+    } else {
+      colID = parse_py_obj_as_tuint(col, "Value of key 'cols' in <dict> config.");
     }
-  return colID;
+  // check for consistency
+    if (colID>=M) {
+      throw FlxException("flxDataBox::extract_colID_99", "colID exceeds dimension of data-points.");
+    }
+    return colID;
 }
 
 const tuint flxDataBox::extract_colID_(py::dict config)

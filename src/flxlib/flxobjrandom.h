@@ -27,7 +27,73 @@ class FLXLIB_EXPORT FlxCreateObjReaders_RND : public FlxCreateObjReaders {
 };
 
 
+
+// #################################################################################
+// dataBox
+// #################################################################################
+
+class PYBIND11_EXPORT flxDataBox {
+  private:
+    const tuint M_in;         // dimension of model input
+    const tuint M_out;        // dimension of model output
+    const tuint M;            // total dimension (M_in+M_out)
+  public:
+    flxVec vec_full;
+    flxVec vec_out;
+    flxVec vec_in;
+  private:
+    // for writing into a file
+      std::ofstream *fstream;
+      tuint fs_N_col;
+      tuint* fs_cols;
+      bool fs_binary;
+
+  public:
+    flxDataBox(const tuint M_in, const tuint M_out);
+    flxDataBox() = delete;
+    flxDataBox(flxDataBox& rhs) = delete;
+    ~flxDataBox();
+
+    flxDataBox& operator=(const flxDataBox& rhs) = delete;
+
+    void write2file(py::dict config);
+    void close_file();
+
+    const tuint get_M_in() const { return M_in; }
+    const tuint get_M_out() const { return M_out; }
+    /**
+    * @brief ensure M_in == M
+    */
+    void ensure_M_in(const tuint M) const;
+    /**
+    * @brief ensure M_in == M
+    */
+    void ensure_M_out(const tuint M) const;
+    /**
+    * @brief registers a data point in the box
+    *
+    * @note before calling this function, the input/output needs to be assigned to vec_full or (vec_out & vec_in) !!!
+    */
+    void append_data();
+
+
+};
+
+
+
+
 //======================== Monte Carlo Integration ===========================
+
+
+/**
+* @brief perform a Monte Carlo Simulation
+* @param N number of samples
+* @param model the model to sample
+* @param sampler for generating samples
+* @return Python dictionary with results of the Monte Carlo simulation
+*/
+FLXLIB_EXPORT void flx_perform_MCS(const tulong N, FlxMtxFun_base& model, RBRV_constructor& sampler, flxDataBox& dbox);
+
 
 /**
 * @brief object class: Monte Carlo Integration

@@ -20,6 +20,8 @@
 #include "flxfunction_data.h"
 #include "flxrbrv_rvs_read.h"
 #include "flxobjrbrv.h"
+#include "flxobjrandom.h"
+
 
 #include <iostream>
 
@@ -1340,6 +1342,18 @@ const tuint flxPySampler::get_NOX() const
     return RndBox->get_NOX();
 }
 
+void flxPySampler::perform_MCS(const tulong N, py::object vfun, flxDataBox& dbox)
+{
+    const tuint M_out = dbox.get_M_out();
+    FlxMtxFun_base* model = parse_FlxMtxFun(M_out, vfun, "parameter 'model' in flx.sampler.perform_MCS");
+    try {
+        flx_perform_MCS(N, *model, *RndBox, dbox);
+    } catch (FlxException& e) {
+        delete model;
+        throw;
+    }
+}
+
 
 // #################################################################################
 // advanced features
@@ -1496,7 +1510,18 @@ PYBIND11_MODULE(core, m) {
             .def(py::init<py::list>())
             .def("sample", &flxPySampler::sample, "generate a random sample for a collection of sets of random variables")
             .def("get_NRV", &flxPySampler::get_NRV, "return number of random variables (in standard Normal space) in the collection of random variables")
-            .def("get_NOX", &flxPySampler::get_NOX, "return number of random variables (in original space) in the collection of random variables");
+            .def("get_NOX", &flxPySampler::get_NOX, "return number of random variables (in original space) in the collection of random variables")
+            .def("perform_MCS", &flxPySampler::perform_MCS, "perform a Monte Carlo simulation")
+            ;
+
+    // ====================================================
+    // dataBox
+    // ====================================================
+        py::class_<flxDataBox>(m, "dataBox")
+            .def(py::init<tuint, tuint>())
+            .def("write2file", &flxDataBox::write2file, "send samples to a file")
+            .def("close_file", &flxDataBox::close_file, "close the file stream")
+            ;
 
     // ====================================================
     // Advanced features

@@ -101,7 +101,9 @@ class FLXLIB_EXPORT FlxMtxFun_base {
     virtual ~FlxMtxFun_base() {}
     virtual void eval() = 0;
 
-    const flxVec& get_res_vec() { return res_vec; };
+    const flxVec& get_res_vec() const { return res_vec; };
+    const tdouble* const get_res_ptr() const { return res_vec.get_tmp_vptr_const(); }
+    const tuint get_N() const { return res_vec.get_N(); }
 };
 
 class FLXLIB_EXPORT FlxMtxFun_const : public FlxMtxFun_base {

@@ -25,6 +25,7 @@
 #include "flxBayUp_obj.h"
 #include "flxsensi.h"
 
+#include <fstream>
 
 flxBayUp* FlxObjReadSuS::lastSuS = NULL;
 FlxVoidBox<flx_sensi_s1o> sensi_s1o_box;
@@ -59,6 +60,172 @@ void FlxCreateObjReaders_RND::createFunReaders(FlxData* dataBox)
   dataBox->FunBox.insert("cdf_smp", new FunReadFunSmpCDF() );
   dataBox->FunBox.insert("sensi_s1o_eval", new FunReadFunSensi_s1o_eval() );
 }
+
+
+// #################################################################################
+// dataBox
+// #################################################################################
+
+flxDataBox::flxDataBox(const tuint M_in, const tuint M_out)
+: M_in(M_in), M_out(M_out), M(M_in+M_out),
+    vec_full(M_in+M_out),
+    vec_out(vec_full.get_tmp_vptr(),M_out),
+    vec_in(vec_full.get_tmp_vptr()+M_out,M_in),
+    fstream(nullptr), fs_N_col(0), fs_cols(nullptr), fs_binary(true)
+{
+
+}
+
+flxDataBox::~flxDataBox()
+{
+  close_file();
+}
+
+void flxDataBox::ensure_M_in(const tuint M) const
+{
+  if (M!=M_in) {
+    throw FlxException("flxDataBox::ensure_M_in", "Mismatch in dimension of input vector.");
+  }
+}
+
+void flxDataBox::ensure_M_out(const tuint M) const
+{
+  if (M!=M_out) {
+    throw FlxException("flxDataBox::ensure_M_out", "Mismatch in dimension of output vector.");
+  }
+}
+
+void flxDataBox::append_data()
+{
+  // write to file
+    if (fstream) {
+      if (fs_binary) {
+        for (tuint i=0;i<fs_N_col;++i) {
+          const float value = vec_full[fs_cols[i]];
+          fstream->write(reinterpret_cast<const char*>(&value), sizeof(float));
+        }
+      } else {
+        for (tuint i=0;i<fs_N_col;++i) {
+          if (i>0) (*fstream) << ", ";
+          (*fstream) << GlobalVar.Double2String(vec_full[fs_cols[i]]);
+        }
+        (*fstream) << std::endl;
+      }
+    }
+}
+
+void flxDataBox::write2file(py::dict config)
+{
+  // checks
+    if (fstream) {
+      throw FlxException("flxDataBox::write2file_01","The dataBox is already linked to an output stream.");
+    }
+  // extract config from dict
+    const std::string fname = parse_py_para_as_string("fname",config,true);
+    const bool append = parse_py_para_as_bool("append",config,false,true);
+    fs_binary = parse_py_para_as_bool("binary",config,false,true);
+  // open file
+    if ( append ) {
+      fstream = new std::ofstream(fname.c_str(), std::ios_base::out | std::ios_base::binary | std::ios_base::app );
+    } else {
+      fstream = new std::ofstream(fname.c_str(), std::ios_base::out | std::ios_base::binary );
+    }
+  try {
+    // ensure file is open
+      if ( fstream == nullptr || ! fstream->is_open() ) {
+        std::ostringstream ssV;
+        ssV << "File (" << fname << ") could not be opened.";
+        throw FlxException("flxDataBox::write2file_02", ssV.str() );
+      }
+    // assign columns to write
+      std::string col_str = "all";
+      if (config.contains("cols")) {
+        py::object obj = config["cols"];
+        if (py::isinstance<py::list>(obj)) {
+          // columns provided as list
+            py::list col_lst = obj.cast<py::list>();
+            fs_N_col = col_lst.size();
+            fs_cols = new tuint[fs_N_col];
+            for (tuint i=0;i<fs_N_col;++i) {
+              const tuint col_id = col_lst[i].cast<tuint>();
+              if (col_id>=M) {
+                  std::ostringstream ssV;
+                  ssV << "ID of column (" << col_id << ") must be smaller than " << M;
+                  throw FlxException("flxDataBox::write2file_02", ssV.str());
+              }
+              fs_cols[i] = col_id;
+            }
+        } else {
+          // columns provided as string
+            col_str = parse_py_obj_as_string(obj,"flxDataBox::write2file_03");
+        }
+      }
+      if (fs_cols==nullptr) {
+        // process string
+          if (col_str=="all") {
+            fs_N_col = M;
+            fs_cols = new tuint[fs_N_col];
+            for (tuint i=0;i<fs_N_col;++i) {
+              fs_cols[i] = i;
+            }
+          } else if (col_str=="all_in") {
+            fs_N_col = M_in;
+            fs_cols = new tuint[fs_N_col];
+            for (tuint i=0;i<fs_N_col;++i) {
+              fs_cols[i] = i+M_out;
+            }
+          } else if (col_str=="all_out") {
+            fs_N_col = M_out;
+            fs_cols = new tuint[fs_N_col];
+            for (tuint i=0;i<fs_N_col;++i) {
+              fs_cols[i] = i;
+            }
+          } else {
+             throw FlxException("flxDataBox::write2file_04", "Unknown keyword for 'col': " + col_str);
+          }
+      }
+  } catch (FlxException& e) {
+    // close file
+    close_file();
+    throw;
+  }
+}
+
+void flxDataBox::close_file()
+{
+    if (fstream) {
+      delete fstream;
+      fstream = nullptr;
+    }
+    fs_N_col = 0;
+    if (fs_cols) {
+      delete [] fs_cols;
+      fs_cols = nullptr;
+    }
+}
+
+
+
+//======================== Monte Carlo Integration ===========================
+
+void flx_perform_MCS(const tulong N, FlxMtxFun_base& model, RBRV_constructor& sampler, flxDataBox& dbox)
+{
+  flxVec& vec_out = dbox.vec_out;
+  flxVec& vec_in = dbox.vec_in;
+  tdouble* ptr_in = vec_in.get_tmp_vptr();
+  // consistency checks
+    dbox.ensure_M_in(sampler.get_NOX());
+    dbox.ensure_M_out(model.get_N());
+  // perform the Monte Carlo simulation
+    for (tulong i=0;i<N;++i) {
+      sampler.gen_smp();
+      model.eval();
+      vec_out = model.get_res_vec();
+      sampler.get_x_Vec(ptr_in);
+      dbox.append_data();
+    }
+}
+
 
 void FlxObjMCI::FirstThingsFirst(RBRV_constructor& RndBox)
 {

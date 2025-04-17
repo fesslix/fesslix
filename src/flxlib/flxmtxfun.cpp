@@ -314,7 +314,7 @@ FlxMtxFun_Py::FlxMtxFun_Py(const tuint N, py::function pyfunc, const bool has_ar
 : FlxMtxFun_base(N), pyfunc(pyfunc), has_arg(has_arg)
 {
   if (has_arg) {
-    py_array = py_wrap_array_no_ownership(res_vec.get_tmp_vptr(),N);
+    py_array = py_wrap_array_no_ownership<tdouble>(res_vec.get_tmp_vptr(),N);
   }
 }
 

@@ -53,14 +53,19 @@ const bool parse_py_para_as_bool(const std::string& para_name, py::dict config, 
   }
 }
 
+const tuint parse_py_obj_as_tuint(py::object obj, std::string descr)
+{
+    try {
+      return py::cast<tuint>(obj);
+    } catch (const py::cast_error &e) {
+      throw FlxException_NeglectInInteractive("parse_py_obj_as_tuint", descr + " cannot be cast into type 'unsigned int'.");
+    }
+}
+
 const tuint parse_py_para_as_tuint(const std::string& para_name, py::dict config, const bool required, const tuint def_val)
 {
   if (config.contains(para_name.c_str())) {
-    try {
-      return py::cast<tuint>(config[para_name.c_str()]);
-    } catch (const py::cast_error &e) {
-      throw FlxException_NeglectInInteractive("parse_py_para_as_tuint_01", "Key '"+para_name+"' in Python <dict> cannot be cast into type 'unsigned int'.");
-    }
+    return parse_py_obj_as_tuint(config[para_name.c_str()],"Key '"+para_name+"' in Python <dict>");
   } else {
     if (required) {
       throw FlxException_NeglectInInteractive("parse_py_para_as_tuint_02", "Key '" + para_name + "' not found in Python <dict>.");
@@ -79,6 +84,22 @@ const tuint parse_py_para_as_tuintNo0(const std::string& para_name, py::dict con
   return val;
 }
 
+const tuint parse_py_para_as_tulong(const std::string& para_name, py::dict config, const bool required, const tuint def_val)
+{
+  if (config.contains(para_name.c_str())) {
+    try {
+      return py::cast<tulong>(config[para_name.c_str()]);
+    } catch (const py::cast_error &e) {
+      throw FlxException_NeglectInInteractive("parse_py_para_as_tulong_01", "Key '"+para_name+"' in Python <dict> cannot be cast into type 'unsigned long'.");
+    }
+  } else {
+    if (required) {
+      throw FlxException_NeglectInInteractive("parse_py_para_as_tulong_02", "Key '" + para_name + "' not found in Python <dict>.");
+    } else {
+      return def_val;
+    }
+  }
+}
 
 const tdouble parse_py_para_as_float(const std::string& para_name, py::dict config, const bool required, const tdouble def_val)
 {
@@ -279,7 +300,8 @@ FlxObjBase* parse_code(py::object pyobj, std::string descr)
   }
 }
 
-py::array_t<tdouble> py_wrap_array_no_ownership(tdouble* ptr, size_t N)
+template <typename T>
+py::array_t<T> py_wrap_array_no_ownership(T* ptr, size_t N)
 {
     // Dummy capsule — ensures py::array holds on to a base object,
     // but does not delete ptr
@@ -287,12 +309,15 @@ py::array_t<tdouble> py_wrap_array_no_ownership(tdouble* ptr, size_t N)
         // No deletion, memory is managed elsewhere
     });
 
-    return py::array_t<tdouble>(
+    return py::array_t<T>(
         {N},             // shape
-        {sizeof(tdouble)}, // stride (in bytes)
+        {sizeof(T)}, // stride (in bytes)
         ptr,             // raw data pointer
         dummy_capsule    // base object
     );
 }
+template py::array_t<tfloat> py_wrap_array_no_ownership<tfloat>(tfloat*, size_t);
+template py::array_t<tdouble> py_wrap_array_no_ownership<tdouble>(tdouble*, size_t);
+
 
 

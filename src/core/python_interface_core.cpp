@@ -1519,6 +1519,9 @@ PYBIND11_MODULE(core, m) {
     // ====================================================
         py::class_<flxDataBox>(m, "dataBox")
             .def(py::init<tuint, tuint>())
+            .def("write2mem", &flxDataBox::write2mem, "allocate memory for storing data")
+            .def("extract_col_from_mem", &flxDataBox::extract_col_from_mem, "return a numpy-array that points to the memory of 'col'")
+            .def("free_mem", &flxDataBox::free_mem, "free the allocated memory for storing data")
             .def("write2file", &flxDataBox::write2file, "send samples to a file")
             .def("close_file", &flxDataBox::close_file, "close the file stream")
             ;

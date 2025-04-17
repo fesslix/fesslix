@@ -24,6 +24,7 @@ PYBIND11_EXPORT FlxFunction* parse_py_para(const std::string& para_name, py::dic
 PYBIND11_EXPORT const bool parse_py_para_as_bool(const std::string& para_name, py::dict config, const bool required, const bool def_val=false);
 PYBIND11_EXPORT const tuint parse_py_para_as_tuint(const std::string& para_name, py::dict config, const bool required, const tuint def_val=0);
 PYBIND11_EXPORT const tuint parse_py_para_as_tuintNo0(const std::string& para_name, py::dict config, const bool required, const tuint def_val=1);
+PYBIND11_EXPORT const tuint parse_py_para_as_tulong(const std::string& para_name, py::dict config, const bool required, const tuint def_val=1);
 PYBIND11_EXPORT const tdouble parse_py_para_as_float(const std::string& para_name, py::dict config, const bool required, const tdouble def_val=ZERO);
 PYBIND11_EXPORT const tdouble parse_py_para_as_floatPosNo0(const std::string& para_name, py::dict config, const bool required, const tdouble def_val=ONE);
 /**
@@ -36,6 +37,7 @@ PYBIND11_EXPORT std::string parse_py_para_as_string(const std::string& para_name
 PYBIND11_EXPORT std::string parse_py_para_as_word(const std::string& para_name, py::dict config, const bool required, const bool lowercase, const bool emptyAllow=false,const bool numbegallow=false, const std::string def_val="");
 PYBIND11_EXPORT void parse_py_para_as_word_lst(std::vector<std::string>& res, const std::string& para_name, py::dict config, const bool required, const bool lowercase, const bool emptyAllow=false,const bool numbegallow=false);
 
+PYBIND11_EXPORT const tuint parse_py_obj_as_tuint(py::object obj, std::string descr);
 PYBIND11_EXPORT py::dict parse_py_obj_as_dict(py::object obj, std::string descr);
 PYBIND11_EXPORT py::list parse_py_obj_as_list(py::object obj, std::string descr);
 /**
@@ -58,5 +60,10 @@ PYBIND11_EXPORT FlxObjBase* parse_code(py::object pyobj, std::string descr="");
 
 /**
 * @brief returns a numpy array that is based on a pointer whose memory is managed externally
+*
+* @note for any template type, add a line below the definition!!!
 */
-py::array_t<tdouble> py_wrap_array_no_ownership(tdouble* ptr, size_t N);
+template <typename T>
+PYBIND11_EXPORT py::array_t<T> py_wrap_array_no_ownership(T* ptr, size_t N);
+
+

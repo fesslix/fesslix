@@ -71,7 +71,8 @@ flxDataBox::flxDataBox(const tuint M_in, const tuint M_out)
     vec_full(M_in+M_out),
     vec_out(vec_full.get_tmp_vptr(),M_out),
     vec_in(vec_full.get_tmp_vptr()+M_out,M_in),
-    fstream(nullptr), fs_N_col(0), fs_cols(nullptr), fs_binary(true)
+    fstream(nullptr), fs_N_col(0), fs_cols(nullptr), fs_binary(true),
+    mem_N_reserved(0), mem_N(0), mem_ptr(nullptr), mem_cols(nullptr)
 {
 
 }
@@ -81,16 +82,23 @@ flxDataBox::~flxDataBox()
   close_file();
 }
 
-void flxDataBox::ensure_M_in(const tuint M) const
+void flxDataBox::ensure_M(const tuint M_) const
 {
-  if (M!=M_in) {
+  if (M_!=M) {
+    throw FlxException("flxDataBox::ensure_M", "Mismatch in dimension of input vector.");
+  }
+}
+
+void flxDataBox::ensure_M_in(const tuint M_) const
+{
+  if (M_!=M_in) {
     throw FlxException("flxDataBox::ensure_M_in", "Mismatch in dimension of input vector.");
   }
 }
 
-void flxDataBox::ensure_M_out(const tuint M) const
+void flxDataBox::ensure_M_out(const tuint M_) const
 {
-  if (M!=M_out) {
+  if (M_!=M_out) {
     throw FlxException("flxDataBox::ensure_M_out", "Mismatch in dimension of output vector.");
   }
 }
@@ -101,8 +109,8 @@ void flxDataBox::append_data()
     if (fstream) {
       if (fs_binary) {
         for (tuint i=0;i<fs_N_col;++i) {
-          const float value = vec_full[fs_cols[i]];
-          fstream->write(reinterpret_cast<const char*>(&value), sizeof(float));
+          const tfloat value = vec_full[fs_cols[i]];
+          fstream->write(reinterpret_cast<const char*>(&value), sizeof(tfloat));
         }
       } else {
         for (tuint i=0;i<fs_N_col;++i) {
@@ -112,6 +120,120 @@ void flxDataBox::append_data()
         (*fstream) << std::endl;
       }
     }
+
+  // write to memory
+    if (mem_ptr) {
+      if (mem_N>=mem_N_reserved) {
+        throw FlxException("flxDataBox::append_data_20", "Memory of dataBox is full.");
+      }
+      tfloat* mem_ptr_pos = mem_ptr + mem_N;
+      for (tuint i=0;i<mem_N_col;++i) {
+        (*mem_ptr_pos) = vec_full[fs_cols[i]];
+        mem_ptr_pos += mem_N_reserved;
+      }
+      ++mem_N;
+    }
+
+}
+
+tuint * flxDataBox::process_col_input(tuint& N_col, py::dict config)
+{
+  tuint* col_ptr = nullptr;
+  try {
+    // assign columns to write
+      std::string col_str = "all";
+      if (config.contains("cols")) {
+        py::object obj = config["cols"];
+        if (py::isinstance<py::list>(obj)) {
+          // columns provided as list
+            py::list col_lst = obj.cast<py::list>();
+            N_col = col_lst.size();
+            col_ptr = new tuint[N_col];
+            for (tuint i=0;i<N_col;++i) {
+              const tuint col_id = col_lst[i].cast<tuint>();
+              if (col_id>=M) {
+                  std::ostringstream ssV;
+                  ssV << "ID of column (" << col_id << ") must be smaller than " << M;
+                  throw FlxException("flxDataBox::process_col_input_01", ssV.str());
+              }
+              col_ptr[i] = col_id;
+            }
+        } else {
+          // columns provided as string
+            col_str = parse_py_obj_as_string(obj,"flxDataBox::process_col_input_02");
+        }
+      }
+      if (col_ptr==nullptr) {
+        // process string
+          if (col_str=="all") {
+            N_col = M;
+            col_ptr = new tuint[N_col];
+            for (tuint i=0;i<N_col;++i) {
+              col_ptr[i] = i;
+            }
+          } else if (col_str=="all_in") {
+            N_col = M_in;
+            col_ptr = new tuint[N_col];
+            for (tuint i=0;i<N_col;++i) {
+              col_ptr[i] = i+M_out;
+            }
+          } else if (col_str=="all_out") {
+            N_col = M_out;
+            col_ptr = new tuint[N_col];
+            for (tuint i=0;i<N_col;++i) {
+              col_ptr[i] = i;
+            }
+          } else {
+             throw FlxException("flxDataBox::process_col_input_03", "Unknown keyword for 'col': " + col_str);
+          }
+      }
+  } catch (FlxException& e) {
+    if (col_ptr) {
+      delete [] col_ptr;
+      col_ptr = nullptr;
+    }
+    throw;
+  }
+  return col_ptr;
+}
+
+void flxDataBox::write2mem(py::dict config)
+{
+  // checks
+    if (mem_ptr) {
+      throw FlxException("flxDataBox::write2mem_01","The dataBox is already linked to memory.");
+    }
+  // extract config from dict
+    mem_N_reserved = parse_py_para_as_tulong("N_reserve",config,true);
+  // get columns to store in memory
+    mem_cols = process_col_input(mem_N_col, config);
+  // allocate memory
+    mem_ptr = new tfloat[mem_N_col*mem_N_reserved];
+}
+
+py::array_t<tfloat> flxDataBox::extract_col_from_mem(py::object col)
+{
+  const tuint colID = parse_py_obj_as_tuint(col, "Value of key 'cols' in <dict> config.");
+  if (colID>=M) {
+    throw FlxException("flxDataBox::extract_col_from_mem", "colID exceeds dimension of data-points.");
+  }
+  tfloat* mem_ptr_pos = mem_ptr + colID*mem_N_reserved;
+  return py_wrap_array_no_ownership<tfloat>(mem_ptr_pos,mem_N);
+}
+
+void flxDataBox::free_mem()
+{
+  if (mem_ptr) {
+    delete [] mem_ptr;
+    mem_ptr = nullptr;
+  }
+  mem_N_reserved = 0;
+  mem_N = 0;
+  mem_N_col = 0;
+  if (mem_cols) {
+    delete [] mem_cols;
+    mem_cols = nullptr;
+  }
 }
 
 void flxDataBox::write2file(py::dict config)
@@ -137,53 +259,7 @@ void flxDataBox::write2file(py::dict config)
         ssV << "File (" << fname << ") could not be opened.";
         throw FlxException("flxDataBox::write2file_02", ssV.str() );
       }
-    // assign columns to write
-      std::string col_str = "all";
-      if (config.contains("cols")) {
-        py::object obj = config["cols"];
-        if (py::isinstance<py::list>(obj)) {
-          // columns provided as list
-            py::list col_lst = obj.cast<py::list>();
-            fs_N_col = col_lst.size();
-            fs_cols = new tuint[fs_N_col];
-            for (tuint i=0;i<fs_N_col;++i) {
-              const tuint col_id = col_lst[i].cast<tuint>();
-              if (col_id>=M) {
-                  std::ostringstream ssV;
-                  ssV << "ID of column (" << col_id << ") must be smaller than " << M;
-                  throw FlxException("flxDataBox::write2file_02", ssV.str());
-              }
-              fs_cols[i] = col_id;
-            }
-        } else {
-          // columns provided as string
-            col_str = parse_py_obj_as_string(obj,"flxDataBox::write2file_03");
-        }
-      }
-      if (fs_cols==nullptr) {
-        // process string
-          if (col_str=="all") {
-            fs_N_col = M;
-            fs_cols = new tuint[fs_N_col];
-            for (tuint i=0;i<fs_N_col;++i) {
-              fs_cols[i] = i;
-            }
-          } else if (col_str=="all_in") {
-            fs_N_col = M_in;
-            fs_cols = new tuint[fs_N_col];
-            for (tuint i=0;i<fs_N_col;++i) {
-              fs_cols[i] = i+M_out;
-            }
-          } else if (col_str=="all_out") {
-            fs_N_col = M_out;
-            fs_cols = new tuint[fs_N_col];
-            for (tuint i=0;i<fs_N_col;++i) {
-              fs_cols[i] = i;
-            }
-          } else {
-             throw FlxException("flxDataBox::write2file_04", "Unknown keyword for 'col': " + col_str);
-          }
-      }
+    fs_cols = process_col_input(fs_N_col, config);
   } catch (FlxException& e) {
     // close file
     close_file();

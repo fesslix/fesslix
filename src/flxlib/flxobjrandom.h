@@ -47,6 +47,14 @@ class PYBIND11_EXPORT flxDataBox {
       tuint fs_N_col;
       tuint* fs_cols;
       bool fs_binary;
+    // for storing data in memory
+      tuint mem_N_reserved;   // total number of data that can be stored
+      tuint mem_N;            // total number of data in memory
+      tfloat* mem_ptr;
+      tuint mem_N_col;
+      tuint* mem_cols;
+
+    tuint* process_col_input(tuint& N_col, py::dict config);
 
   public:
     flxDataBox(const tuint M_in, const tuint M_out);
@@ -56,19 +64,27 @@ class PYBIND11_EXPORT flxDataBox {
 
     flxDataBox& operator=(const flxDataBox& rhs) = delete;
 
+    void write2mem(py::dict config);
+    py::array_t<tfloat> extract_col_from_mem(py::object obj);
+    void free_mem();
+
     void write2file(py::dict config);
     void close_file();
 
     const tuint get_M_in() const { return M_in; }
     const tuint get_M_out() const { return M_out; }
     /**
-    * @brief ensure M_in == M
+    * @brief ensure M == M_
     */
-    void ensure_M_in(const tuint M) const;
+    void ensure_M(const tuint M_) const;
     /**
-    * @brief ensure M_in == M
+    * @brief ensure M_in == M_
     */
-    void ensure_M_out(const tuint M) const;
+    void ensure_M_in(const tuint M_) const;
+    /**
+    * @brief ensure M_in == M_
+    */
+    void ensure_M_out(const tuint M_) const;
     /**
     * @brief registers a data point in the box
     *

@@ -2,6 +2,8 @@
 
 ## Environment & Dependencies
 
+TODO: needed? Build is documented on: fesslix-docu/docs/_build/html/start_installation.html#install-as-a-local-build
+
 Install the package 'docker'.
 
 python -m venv .venv-fesslix
@@ -9,13 +11,6 @@ source .venv-fesslix/bin/activate
 
 pip install build scikit-build-core pybind11
 pip install twine cibuildwheel
-
-## Local build
-
-source .venv-fesslix/bin/activate
-
-python -m build
-pip install --verbose .
 
 ## Precompiled Binaries
 https://pypi.org/account/register/

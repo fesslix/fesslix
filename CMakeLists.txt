@@ -287,6 +287,8 @@ MARK_AS_ADVANCED(
 #==========================================================
 # ARPACK library
 #==========================================================
+# TODO use ARPACK-NG instead of ARPACK++  // Alternatively, use Spectra+Eigen ???
+# TODO alternatively, rely on Python packages SciPy or scikit-sparse (https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.eigsh.html#scipy.sparse.linalg.eigsh)
 
 if(UNIX)
   FIND_PACKAGE(ARPACK)
@@ -300,8 +302,10 @@ else(UNIX)
 endif(UNIX)
 
 if("${FLX_USE_ARPACK}" STREQUAL "ON")
+  message(STATUS "ARPACK support activated: ${ARPACK_LIBRARIES}")
   set ( FLX_USE_ARPACKb 1 )
 else("${FLX_USE_ARPACK}" STREQUAL "ON")
+  message(STATUS "ARPACK support deactivated.")
   set ( FLX_USE_ARPACKb 0 )
 endif("${FLX_USE_ARPACK}" STREQUAL "ON")
 
@@ -398,6 +402,9 @@ if(GSL_FOUND_STATIC)
     target_link_libraries(flxlib PRIVATE ${GSL_STATIC_LIB} ${GSLCBLAS_STATIC_LIB})
 else()
     target_link_libraries(flxlib PRIVATE GSL::gsl)
+endif()
+if("${FLX_USE_ARPACK}" STREQUAL "ON")
+    target_link_libraries(flxlib PRIVATE ${ARPACK_LIBRARIES})
 endif()
 target_link_libraries(flxlib PRIVATE pybind11::module )   # pybind11::headers
 if(DEFINED RPATH_STRING)

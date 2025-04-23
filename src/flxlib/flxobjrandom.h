@@ -199,8 +199,9 @@ class PYBIND11_EXPORT flxDataBox {
       py::array_t<tfloat> extract_col_from_mem(py::object col);
       void free_mem();
 
-    // for writing into a file
+    // for exporting into / importing from  a file
       void write2file(py::dict config);
+      void read_from_file(py::dict config);
       void close_file();
 
     // for managing post-processors

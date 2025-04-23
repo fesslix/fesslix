@@ -151,6 +151,10 @@ class FLXLIB_EXPORT ReadStream {
     
     const std::string& get_FileName() { return theStream->get_FileName(); }
     /**
+    * @brief check for end of file
+    */
+    const bool check_eof();
+    /**
     * @brief Indicates the position where an error occurred.
     * @return String describing the current position in text file (line number, column number, name of the file).
     */
@@ -393,10 +397,6 @@ class FLXLIB_EXPORT FlxIstream_file : public FlxIstream {
     * @brief read another block
     */
     virtual void read_block();
-    /**
-    * @brief check for end of file
-    */
-    bool check_eof(ReadStream_ptr& rp);
     
     // reading specific columns
       /**

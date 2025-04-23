@@ -325,6 +325,14 @@ const ReadStream::InpType ReadStream::getNextType () {
   return getType( theStream->peek() );
 }
 
+const bool ReadStream::check_eof()
+{
+  if (getNextType() == ReadStream::ENDOFFILE) {
+    return true;
+  }
+  else return false;
+}
+
 const std::string ReadStream::getCurrentPos () {
   ostringstream ssV;
   ssV << "Line: " << lineNumb << "; Column: " << charNumb << "; File: " << theStream->get_FileName();
@@ -1096,17 +1104,6 @@ FlxIstream_file::~FlxIstream_file()
   if (SeqVec) delete SeqVec;
 }
 
-bool FlxIstream_file::check_eof(ReadStream_ptr& rp)
-{
-  if (rp==NULL) return true;
-  if (rp->getNextType() == ReadStream::ENDOFFILE) { 
-    delete rp;
-    rp = NULL;
-    return true;
-  }
-  else return false;
-}
-
 void FlxIstream_file::set_next()
 {
   const char c = iReader->whatIsNextChar();
@@ -1119,12 +1116,12 @@ void FlxIstream_file::read_block()
 {
   if (Cnumb==1 && Cvec.size()==1) {
     for (tuint i = 0; i < blocksize; ++i) {
-      if (check_eof(iReader)) {
+      if (iReader->check_eof()) {
         lastindex = i;
         break;
       }
       (*SeqVec)[i] = iReader->get_Double();
-      if (!check_eof(iReader)) {
+      if (!(iReader->check_eof())) {
         set_next();
       }
     }
@@ -1132,12 +1129,12 @@ void FlxIstream_file::read_block()
     tuint i=0;
     tdouble d;
     while (i<blocksize) {
-      if (check_eof(iReader)) {
+      if ((iReader->check_eof())) {
         lastindex = i;
         break;
       }
       d = iReader->get_Double();
-      if (!check_eof(iReader)) {
+      if (!(iReader->check_eof())) {
         set_next();
       }
       if (curCol==Cvec[curVecIdx]) {        
@@ -1330,7 +1327,7 @@ void FlxIstream_file_combine::read_block()
   // check if readers are still working
     bool is_eof = true;
     for (size_t i=0;i<NR;++i) {
-      if (check_eof(iReader_vec[i])==false) {
+      if (iReader_vec[i]->check_eof()==false) {
         is_eof = false;
       }
     }
@@ -1346,16 +1343,16 @@ void FlxIstream_file_combine::read_block()
       tdouble sum_w = ZERO;  // sum of weights
       for (size_t j=0;j<NR;++j) {
         ReadStream_ptr& rp = iReader_vec[j];
-        if (check_eof(rp)==false) {
+        if (rp->check_eof()==false) {
           const tdouble w = weight_vecP->operator[](j);
           sum_d += w * (rp->get_Double());
           sum_w += w;
-          if (check_eof(rp)==false) {
+          if (rp->check_eof()==false) {
             const char c = rp->whatIsNextChar();
             if (c == ',' || c==';') {
               rp->getChar();
             }
-            if (check_eof(rp)==false) is_eof = false;
+            if (rp->check_eof()==false) is_eof = false;
           }
         }
       }

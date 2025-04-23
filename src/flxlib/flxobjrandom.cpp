@@ -752,6 +752,72 @@ void flxDataBox::write2file(py::dict config)
   }
 }
 
+void flxDataBox::read_from_file(py::dict config)
+{
+  // extract config from dict
+    const std::string fname = parse_py_para_as_string("fname",config,true);
+    const bool ifs_binary = parse_py_para_as_bool("binary",config,false,true);
+  if (ifs_binary) {
+    // open file
+      std::ifstream ifs(fname.c_str(), std::ios_base::in | std::ios_base::binary );
+    // ensure file is open
+      if ( !ifs ) {
+        std::ostringstream ssV;
+        ssV << "File (" << fname << ") could not be opened.";
+        throw FlxException("flxDataBox::read_from_file_01", ssV.str() );
+      }
+    // Determine file size
+      ifs.seekg(0, std::ios::end);
+      std::streamsize size = ifs.tellg();
+      ifs.seekg(0, std::ios::beg);
+    // Compute how many floats the file holds
+      const size_t num_floats = size / sizeof(tfloat);
+      if (num_floats % M != 0) {
+        std::ostringstream ssV;
+        ssV << "Total number of values in the file is not a multiple of M (" << M << ").";
+        throw FlxException("flxDataBox::read_from_file_02a", ssV.str() );
+      }
+    // allocate memory for importing float values
+      std::vector<tfloat> buffer(M);
+    // import the entire file
+      while (ifs.read(reinterpret_cast<char*>(buffer.data()), M * sizeof(float))) {
+        // cast to tdouble
+          for (tuint i=0;i<M;++i) {
+            vec_full[i] = buffer[i];
+          }
+        // import data
+          append_data();
+      }
+
+    // Check if there was an incomplete final chunk (shouldn't happen if total is multiple of M)
+      if (ifs.gcount() > 0) {
+        throw FlxException_Crude("flxDataBox::read_from_file_03a");
+      }
+  } else {
+    ReadStream rs(fname.c_str());
+    while (rs.check_eof()==false) {
+      // read next data point
+        for (tuint i = 0; i < M; ++i) {
+          if (rs.check_eof()) {
+            std::ostringstream ssV;
+            ssV << "Total number of values in the file is not a multiple of M (" << M << ").";
+            throw FlxException("flxDataBox::read_from_file_02b", ssV.str() );
+          }
+          vec_full[i] = rs.get_Double();
+          if (!(rs.check_eof())) {
+            // set next
+              const char c = rs.whatIsNextChar();
+              if (c == ',' || c==';') {
+                rs.getChar();
+              }
+          }
+        }
+      // import data
+        append_data();
+    }
+  }
+}
+
 void flxDataBox::close_file()
 {
     if (fstream) {

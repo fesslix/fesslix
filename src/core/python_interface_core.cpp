@@ -1224,6 +1224,7 @@ PYBIND11_MODULE(core, m) {
             .def("extract_col_from_mem", &flxDataBox::extract_col_from_mem, py::return_value_policy::reference_internal, "return a numpy-array that points to the memory of 'col'")
             .def("free_mem", &flxDataBox::free_mem, "free the allocated memory for storing data")
             .def("write2file", &flxDataBox::write2file, "send samples to a file")
+            .def("read_from_file", &flxDataBox::read_from_file, "import data from a file")
             .def("close_file", &flxDataBox::close_file, "close the file stream")
             .def("register_post_processor", &flxDataBox::register_post_processor, py::return_value_policy::reference_internal, "register a new post-processor")
             ;

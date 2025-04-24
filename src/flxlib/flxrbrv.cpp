@@ -188,6 +188,9 @@ void RBRV_entry_RV_base::init()
 {
   this->eval_para();
   value = this->transform_y2x(ZERO);
+  #if FLX_DEBUG
+    valid = true;                // true, if value has been set
+  #endif
 }
 
 void RBRV_entry_RV_base::transform_y2x(const tdouble*const y_vec)

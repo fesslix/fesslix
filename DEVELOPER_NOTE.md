@@ -12,6 +12,12 @@ source .venv-fesslix/bin/activate
 pip install build scikit-build-core pybind11
 pip install twine cibuildwheel
 
+## fast install with KDevelop (for development)
+
+set CMAKE_INSTALL_PREFIX to e.g., ~/.venv-fesslix/lib/python3.13/site-packages
+then install with SHIFT+F8
+
+
 ## Precompiled Binaries
 https://pypi.org/account/register/
 

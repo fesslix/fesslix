@@ -163,6 +163,8 @@ class flxPyRVset {
     flxPyRVset& operator=(const flxPyRVset& rhs);
 
     const std::string get_name() const;
+    const tuint get_NRV() const;
+    const tuint get_NOX() const;
 
     py::array_t<tdouble> get_values(const std::string mode="x");
     void set_x_vec(py::array_t<tdouble> arr);

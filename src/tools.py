@@ -1,0 +1,163 @@
+"""Tools module for Fesslix.
+
+"""
+
+# Fesslix - Stochastic Analysis
+# Copyright (C) 2010-2025 Wolfgang Betz
+#
+# Fesslix is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Fesslix is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Fesslix.  If not, see <http://www.gnu.org/licenses/>. 
+
+import fesslix as flx
+
+import numpy as np
+
+
+
+##################################################
+# discretization                                 #
+##################################################
+
+def detect_bounds_x(rv, config_dict, q_low=1e-3, q_up=None, mode='ignore'):
+    """Makes sure that x_low and x_up are assigned in config_dict.
+
+    """
+    if q_up is None:
+        q_up = 1.-q_low
+    if 'x_low' not in config_dict:
+        config_dict['x_low'] = rv.icdf(q_low)
+    else:
+        if (config_dict['x_low'] is None):
+            config_dict['x_low'] = rv.icdf(q_low)
+        else:
+            if mode=='overwrite':
+                config_dict['x_low'] = rv.icdf(q_low)
+            elif mode=='minmax':
+                config_dict['x_low'] = min(config_dict['x_low'], rv.icdf(q_low))
+    if 'x_up' not in config_dict:
+        config_dict['x_up'] = rv.icdf(q_up)
+    else:
+        if (config_dict['x_up'] is None):
+            config_dict['x_up'] = rv.icdf(q_up)
+        else:
+            if mode=='overwrite':
+                config_dict['x_up'] = rv.icdf(q_up)
+            elif mode=='minmax':
+                config_dict['x_up'] = max(config_dict['x_up'], rv.icdf(q_up))
+
+
+def discretize_x(x_low, x_up, x_disc_N=int(1e3), x_disc_shift=False, x_disc_on_log=False):
+    """Returns an array with discretized values for the x-axis."""
+    if x_disc_on_log:
+        if x_low<0. or x_up<0.:
+            raise NameError(f'ERROR 202202071550: {x_low} {x_up}')
+        x_low = np.log(x_low)
+        x_up = np.log(x_up)
+    x, dx = np.linspace(x_low,x_up,num=x_disc_N,endpoint=(not x_disc_shift),retstep=True)
+    if x_disc_shift:
+        x += dx/2
+    if x_disc_on_log:
+        x = np.exp(x)
+    return x
+
+def discretize_x_get_diff(x_low, x_up, x_disc_N=int(1e3), x_disc_on_log=False):
+    """Returns an array with discretized values for the x-axis and additionally returns an vector with the size of the elements."""
+    x = discretize_x(x_low=x_low, x_up=x_up, x_disc_N=x_disc_N, x_disc_shift=True, x_disc_on_log=x_disc_on_log)
+    N = len(x)
+    dx = np.empty(N)
+    x_prev = x_low
+    for i in range(N):
+        if i+1<N:
+            x_next = (x[i]+x[i+1])/2
+        else:
+            x_next = x_up
+        dx[i] = (x_next-x_prev)
+        x_prev = x_next
+    return x, dx
+
+def discretize_stdNormal_space(q_low=1e-3, q_up=None, x_disc_N=int(1e3)):
+    """Returns an array with discretized values on U-space (standard Normal space).
+
+    """
+    if q_up is None:
+        q_up = 1. - q_low
+    xl = flx.cdfn_inv(q_low)
+    xu = flx.cdfn_inv(q_up)
+    return discretize_x(x_low=xl, x_up=xu, x_disc_N=x_disc_N, x_disc_shift=False, x_disc_on_log=False)
+
+
+
+##################################################
+# Working with float arrays                      #
+##################################################
+
+def get_quantiles_from_data(data, p_vec=None, N_points_per_bin=100, data_is_sorted=False, lower_bound=None, upper_bound=None):
+    """Extract quantiles from data."""
+    res = {}
+    ## ===============
+    ## Sort data array
+    ## ===============
+    if data_is_sorted:
+        sdata = data
+    else:
+        sdata = np.sort(data, axis=None)
+    N_total = sdata.size
+    res['N_total'] = N_total
+    ## ==============
+    ## Assemble p_vec
+    ## ==============
+    if p_vec is None:
+        ## ---------------------
+        ## select number of bins
+        ## ---------------------
+        if N_total < N_points_per_bin*10:
+            raise NameError(f'ERROR 202504241439: Not enough data. {N_total = }, {N_points_per_bin = }')
+        N_bins = int(N_total / N_points_per_bin)
+        ## --------------------
+        ## assign probabilities
+        ## --------------------
+        p_vec = discretize_x(x_low=0., x_up=1., x_disc_N=N_bins+1, x_disc_shift=False, x_disc_on_log=False)
+    if p_vec[0]!=0. or p_vec[-1]!=1.:
+        raise NameError(f"ERROR 202504241513: First and last value of 'p_vec' must be 0.0 and 1.0, respectively.")
+    res['p_vec'] = p_vec
+    ## ==============
+    ## Assemble q_vec
+    ## ==============
+    q_vec = np.empty(p_vec.size)
+    for i in range(N_bins+1):
+        p = p_vec[i]
+        if p<=0.:
+            if lower_bound is None:
+                q_vec[i] = sdata[0]
+            else:
+                q_vec[i] = lower_bound
+        elif p>=1.:
+            if upper_bound is None:
+                q_vec[i] = sdata[-1]
+            else:
+                q_vec[i] = upper_bound
+        else:
+            ## linear interpolation
+            nf = p*N_total
+            j = int(nf)
+            nf -= j
+            q_vec[i] = sdata[j] + (sdata[j+1]-sdata[j])*nf
+    res['q_vec'] = q_vec
+    ## ==============================================
+    ## return
+    ## ==============================================
+    return res
+
+
+
+

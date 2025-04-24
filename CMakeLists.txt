@@ -406,6 +406,11 @@ endif()
 if("${FLX_USE_ARPACK}" STREQUAL "ON")
     target_link_libraries(flxlib PRIVATE ${ARPACK_LIBRARIES})
 endif()
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  ## somehow Debug-builds required this library ...
+  find_package(TBB REQUIRED)
+  target_link_libraries(flxlib PRIVATE TBB::tbb)
+endif()
 target_link_libraries(flxlib PRIVATE pybind11::module )   # pybind11::headers
 if(DEFINED RPATH_STRING)
   set_target_properties(flxlib PROPERTIES INSTALL_RPATH ${RPATH_STRING} )
@@ -443,6 +448,8 @@ install(TARGETS flxlib
     ARCHIVE DESTINATION fesslix  # For static libs (.lib)
 )
 install(FILES src/plot.py
+              src/tools.py
+              src/model_templates.py
               config/gausspoints.dat
               DESTINATION fesslix)
 

@@ -578,7 +578,7 @@ void flxDataBox::append_data()
       }
       tfloat* mem_ptr_pos = mem_ptr + mem_N;
       for (tuint i=0;i<mem_N_col;++i) {
-        (*mem_ptr_pos) = vec_full[fs_cols[i]];
+        (*mem_ptr_pos) = vec_full[mem_cols[i]];
         mem_ptr_pos += mem_N_reserved;
       }
       ++mem_N;

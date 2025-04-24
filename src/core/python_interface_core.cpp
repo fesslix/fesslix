@@ -546,6 +546,16 @@ const std::string flxPyRVset::get_name() const
     return name_of_set;
 }
 
+const tuint flxPyRVset::get_NRV() const
+{
+    return rvset_ptr->get_NRV_only_this();
+}
+
+const tuint flxPyRVset::get_NOX() const
+{
+    return rvset_ptr->get_NOX_only_this();
+}
+
 py::array_t<tdouble> flxPyRVset::get_values(const std::string mode)
 {
     // process mode
@@ -1190,6 +1200,8 @@ PYBIND11_MODULE(core, m) {
     // ====================================================
         py::class_<flxPyRVset>(m, "rvset")
             .def("get_name", &flxPyRVset::get_name, "get name of set of random variables")
+            .def("get_NRV", &flxPyRVset::get_NRV, "return number of random variables (in standard Normal space) in the set of random variables")
+            .def("get_NOX", &flxPyRVset::get_NOX, "return number of random variables (in original space) in the set of random variables")
             .def("get_values", &flxPyRVset::get_values, pybind11::arg("mode")="x", "returns a vector of quantities of all entries contained in the set of random variables")
             .def("eval_rp_psd", &flxPyRVset::eval_rp_psd, "evaluates the realization of a random process at time t with given power spectral density function");
 

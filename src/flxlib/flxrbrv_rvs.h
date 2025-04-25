@@ -600,6 +600,42 @@ class PYBIND11_EXPORT RBRV_entry_RV_Laplace : public RBRV_entry_RV_base {
     virtual const tdouble get_HPD(const tdouble p);
 };
 
+
+class PYBIND11_EXPORT RBRV_entry_RV_genpareto : public RBRV_entry_RV_base {
+  protected:
+    FlxFunction* xif;
+    FlxFunction* locf;
+    FlxFunction* scalef;
+    tdouble xi;
+    tdouble loc;
+    tdouble scale;
+    bool eval_once;
+
+    const tdouble eval_cdf_help(const tdouble x_val);
+    void free_mem();
+  public:
+    RBRV_entry_RV_genpareto(const std::string& name, const tuint iID, py::dict config);
+    ~RBRV_entry_RV_genpareto();
+
+    const std::string get_type() const { return "genpareto"; }
+    virtual void eval_para();
+    virtual const tdouble transform_y2x(const tdouble y_val);
+    virtual const tdouble transform_x2y(const tdouble& x_val);
+    virtual const tdouble calc_pdf_x(const tdouble& x_val, const bool safeCalc=false);
+    virtual const tdouble calc_cdf_x(const tdouble& x_val, const bool safeCalc=false);
+    virtual const tdouble calc_sf_x(const tdouble& x_val, const bool safeCalc=false);
+    virtual const tdouble calc_entropy();
+    virtual const tdouble get_mean_current_config();
+    virtual const tdouble get_sd_current_config();
+    virtual const tdouble get_median_current_config();
+    virtual const tdouble get_mode_current_config();
+    virtual const bool check_x(const tdouble xV);
+    virtual const bool search_circref(FlxFunction* fcr);
+    virtual py::dict info();
+};
+
+
+
 class PYBIND11_EXPORT RBRV_entry_RV_UserTransform : public RBRV_entry_RV_base {
   protected:
     const bool is_z2x;

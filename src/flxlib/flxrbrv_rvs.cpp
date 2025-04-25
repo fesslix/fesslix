@@ -2968,6 +2968,169 @@ const tdouble RBRV_entry_RV_Laplace::get_HPD(const tdouble p)
   return (ONE-p)/2;
 }
 
+
+RBRV_entry_RV_genpareto::RBRV_entry_RV_genpareto(const std::string& name, const tuint iID, py::dict config)
+: RBRV_entry_RV_base(name,iID), xif(nullptr), locf(nullptr), scalef(nullptr), xi(ZERO), loc(ZERO), scale(ZERO), eval_once(false)
+{
+  try {
+    xif = parse_py_para("xi",config,true);
+    locf = parse_py_para("loc",config,false);
+    scalef = parse_py_para("scale",config,false);
+
+    eval_once = parse_py_para_as_bool("eval_once", config, false, false);
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_genpareto::RBRV_entry_RV_genpareto_99",1);
+    free_mem();
+    throw;
+  }
+}
+
+RBRV_entry_RV_genpareto::~RBRV_entry_RV_genpareto()
+{
+  free_mem();
+}
+
+void RBRV_entry_RV_genpareto::free_mem()
+{
+  if (xif) delete xif;
+  if (locf) delete locf;
+  if (scalef) delete scalef;
+}
+
+void RBRV_entry_RV_genpareto::eval_para()
+{
+  if (!eval_once || (eval_once&&xif) ) {
+    // compute parameters
+      xi = xif->calc();
+      if (scalef) {
+        scale = scalef->cast2positive();
+      } else {
+        scale = ONE;
+      }
+      if (locf) {
+        loc = locf->cast2positive();
+      } else {
+        loc = ZERO;
+      }
+    if (eval_once) {
+      delete xif; xif = nullptr;
+      if (scalef) {
+        delete scalef;
+        scalef = nullptr;
+      }
+      if (locf) {
+        delete locf;
+        locf = nullptr;
+      }
+    }
+  }
+}
+
+const tdouble RBRV_entry_RV_genpareto::transform_y2x(const tdouble y_val)
+{
+  const tdouble p_ = rv_Phi(-y_val); // NOTE this is p_=1-p !!!
+  if (xi==ZERO) {
+    return loc-scale*log(p_);
+  } else {
+    return loc+scale/xi*(pow(p_,-xi)-ONE);
+  }
+}
+
+const tdouble RBRV_entry_RV_genpareto::transform_x2y(const tdouble& x_val)
+{
+  if (x_val<=get_median_current_config()) {
+    return rv_InvPhi_noAlert(ONE-eval_cdf_help(x_val));
+  } else {
+    return -rv_InvPhi_noAlert(eval_cdf_help(x_val));
+  }
+}
+
+const tdouble RBRV_entry_RV_genpareto::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
+{
+  const tdouble x_ = (x_val-loc)/scale;
+  return pow(ONE+xi*x_,-(ONE/xi+ONE))/scale;
+}
+
+const tdouble RBRV_entry_RV_genpareto::eval_cdf_help(const tdouble x_val)
+{
+  const tdouble x_ = (x_val-loc)/scale;
+  if (xi==ZERO) {
+    return exp(-x_);
+  } else {
+    return pow(ONE+xi*x_,-ONE/xi);
+  }
+}
+
+const tdouble RBRV_entry_RV_genpareto::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
+{
+  return ONE-eval_cdf_help(x_val);
+}
+
+const tdouble RBRV_entry_RV_genpareto::calc_sf_x(const tdouble& x_val, const bool safeCalc)
+{
+  return eval_cdf_help(x_val);
+}
+
+const tdouble RBRV_entry_RV_genpareto::calc_entropy()
+{
+  return log(scale)+xi+ONE;
+}
+
+const tdouble RBRV_entry_RV_genpareto::get_mean_current_config()
+{
+  if (xi>=ONE) return std::numeric_limits<tdouble>::infinity();
+  return loc+scale/(ONE-xi);
+}
+
+const tdouble RBRV_entry_RV_genpareto::get_sd_current_config()
+{
+  if (xi>=ONE/2) return std::numeric_limits<tdouble>::infinity();
+  return scale/((ONE-xi)*sqrt(ONE-2*xi));
+}
+
+const tdouble RBRV_entry_RV_genpareto::get_median_current_config()
+{
+  return loc + scale*(pow(2*ONE,xi)-ONE)/xi;
+}
+
+const tdouble RBRV_entry_RV_genpareto::get_mode_current_config()
+{
+  return loc;
+}
+
+const bool RBRV_entry_RV_genpareto::check_x(const tdouble xV)
+{
+  if (xi>=ZERO) {
+    return xV>=loc;
+  } else {
+    return (xV>=loc) && (loc-scale/xi);
+  }
+}
+
+const bool RBRV_entry_RV_genpareto::search_circref(FlxFunction* fcr)
+{
+  bool b = (corr_valF==NULL)?false:(corr_valF->search_circref(fcr));
+  b = b || xif->search_circref(fcr);
+  if (locf) {
+    b = b || locf->search_circref(fcr);
+  }
+  if (scalef) {
+    b = b || scalef->search_circref(fcr);
+  }
+  return b;
+}
+
+py::dict RBRV_entry_RV_genpareto::info()
+{
+  py::dict res = RBRV_entry_RV_base::info();
+  res["xi"] = xi;
+  res["loc"] = loc;
+  res["scale"] = scale;
+  return res;
+}
+
+
 RBRV_entry_RV_UserTransform::RBRV_entry_RV_UserTransform(const std::string& name, const tuint iID, const bool is_z2x, FlxFunction* t1, FlxFunction* t2, FlxFunction* dh, FlxFunction* checkXf, RBRV_entry_RV_base* rv_z, const bool manage_z)
 : RBRV_entry_RV_base(name,iID), is_z2x(is_z2x), t1(t1), t2(t2), dh(dh), checkXf(checkXf), rv_z(rv_z), manage_z(manage_z),
   tPL(1), tPLp(&tPL[0])

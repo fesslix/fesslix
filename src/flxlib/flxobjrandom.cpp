@@ -112,6 +112,8 @@ RBRV_entry_RV_base * parse_py_obj_as_rv(py::dict config, const bool name_require
             rv_ptr = new RBRV_entry_RV_logt(rv_name,iID,config);
         // } else if (rv_type=="laplace") {
         //     rv_ptr = new RBRV_entry_read_Laplace(rv_name,iID,config);
+        } else if (rv_type=="genpareto") {
+            rv_ptr = new RBRV_entry_RV_genpareto(rv_name,iID,config);
         // } else if (rv_type=="usertransform") {
         //     rv_ptr = new RBRV_entry_read_UserTransform(rv_name,iID,config);
         // } else if (rv_type=="truncated") {

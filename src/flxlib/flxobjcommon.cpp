@@ -2062,27 +2062,8 @@ const tdouble FunInterpolate::calc()
   const tdouble xval = child_1->calc();
   const flxVec& xvec = data->get_xvec();
   const flxVec& yvec = data->get_yvec();
-  size_t Nel = xvec.get_N();
-  size_t cpos = 0;
-  // check beginning and ending of matrix
-    if (xval<=xvec[0]) {
-      return yvec[0];
-    }
-    if (xval>=xvec[Nel-1]) {
-      return yvec[Nel-1];
-    }
-  // find the lower bound of the interpolation interval
-    while (Nel>1) {
-      size_t npos = cpos + Nel/2;
-      if (xvec[npos]>xval) {
-        Nel = npos - cpos;
-      } else {
-        Nel = Nel - (npos - cpos);
-        cpos = npos;
-      }
-    };
-  // interpolate
-    return yvec[cpos] + (yvec[cpos+1]-yvec[cpos])*((xval-xvec[cpos])/(xvec[cpos+1]-xvec[cpos]));
+  const size_t Nel = xvec.get_N();
+  return flx_interpolate_linear(xval,xvec.get_tmp_vptr_const(),yvec.get_tmp_vptr_const(),Nel);
 }
 
 Interpolate_help::~Interpolate_help()

@@ -47,6 +47,7 @@ class PYBIND11_EXPORT RBRV_entry {
     virtual const tdouble calc_pdf_x(const tdouble& x_val, const bool safeCalc=false);
     virtual const tdouble calc_pdf_x_log(const tdouble& x_val, const bool safeCalc=false);
     virtual const tdouble calc_cdf_x(const tdouble& x_val, const bool safeCalc=false);
+    virtual const tdouble calc_icdf_x(const tdouble p_val);
     virtual const tdouble calc_sf_x(const tdouble& x_val, const bool safeCalc=false);
     virtual const tdouble calc_entropy();
     /**
@@ -113,6 +114,7 @@ class PYBIND11_EXPORT RBRV_entry_RV_base : public RBRV_entry {
     
     virtual void transform_y2x(const tdouble* const y_vec);
     virtual const tdouble transform_y2x(const tdouble y_val) = 0;
+    virtual const tdouble calc_icdf_x(const tdouble p_val);
     const bool allow_x2y() const { return (corr_rv==NULL); }
     /**
     * @brief returns the lower quantile value of the HPD (highest probability density) interval of the distribution

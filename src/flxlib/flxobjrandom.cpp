@@ -118,6 +118,8 @@ RBRV_entry_RV_base * parse_py_obj_as_rv(py::dict config, const bool name_require
         //     rv_ptr = new RBRV_entry_read_Truncated(rv_name,iID,config);
         // } else if (rv_type=="maxmintransform") {
         //     rv_ptr = new RBRV_entry_read_maxminTransform(rv_name,iID,config);
+        } else if (rv_type=="quantiles") {
+            rv_ptr = new RBRV_entry_RV_quantiles(rv_name,iID,config);
         // } else if (rv_type=="bayda") {
         //     rv_ptr = new RBRV_entry_read_bayDA(rv_name,iID,config);
         } else {
@@ -309,8 +311,7 @@ const tdouble flxPyRV::icdf(const tdouble p)
 {
     ensure_is_a_basic_rv();
     rv_ptr_->eval_para();
-    const tdouble y = rv_InvPhi_noAlert( p );
-    return rv_ptr_->transform_y2x(y);
+    return rv_ptr_->calc_icdf_x(p);
 }
 
 const tdouble flxPyRV::sf(const tdouble x_val, const bool safeCalc)

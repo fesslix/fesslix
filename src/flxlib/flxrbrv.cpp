@@ -67,6 +67,13 @@ const tdouble RBRV_entry::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
   throw FlxException("RBRV_entry::calc_cdf_x", ssV.str() );
 }
 
+const tdouble RBRV_entry::calc_icdf_x(const tdouble p_val)
+{
+  std::ostringstream ssV;
+  ssV << "This operation is not available for this type of random variable (rv-name: " << name << ").";
+  throw FlxException("RBRV_entry::calc_icdf_x", ssV.str() );
+}
+
 const tdouble RBRV_entry::calc_sf_x(const tdouble& x_val, const bool safeCalc)
 {
   return ONE-this->calc_cdf_x(x_val,safeCalc);
@@ -217,6 +224,12 @@ void RBRV_entry_RV_base::transform_y2x(const tdouble*const y_vec)
   #endif
 }
 
+const tdouble RBRV_entry_RV_base::calc_icdf_x(const tdouble p_val)
+{
+  const tdouble y = rv_InvPhi_noAlert( p_val );
+  return this->transform_y2x(y);
+}
+
 struct flx_RBRV_entry_RV_data {
   tdouble p_i;                // probability of HPD interval
   RBRV_entry_RV_base* rbrv;
@@ -230,11 +243,11 @@ tdouble perfFun1D_RBRV_entry_RV_base(const tdouble x, void *params) {
     tdouble lp = x;
     if (lp<=ZERO) return 1e90;
     if (lp >= ONE - dat->p_i) return 1e90;
-    const tdouble lb = dat->rbrv->transform_y2x( rv_InvPhi( lp ) );
+    const tdouble lb = dat->rbrv->calc_icdf_x( lp );
   // calculate upper bound
     tdouble up = lp + dat->p_i;
     if (up>ONE) throw FlxException_Crude("perfFun1D_RBRV_entry_RV_base");
-    const tdouble ub = dat->rbrv->transform_y2x( rv_InvPhi( up ) );
+    const tdouble ub = dat->rbrv->calc_icdf_x( up );
   // remember minimum?
     if (ub-lb < dat->om) dat->om = ub-lb;
   return ub-lb;

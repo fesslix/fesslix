@@ -1527,8 +1527,7 @@ const tdouble FunCDF_inv::calc()
 {
   rep->eval_para();
   const tdouble p = fun->calc();
-  const tdouble y = rv_InvPhi_noAlert( p );
-  return rep->transform_y2x(y);
+  return rep->calc_icdf_x(p);
 }
 
 // ------------------------------------------------------------------------------------------------

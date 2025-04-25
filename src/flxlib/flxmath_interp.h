@@ -20,6 +20,9 @@
 #include "flxglobal.h"
 
 
+const tdouble flx_interpolate_linear(const tdouble x_val, const tdouble* x_ptr, const tdouble* f_ptr, const size_t N);
+
+
 class FLXLIB_EXPORT flx_interp {
   private:
     size_t Nreserve;

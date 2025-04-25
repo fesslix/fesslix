@@ -20,6 +20,33 @@
 #include <string.h>
 #include <boost/iterator/iterator_concepts.hpp>
 
+
+const tdouble flx_interpolate_linear(const tdouble x_val, const tdouble* x_ptr, const tdouble* f_ptr, const size_t N)
+{
+  size_t Nel = N;
+  size_t cpos = 0;
+  // check beginning and ending of matrix
+    if (x_val<=x_ptr[0]) {
+      return f_ptr[0];
+    }
+    if (x_val>=x_ptr[Nel-1]) {
+      return f_ptr[Nel-1];
+    }
+  // find the lower bound of the interpolation interval
+    while (Nel>1) {
+      size_t npos = cpos + Nel/2;
+      if (x_ptr[npos]>x_val) {
+        Nel = npos - cpos;
+      } else {
+        Nel = Nel - (npos - cpos);
+        cpos = npos;
+      }
+    };
+  // interpolate
+    return f_ptr[cpos] + (f_ptr[cpos+1]-f_ptr[cpos])*((x_val-x_ptr[cpos])/(x_ptr[cpos+1]-x_ptr[cpos]));
+}
+
+
 flx_interp::flx_interp(size_t Nreserve)
 : Nreserve(Nreserve), Nsmpl(0), dptr(new tdouble[2*Nreserve])
 {

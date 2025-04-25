@@ -16,6 +16,7 @@
  */
 
 #include "flxrbrv_rvs.h"
+#include "flxobjrandom.h"
 
 
 const tdouble RBRV_entry_RV_stdN::transform_y2x(const tdouble y_val)
@@ -729,6 +730,11 @@ const tdouble RBRV_entry_RV_uniform::calc_cdf_x(const tdouble& x_val, const bool
   return (x_val-av)/(bv-av);
 }
 
+const tdouble RBRV_entry_RV_uniform::calc_icdf_x(const tdouble p_val)
+{
+  return p_val*(bv-av)+av;
+}
+
 const tdouble RBRV_entry_RV_uniform::calc_sf_x(const tdouble& x_val, const bool safeCalc)
 {
   if (x_val>bv || x_val<av) {
@@ -1296,7 +1302,10 @@ const tdouble RBRV_entry_RV_beta::calc_pdf_x_log(const tdouble& x_val, const boo
 const tdouble RBRV_entry_RV_beta::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
 {
   if (x_val>bv || x_val<av) {
-    if (safeCalc) return ZERO;
+    if (safeCalc) {
+      if (x_val<av) return ZERO;
+      else return ONE;
+    }
     std::ostringstream ssV;
     ssV << "Value (" << GlobalVar.Double2String(x_val) << ") is not within the valid bounds [" << GlobalVar.Double2String(av) << ";" << GlobalVar.Double2String(bv) << "].";
     throw FlxException("RBRV_entry_RV_beta::calc_cdf_x", ssV.str() );
@@ -1308,7 +1317,10 @@ const tdouble RBRV_entry_RV_beta::calc_cdf_x(const tdouble& x_val, const bool sa
 const tdouble RBRV_entry_RV_beta::calc_sf_x(const tdouble& x_val, const bool safeCalc)
 {
   if (x_val>bv || x_val<av) {
-    if (safeCalc) return ZERO;
+    if (safeCalc) {
+      if (x_val<av) return ONE;
+      else return ZERO;
+    }
     std::ostringstream ssV;
     ssV << "Value (" << GlobalVar.Double2String(x_val) << ") is not within the valid bounds [" << GlobalVar.Double2String(av) << ";" << GlobalVar.Double2String(bv) << "].";
     throw FlxException("RBRV_entry_RV_beta::calc_sf_x", ssV.str() );
@@ -3414,6 +3426,203 @@ const bool RBRV_entry_RV_maxminTransform::search_circref(FlxFunction* fcr)
   const bool b = (corr_valF==NULL)?false:(corr_valF->search_circref(fcr));
   return b || (n?(n->search_circref(fcr)):false) || rv_z->search_circref(fcr);
 }
+
+
+
+RBRV_entry_RV_base* extract_tail_rv(py::dict& dict_tail)
+{
+  const std::string tail_model = parse_py_para_as_string("use_model", dict_tail, true);
+  if (dict_tail.contains("models")==false) {
+    throw FlxException("extract_tail_rv_01", "Key 'models' not found in tail configuration.");
+  }
+  py::dict dict_models = parse_py_obj_as_dict(dict_tail["models"], "Key 'models' in 'config'");
+  if (dict_models.contains(tail_model.c_str())==false) {
+    throw FlxException("extract_tail_rv_02", "Model '" + tail_model + "' not found in tail configuration.");
+  }
+  py::dict config = parse_py_obj_as_dict(dict_models[tail_model.c_str()], "Model '" + tail_model + "' in 'config'");
+  return parse_py_obj_as_rv(config,false,0,"","internal");
+}
+
+RBRV_entry_RV_quantiles::RBRV_entry_RV_quantiles(const std::string& name, const tuint iID, py::dict config)
+: RBRV_entry_RV_base(name,iID), N_bins(0), p_vec(nullptr), q_vec(nullptr), N_vec(nullptr), tail_up(nullptr), tail_low(nullptr), use_pchip(false)
+{
+  try {
+    N_bins = parse_py_para_as_tuintNo0("N_bins",config,true);
+    if (N_bins<5) {
+      throw FlxException("RBRV_entry_RV_quantiles::RBRV_entry_RV_quantiles_01", "Not enough data.");
+    }
+    // import p_vec
+      pv.resize(N_bins+1);
+      p_vec = &pv[0];
+      flxVec pv_tmp(p_vec,N_bins+1);
+      pv_tmp = parse_py_para_as_flxVec("p_vec",config,true);
+    // import q_vec
+      qv.resize(N_bins+1);
+      q_vec = &qv[0];
+      flxVec qv_tmp(q_vec,N_bins+1);
+      qv_tmp = parse_py_para_as_flxVec("q_vec",config,true);
+    // tail fit
+      const bool use_tail_fit = parse_py_para_as_bool("use_tail_fit",config,false,false);
+      if (use_tail_fit) {
+        // lower tail
+          if (config.contains("tail_lower")) {
+            py::dict dict_tail = parse_py_obj_as_dict(config["tail_lower"], "'tail_lower' in 'config'");
+            tail_low = extract_tail_rv(dict_tail);
+          }
+        // upper tail
+          if (config.contains("tail_upper")) {
+            py::dict dict_tail = parse_py_obj_as_dict(config["tail_upper"], "'tail_upper' in 'config'");
+            tail_up = extract_tail_rv(dict_tail);
+          }
+      }
+
+
+
+    // N_vec = new tuint[N_total];
+    // import pchip
+      use_pchip = parse_py_para_as_bool("use_pchip",config,false,false);
+      if (use_pchip) {
+        // NOTE not very memory efficient. One could use » std::make_shared<std::vector<tdouble>>(x);
+        pchip_cdf.emplace( std::vector<tdouble>(qv), std::vector<tdouble>(pv) );
+        pchip_icdf.emplace( std::vector<tdouble>(pv), std::vector<tdouble>(qv) );
+      }
+  } catch (FlxException& e) {
+    free_mem();
+    throw;
+  }
+}
+
+
+RBRV_entry_RV_quantiles::~RBRV_entry_RV_quantiles()
+{
+    free_mem();
+}
+
+void RBRV_entry_RV_quantiles::free_mem()
+{
+    if (N_vec) delete [] N_vec;
+    if (tail_up) delete tail_up;
+    if (tail_low) delete tail_low;
+}
+
+void RBRV_entry_RV_quantiles::eval_para()
+{
+
+}
+
+const tdouble RBRV_entry_RV_quantiles::transform_y2x(const tdouble y_val)
+{
+  const tdouble p = rv_Phi(y_val);
+  if (p<p_vec[1]) {
+    if (tail_low) {
+      const tdouble p_transformed = ONE - p/p_vec[1];
+      const tdouble x_transformed = tail_low->calc_icdf_x(p_transformed);
+      return q_vec[1] - x_transformed;
+    }
+  } else if (p>p_vec[N_bins-1]) {
+    if (tail_up) {
+      const tdouble p_transformed = (p-p_vec[N_bins-1])/(ONE-p_vec[N_bins-1]);
+      const tdouble x_transformed = tail_up->calc_icdf_x(p_transformed);
+      return x_transformed + q_vec[N_bins-1];
+    }
+  }
+  if (use_pchip) {
+    return (*pchip_icdf)(p);
+  } else {
+    return flx_interpolate_linear(p, p_vec, q_vec, N_bins+1);
+  }
+}
+
+const tdouble RBRV_entry_RV_quantiles::transform_x2y(const tdouble& x_val)
+{
+  return rv_InvPhi_noAlert(this->calc_cdf_x(x_val));
+}
+
+const tdouble RBRV_entry_RV_quantiles::calc_pdf_x(const tdouble& x_val, const bool safeCalc)
+{
+  const tdouble x_ref = q_vec[N_bins/2];
+  const tdouble stepf = 1e-6;
+  const tdouble dx = stepf*x_ref;
+  const tdouble pr_low = this->calc_cdf_x(x_val-dx);
+  const tdouble pr_up  = this->calc_cdf_x(x_val+dx);
+  return (pr_up-pr_low)/(2*dx);
+}
+
+const tdouble RBRV_entry_RV_quantiles::calc_cdf_x(const tdouble& x_val, const bool safeCalc)
+{
+  if (x_val<q_vec[1]) {
+    if (tail_low) {
+      const tdouble x_transformed = q_vec[1] - x_val;
+      const tdouble p_transformed = tail_low->calc_cdf_x(x_transformed, safeCalc);
+      return (ONE-p_transformed)*p_vec[1];
+    }
+  } else if (x_val>q_vec[N_bins-1]) {
+    if (tail_up) {
+      const tdouble x_transformed = x_val-q_vec[N_bins-1];
+      const tdouble p_transformed = tail_up->calc_cdf_x(x_transformed, safeCalc);
+      return p_transformed*(ONE-p_vec[N_bins-1])+p_vec[N_bins-1];
+    }
+  }
+  if (use_pchip) {
+    return (*pchip_cdf)(x_val);
+  } else {
+    return flx_interpolate_linear(x_val, q_vec, p_vec, N_bins+1);
+  }
+}
+
+const tdouble RBRV_entry_RV_quantiles::get_mean_current_config()
+{
+  throw FlxException_NotImplemented("RBRV_entry_RV_quantiles::get_mean_current_config");
+}
+
+const tdouble RBRV_entry_RV_quantiles::get_median_current_config()
+{
+  throw FlxException_NotImplemented("RBRV_entry_RV_quantiles::get_median_current_config");
+}
+
+const tdouble RBRV_entry_RV_quantiles::get_mode_current_config()
+{
+  throw FlxException_NotImplemented("RBRV_entry_RV_quantiles::get_mode_current_config");
+}
+
+const tdouble RBRV_entry_RV_quantiles::get_sd_current_config()
+{
+  throw FlxException_NotImplemented("RBRV_entry_RV_quantiles::get_sd_current_config");
+}
+
+const bool RBRV_entry_RV_quantiles::check_x(const tdouble xV)
+{
+  if (xV<q_vec[0]) {
+    if (tail_low) {
+      const tdouble x_transformed = q_vec[1] - xV;
+      return tail_low->check_x(x_transformed);
+    } else {
+      return false;
+    }
+  } else if (xV>q_vec[N_bins]) {
+    if (tail_up) {
+      const tdouble x_transformed = xV - q_vec[N_bins-1];
+      return tail_up->check_x(x_transformed);
+    } else {
+      return false;
+    }
+  } else {
+    return true;
+  }
+}
+
+const bool RBRV_entry_RV_quantiles::search_circref(FlxFunction* fcr)
+{
+  bool b = false;
+  if (tail_low) {
+    b = b || tail_low->search_circref(fcr);
+  }
+  if (tail_up) {
+    b = b || tail_up->search_circref(fcr);
+  }
+  return b;
+}
+
 
 
 tdouble calc_expectation_numerical_1D::calc_expectation(const tulong N_Interv, const tulong N, const tdouble pRedistribute, RBRV_entry_RV_base& rnd, const tdouble LB, const tdouble UB)

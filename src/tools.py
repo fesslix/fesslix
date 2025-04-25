@@ -21,7 +21,7 @@
 import fesslix as flx
 
 import numpy as np
-
+from scipy import stats as scipy_stats
 
 
 ##################################################
@@ -101,6 +101,61 @@ def discretize_stdNormal_space(q_low=1e-3, q_up=None, x_disc_N=int(1e3)):
 # Working with float arrays                      #
 ##################################################
 
+def fit_tail_to_data(tail_data_transformed, bound=None):
+    res = { 'models':{} }
+    def neg_log_likelihood(dist, data, params):
+        return -np.sum(dist.logpdf(data, *params))
+    ## ======================
+    ## Fit generalized pareto
+    ## ======================
+    ## Fit GPD to the tail data
+    gpd_params = scipy_stats.genpareto.fit(tail_data_transformed,floc=0.)
+    res_ = { 'type':'genpareto', 'xi':gpd_params[0], 'scale':gpd_params[2] }
+    ## Kolmogorov–Smirnov Test
+    D_gpd, p_gpd = scipy_stats.kstest(tail_data_transformed, 'genpareto', args=gpd_params)
+    res_['kstest_D'] = D_gpd
+    res_['kstest_p'] = p_gpd
+    ## Log-Likelihood
+    res_['nll'] = neg_log_likelihood(scipy_stats.genpareto, tail_data_transformed, gpd_params)
+    ## store results
+    res['models']['genpareto'] = res_
+    ## ==========================
+    ## Fit lognormal distribution
+    ## ==========================
+    ## Fit log-Normal distribution to the tail data
+    logn_params = scipy_stats.lognorm.fit(tail_data_transformed,floc=0.)
+    res_ = { 'type':'logn', 'lambda':logn_params[2], 'zeta':logn_params[0] }
+    ## Kolmogorov–Smirnov Test
+    D_logn, p_logn = scipy_stats.kstest(tail_data_transformed, 'lognorm', args=logn_params)
+    res_['kstest_D'] = D_logn
+    res_['kstest_p'] = p_logn
+    ## Log-Likelihood
+    res_['nll'] = neg_log_likelihood(scipy_stats.lognorm, tail_data_transformed, logn_params)
+    ## store results
+    res['models']['logn'] = res_
+    ## ==========================
+    ## TODO fit beta distribution in case there is a bound
+    ## ==========================
+    # TODO
+
+    ## ==========================
+    ## Select model with best fit
+    ## ==========================
+    best_fit = None
+    best_model = None
+    for model_type, model in res['models'].items():
+        if best_fit is None:
+            best_fit = model['nll']
+            best_model = model_type
+        else:
+            if best_fit > model['nll']:
+                best_fit = model['nll']
+                best_model = model_type
+    res['best_model'] = best_model  ## model with best fit
+    res['use_model'] = best_model   ## use the model with best fit
+    return res
+
+
 def get_quantiles_from_data(data, p_vec=None, N_points_per_bin=100, data_is_sorted=False, lower_bound=None, upper_bound=None):
     """Extract quantiles from data."""
     res = {}
@@ -112,7 +167,7 @@ def get_quantiles_from_data(data, p_vec=None, N_points_per_bin=100, data_is_sort
     else:
         sdata = np.sort(data, axis=None)
     N_total = sdata.size
-    res['N_total'] = N_total
+    res['N_total'] = N_total    ## total number of samples considered
     ## ==============
     ## Assemble p_vec
     ## ==============
@@ -127,35 +182,95 @@ def get_quantiles_from_data(data, p_vec=None, N_points_per_bin=100, data_is_sort
         ## assign probabilities
         ## --------------------
         p_vec = discretize_x(x_low=0., x_up=1., x_disc_N=N_bins+1, x_disc_shift=False, x_disc_on_log=False)
+    else:
+        N_bins = p_vec.size()-1
     if p_vec[0]!=0. or p_vec[-1]!=1.:
         raise NameError(f"ERROR 202504241513: First and last value of 'p_vec' must be 0.0 and 1.0, respectively.")
-    res['p_vec'] = p_vec
+    if N_bins < 5:
+        raise NameError(f'ERROR 202504250716: Not enough bins. {N_bins = }')
+    res['N_bins'] = N_bins
+    res['p_vec'] = p_vec    ## vector of probabilities (for quantile evaluation)
     ## ==============
     ## Assemble q_vec
     ## ==============
-    q_vec = np.empty(p_vec.size)
+    res['nf_points_per_bin'] = N_total/float(N_bins)  ## (average) number of points per bin
+    q_vec = np.empty(N_bins+1)
+    N_vec = np.empty(N_bins,dtype=int)
+    j_first = None
+    j_last  = None
+    j_prev = 0
     for i in range(N_bins+1):
         p = p_vec[i]
         if p<=0.:
             if lower_bound is None:
-                q_vec[i] = sdata[0]
+                q_vec[i] = sdata[0] - (sdata[1]-sdata[0])/2
             else:
                 q_vec[i] = lower_bound
+                if lower_bound>sdata[0]:
+                    raise NameError(f"ERROR 202504250831: lower bound is larger than minimum in data. {lower_bound = }, {sdata[0] = }")
+            j = 0
         elif p>=1.:
             if upper_bound is None:
-                q_vec[i] = sdata[-1]
+                q_vec[i] = sdata[-1] + (sdata[-1]-sdata[-2])/2
             else:
                 q_vec[i] = upper_bound
+                if upper_bound<sdata[-1]:
+                    raise NameError(f"ERROR 202504250832: upper bound is smaller than maimum in data. {upper_bound = }, {sdata[-1] = }")
+            j = N_total
         else:
             ## linear interpolation
-            nf = p*N_total
+            nf = p*N_total - 0.5
             j = int(nf)
             nf -= j
             q_vec[i] = sdata[j] + (sdata[j+1]-sdata[j])*nf
-    res['q_vec'] = q_vec
+            ## remember relevant indices for tail-fitting
+            if i==1:
+                j_first = j+1
+                if nf<1e-12:  ## if quantile matches 'exactly' the relevant data-point it is not part of the tail
+                    j_first -= 1
+            if i==N_bins-1:
+                j_last = j+1
+            ## increase j by 1 for assembling N_vec
+            j += 1
+        ## store number of samples per bin
+        if i>0:
+            N_vec[i-1] = j-j_prev
+            j_prev = j
+    ## make sure that only unique values are in q_vec
+    for i in range(N_bins):
+        if q_vec[i]==q_vec[i+1]:
+            raise NameError(f"ERROR 202504250837: quantiles are not unique. {i = }")
+    res['q_vec'] = q_vec    ## vector of quantiles (associated with p_vec)
+    ## make sure total number of samples is consistent
+    if sum(N_vec)!=N_total:
+        raise NameError(f"ERROR 202504250841: {sum(N_vec)}, {N_vec = }")
+    res['N_vec'] = N_vec
+    ## ==============================================
+    ## fit upper tail
+    ## ==============================================
+    Q_tail = q_vec[-2]
+    tail_data_transformed = sdata[j_last:] - Q_tail
+    if upper_bound is None:
+        bound_transformed = upper_bound
+    else:
+        bound_transformed = upper_bound - Q_tail
+    res['tail_upper'] = fit_tail_to_data(tail_data_transformed,bound_transformed)
+    ## ==============================================
+    ## fit lower tail
+    ## ==============================================
+    Q_tail = q_vec[1]
+    tail_data_transformed = Q_tail - sdata[:j_first]
+    if lower_bound is None:
+        bound_transformed = lower_bound
+    else:
+        bound_transformed = Q_tail - lower_bound
+    res['tail_lower'] = fit_tail_to_data(tail_data_transformed,bound_transformed)
     ## ==============================================
     ## return
     ## ==============================================
+    res['type'] = 'quantiles'
+    res['use_pchip'] = False
+    res['use_tail_fit'] = True
     return res
 
 

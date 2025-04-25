@@ -19,6 +19,9 @@
 
 #include "flxrbrv.h"
 
+#include <boost/math/interpolators/pchip.hpp>
+
+
 
 class PYBIND11_EXPORT RBRV_entry_RV_normal : public RBRV_entry_RV_base {
   protected:
@@ -144,6 +147,7 @@ class PYBIND11_EXPORT RBRV_entry_RV_uniform : public RBRV_entry_RV_base {
     virtual const tdouble transform_x2y(const tdouble& x_val);
     virtual const tdouble calc_pdf_x(const tdouble& x_val, const bool safeCalc=false);
     virtual const tdouble calc_cdf_x(const tdouble& x_val, const bool safeCalc=false);
+    virtual const tdouble calc_icdf_x(const tdouble p_val);
     virtual const tdouble calc_sf_x(const tdouble& x_val, const bool safeCalc=false);
     virtual const tdouble calc_entropy();
     virtual const tdouble get_mean_current_config();
@@ -685,6 +689,43 @@ class PYBIND11_EXPORT RBRV_entry_RV_maxminTransform : public RBRV_entry_RV_base 
     virtual const bool check_x(const tdouble xV);
     virtual const bool search_circref(FlxFunction* fcr);
 };
+
+
+
+class PYBIND11_EXPORT RBRV_entry_RV_quantiles : public RBRV_entry_RV_base {
+  protected:
+    tulong N_bins;
+    std::vector<tdouble> pv;
+    std::vector<tdouble> qv;
+    tdouble* p_vec;   // of size N_bins+1
+    tdouble* q_vec;   // of size N_bins+1
+    tuint* N_vec;     // of size N_bins+1
+    RBRV_entry_RV_base* tail_up;
+    RBRV_entry_RV_base* tail_low;
+
+    bool use_pchip;
+    std::optional<boost::math::interpolators::pchip<std::vector<tdouble>>> pchip_cdf;
+    std::optional<boost::math::interpolators::pchip<std::vector<tdouble>>> pchip_icdf;
+
+    void free_mem();
+  public:
+    RBRV_entry_RV_quantiles(const std::string& name, const tuint iID, py::dict config);
+    virtual ~RBRV_entry_RV_quantiles();
+
+    const std::string get_type() const { return "quantiles"; }
+    virtual void eval_para();
+    virtual const tdouble transform_y2x(const tdouble y_val);
+    virtual const tdouble transform_x2y(const tdouble& x_val);
+    virtual const tdouble calc_pdf_x(const tdouble& x_val, const bool safeCalc=false);
+    virtual const tdouble calc_cdf_x(const tdouble& x_val, const bool safeCalc=false);
+    virtual const tdouble get_mean_current_config();
+    virtual const tdouble get_sd_current_config();
+    virtual const tdouble get_median_current_config();
+    virtual const tdouble get_mode_current_config();
+    virtual const bool check_x(const tdouble xV);
+    virtual const bool search_circref(FlxFunction* fcr);
+};
+
 
 
 

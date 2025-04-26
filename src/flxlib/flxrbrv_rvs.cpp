@@ -1183,6 +1183,9 @@ RBRV_entry_RV_beta::RBRV_entry_RV_beta(const std::string& name, const tuint iID,
       throw FlxException_NeglectInInteractive("RBRV_entry_RV_beta::RBRV_entry_RV_beta_70", "Required parameters to define distribution not found in Python <dict>.");
     }
 
+    a =  parse_py_para("a", config, false);
+    b =  parse_py_para("b", config, false);
+
     eval_once = parse_py_para_as_bool("eval_once", config, false, false);
 
     this->init();

@@ -134,10 +134,19 @@ def fit_tail_to_data(tail_data_transformed, bound=None):
     ## store results
     res['models']['logn'] = res_
     ## ==========================
-    ## TODO fit beta distribution in case there is a bound
+    ## fit beta distribution in case there is a bound
     ## ==========================
-    # TODO
-
+    if bound is not None:
+        beta_params = scipy_stats.beta.fit(tail_data_transformed,floc=0.,fscale=bound)
+        res_ = { 'type':'beta', 'alpha':beta_params[0], 'beta':beta_params[1], 'a':beta_params[2], 'b':beta_params[3] }
+        ## Kolmogorov–Smirnov Test
+        D_beta, p_beta = scipy_stats.kstest(tail_data_transformed, 'beta', args=beta_params)
+        res_['kstest_D'] = D_beta
+        res_['kstest_p'] = p_beta
+        ## Log-Likelihood
+        res_['nll'] = neg_log_likelihood(scipy_stats.beta, tail_data_transformed, beta_params)
+        ## store results
+        res['models']['beta'] = res_
     ## ==========================
     ## Select model with best fit
     ## ==========================

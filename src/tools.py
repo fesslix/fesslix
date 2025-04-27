@@ -255,6 +255,24 @@ def get_quantiles_from_data(data, p_vec=None, N_points_per_bin=100, data_is_sort
         raise NameError(f"ERROR 202504250841: {sum(N_vec)}, {N_vec = }")
     res['N_vec'] = N_vec
     ## ==============================================
+    ## fit beta distribution to individual bins
+    ## ==============================================
+    bin_rvbeta_params = np.ones(N_bins*2)*-1.
+    for i in range(N_bins):
+        ## transform bin-data to [0.,1.] values
+        x_low = q_vec[i]
+        x_up  = q_vec[i+1]
+        if (x_up-x_low)<1e-12: ## avoid fit if values are 'almost' equivalent
+            continue
+        data_bin = data[np.logical_and( (x_low<data), (x_up>data) )]
+        data_bin -= x_low
+        data_bin /= (x_up-x_low)
+        ## fit distribution
+        beta_params = scipy_stats.beta.fit(data_bin,floc=0.,fscale=1.)
+        bin_rvbeta_params[i*2] = beta_params[0]
+        bin_rvbeta_params[i*2+1] = beta_params[1]
+    res['bin_rvbeta_params'] = bin_rvbeta_params
+    ## ==============================================
     ## fit upper tail
     ## ==============================================
     Q_tail = q_vec[-2]
@@ -278,7 +296,7 @@ def get_quantiles_from_data(data, p_vec=None, N_points_per_bin=100, data_is_sort
     ## return
     ## ==============================================
     res['type'] = 'quantiles'
-    res['use_pchip'] = False
+    res['interpol'] = "linear"
     res['use_tail_fit'] = True
     return res
 

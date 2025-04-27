@@ -22,6 +22,10 @@
 
 const tdouble flx_interpolate_linear(const tdouble x_val, const tdouble* x_ptr, const tdouble* f_ptr, const size_t N);
 
+/**
+* @returns the index of the first element in x_ptr larger or equal than x_val
+*/
+const size_t flx_interpolate_find_larger_eq(const tdouble x_val, const tdouble* x_ptr, const size_t N);
 
 class FLXLIB_EXPORT flx_interp {
   private:

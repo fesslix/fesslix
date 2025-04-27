@@ -46,6 +46,26 @@ const tdouble flx_interpolate_linear(const tdouble x_val, const tdouble* x_ptr, 
     return f_ptr[cpos] + (f_ptr[cpos+1]-f_ptr[cpos])*((x_val-x_ptr[cpos])/(x_ptr[cpos+1]-x_ptr[cpos]));
 }
 
+const size_t flx_interpolate_find_larger_eq(const tdouble x_val, const tdouble* x_ptr, const size_t N)
+{
+  if (N==0) return 0;
+  if (x_val<x_ptr[0]) return 0;
+  if (x_val>x_ptr[N-1]) return N;
+  size_t start = 0;
+  size_t length = N;
+  while (length>1) {
+    const size_t check = start + (length/2);
+    if (x_val<x_ptr[check]) {
+      // start = start;
+      length = check-start;
+    } else {
+      length = (start+length)-check;
+      start = check;
+    }
+  };
+  return start+1;
+}
+
 
 flx_interp::flx_interp(size_t Nreserve)
 : Nreserve(Nreserve), Nsmpl(0), dptr(new tdouble[2*Nreserve])

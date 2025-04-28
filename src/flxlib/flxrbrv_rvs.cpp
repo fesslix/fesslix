@@ -3622,12 +3622,12 @@ RBRV_entry_RV_quantiles::RBRV_entry_RV_quantiles(const std::string& name, const 
       pv.resize(N_bins+1);
       p_vec = &pv[0];
       flxVec pv_tmp(p_vec,N_bins+1);
-      pv_tmp = parse_py_para_as_flxVec("p_vec",config,true);
+      pv_tmp.assign_save(parse_py_para_as_flxVec("p_vec",config,true));
     // import q_vec
       qv.resize(N_bins+1);
       q_vec = &qv[0];
       flxVec qv_tmp(q_vec,N_bins+1);
-      qv_tmp = parse_py_para_as_flxVec("q_vec",config,true);
+      qv_tmp.assign_save(parse_py_para_as_flxVec("q_vec",config,true));
     // tail fit
       const bool use_tail_fit = parse_py_para_as_bool("use_tail_fit",config,false,false);
       if (use_tail_fit) {
@@ -3647,32 +3647,80 @@ RBRV_entry_RV_quantiles::RBRV_entry_RV_quantiles(const std::string& name, const 
         const std::string str_interpol = parse_py_para_as_word("interpol",config,true,true);
         if (str_interpol=="uniform") interpol_type = interpol_type_t::uniform;
         else if (str_interpol=="pchip") interpol_type = interpol_type_t::pchip;
-        else if (str_interpol=="beta") interpol_type = interpol_type_t::beta;
-        else if (str_interpol=="linear") interpol_type = interpol_type_t::linear;
+        else if (str_interpol=="bin_beta") interpol_type = interpol_type_t::bin_beta;
+        else if (str_interpol=="bin_linear") interpol_type = interpol_type_t::bin_linear;
+        else if (str_interpol=="pdf_linear") interpol_type = interpol_type_t::pdf_linear;
         else {
           throw FlxException("RBRV_entry_RV_quantiles::RBRV_entry_RV_quantiles_02","Unknown identifier for type of interpolation: " + str_interpol);
         }
       }
 
     // beta-fit of bins
-      if (interpol_type == interpol_type_t::beta) {
+      if (interpol_type == interpol_type_t::bin_beta) {
         if (config.contains("bin_rvbeta_params")) {
           bin_rv_params = new tdouble[N_bins*2];
           flxVec brvb_tmp(bin_rv_params,N_bins*2);
-          brvb_tmp = parse_py_para_as_flxVec("bin_rvbeta_params",config,true);
+          brvb_tmp.assign_save(parse_py_para_as_flxVec("bin_rvbeta_params",config,true));
         } else {
           throw FlxException("RBRV_entry_RV_quantiles::RBRV_entry_RV_quantiles_03", "'bin_rvbeta_params' required in config.");
         }
       }
     // linear-fit of bins
-      if (interpol_type == interpol_type_t::linear) {
+      if (interpol_type == interpol_type_t::bin_linear) {
         if (config.contains("bin_rvlinear_params")) {
           bin_rv_params = new tdouble[N_bins];
           flxVec brvb_tmp(bin_rv_params,N_bins);
-          brvb_tmp = parse_py_para_as_flxVec("bin_rvlinear_params",config,true);
+          brvb_tmp.assign_save(parse_py_para_as_flxVec("bin_rvlinear_params",config,true));
         } else {
           throw FlxException("RBRV_entry_RV_quantiles::RBRV_entry_RV_quantiles_04", "'bin_rvlinear_params' required in config.");
         }
+      }
+    // linear fit of entire pdf
+      if (interpol_type == interpol_type_t::pdf_linear) {
+        if (config.contains("pdf_vec")) {
+          bin_rv_params = new tdouble[N_bins+1];
+          flxVec brvb_tmp(bin_rv_params,N_bins+1);
+          brvb_tmp.assign_save(parse_py_para_as_flxVec("pdf_vec",config,true));
+        } else {
+          throw FlxException("RBRV_entry_RV_quantiles::RBRV_entry_RV_quantiles_05", "'pdf_vec' required in config.");
+        }
+        // correct q_vec
+          // remember tail probabilities
+            tdouble Pr_tail_low = ZERO;
+            tuint i_start = 0;
+            if (tail_low) {
+              Pr_tail_low = p_vec[1];
+              i_start = 1;
+            }
+            tdouble Pr_tail_up = ZERO;
+            tuint i_end = N_bins;
+            if (tail_up) {
+              Pr_tail_up = ONE - p_vec[N_bins-1];
+              --i_end;
+            }
+          // reset p_vec
+            pv_tmp = ZERO;
+          // restore tail probabilities
+            p_vec[1] = Pr_tail_low;
+          //  iterate over bins
+            pdouble Pr_sum = Pr_tail_low;
+            for (tuint i=i_start;i<i_end;++i) {
+              Pr_sum += (bin_rv_params[i]+bin_rv_params[i+1])/2*(q_vec[i+1]-q_vec[i]);
+              p_vec[i+1] = Pr_sum.cast2double();
+            }
+          // restore tail properties
+            if (tail_up) {
+              Pr_sum += Pr_tail_up;
+              p_vec[N_bins] = Pr_sum.cast2double();
+            }
+          // try to 'normalize out' round-off errors
+            if (fabs(ONE-Pr_sum.cast2double())>1e-10) {
+              throw FlxException("RBRV_entry_RV_quantiles::RBRV_entry_RV_quantiles_06", GlobalVar.Double2String(ONE-Pr_sum.cast2double()));
+            }
+            for (tuint i=1;i<N_bins;++i) {
+              p_vec[i] /= Pr_sum.cast2double();
+            }
+            p_vec[N_bins] = ONE;
       }
 
     // N_vec = new tuint[N_total]; TODO
@@ -3728,7 +3776,7 @@ const tdouble RBRV_entry_RV_quantiles::transform_y2x(const tdouble y_val)
       return flx_interpolate_linear(p, p_vec, q_vec, N_bins+1);
     case interpol_type_t::pchip:
       return (*pchip_icdf)(p);
-    case interpol_type_t::beta:
+    case interpol_type_t::bin_beta:
     {
       const size_t firstPleq = flx_interpolate_find_larger_eq(p,p_vec,N_bins+1);
       if (p==p_vec[firstPleq]) return q_vec[firstPleq];
@@ -3738,14 +3786,24 @@ const tdouble RBRV_entry_RV_quantiles::transform_y2x(const tdouble y_val)
       const tdouble q_bin = iBeta_reg_inv(alpha,beta,p_);
       return q_bin * (q_vec[firstPleq]-q_vec[firstPleq-1]) + q_vec[firstPleq-1];
     }
-    case interpol_type_t::linear:
+    case interpol_type_t::bin_linear:
     {
       const size_t firstPleq = flx_interpolate_find_larger_eq(p,p_vec,N_bins+1);
       if (p==p_vec[firstPleq]) return q_vec[firstPleq];
-      const tdouble m = bin_rv_params[firstPleq-1];
       const tdouble p_ = (p-p_vec[firstPleq-1])/(p_vec[firstPleq]-p_vec[firstPleq-1]);
-      const tdouble q_bin = (fabs(p_)<1e-12)?p_:((-(ONE-m)+sqrt(pow2(ONE-m)+4*m*p))/(2*m));
-      return q_bin * (q_vec[firstPleq]-q_vec[firstPleq-1]) + q_vec[firstPleq-1];
+      const tdouble m = bin_rv_params[firstPleq-1];
+      const tdouble xx = (fabs(p_)<1e-12)?p_:((-(ONE-m)+sqrt(pow2(ONE-m)+4*m*p_))/(2*m));
+      return xx * (q_vec[firstPleq]-q_vec[firstPleq-1]) + q_vec[firstPleq-1];
+    }
+    case interpol_type_t::pdf_linear:
+    {
+      const size_t firstPleq = flx_interpolate_find_larger_eq(p,p_vec,N_bins+1);
+      const tdouble delta_pr = p-p_vec[firstPleq-1];
+      const tdouble dx = q_vec[firstPleq]-q_vec[firstPleq-1];
+      const tdouble a = bin_rv_params[firstPleq-1];
+      const tdouble b = bin_rv_params[firstPleq];
+      const tdouble delta_x = dx/(b-a)*(sqrt(pow2(a)+2*(b-a)/dx*delta_pr)-a);
+      return delta_x + q_vec[firstPleq-1];
     }
     default:
       throw FlxException("RBRV_entry_RV_quantiles::transform_y2x");
@@ -3787,7 +3845,7 @@ const tdouble RBRV_entry_RV_quantiles::calc_cdf_x(const tdouble& x_val, const bo
       return flx_interpolate_linear(x_val, q_vec, p_vec, N_bins+1);
     case interpol_type_t::pchip:
       return (*pchip_cdf)(x_val);
-    case interpol_type_t::beta:
+    case interpol_type_t::bin_beta:
     {
       const size_t firstXleq = flx_interpolate_find_larger_eq(x_val,q_vec,N_bins+1);
       if (x_val==q_vec[firstXleq]) return p_vec[firstXleq];
@@ -3797,14 +3855,25 @@ const tdouble RBRV_entry_RV_quantiles::calc_cdf_x(const tdouble& x_val, const bo
       const tdouble p_bin = iBeta_reg(alpha,beta,xx);
       return p_bin * (p_vec[firstXleq]-p_vec[firstXleq-1]) + p_vec[firstXleq-1];
     }
-    case interpol_type_t::linear:
+    case interpol_type_t::bin_linear:
     {
       const size_t firstXleq = flx_interpolate_find_larger_eq(x_val,q_vec,N_bins+1);
       if (x_val==q_vec[firstXleq]) return p_vec[firstXleq];
       const tdouble m = bin_rv_params[firstXleq-1];
-      const tdouble xx = (x_val-q_vec[firstXleq-1])/(q_vec[firstXleq]-q_vec[firstXleq-1]);
-      const tdouble p_bin = (ONE-m)*xx+m*pow2(xx);
-      return p_bin * (p_vec[firstXleq]-p_vec[firstXleq-1]) + p_vec[firstXleq-1];
+      const tdouble delta_x = x_val-q_vec[firstXleq-1];
+      const tdouble xx = delta_x/(q_vec[firstXleq]-q_vec[firstXleq-1]);   // normalized to [0,1]
+      const tdouble p1 = ONE-m;
+      const tdouble p_x = ONE+m*(2*xx-ONE);
+      const tdouble delta_p = (p1+p_x)/2*xx*(p_vec[firstXleq]-p_vec[firstXleq-1]);
+      return p_vec[firstXleq-1] + delta_p;
+    }
+    case interpol_type_t::pdf_linear:
+    {
+      const size_t firstXleq = flx_interpolate_find_larger_eq(x_val,q_vec,N_bins+1);
+      const tdouble dx = (q_vec[firstXleq]-q_vec[firstXleq-1]);
+      const tdouble xx = (x_val-q_vec[firstXleq-1])/dx;
+      const tdouble pdfx = bin_rv_params[firstXleq-1] + xx*(bin_rv_params[firstXleq]-bin_rv_params[firstXleq-1]);
+      return (bin_rv_params[firstXleq-1]+pdfx)/2*(xx*dx) + p_vec[firstXleq-1];
     }
     default:
       throw FlxException_Crude("RBRV_entry_RV_quantiles::calc_cdf_x");

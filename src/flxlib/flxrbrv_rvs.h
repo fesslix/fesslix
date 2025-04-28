@@ -739,7 +739,7 @@ class PYBIND11_EXPORT RBRV_entry_RV_quantiles : public RBRV_entry_RV_base {
     RBRV_entry_RV_base* tail_up;
     RBRV_entry_RV_base* tail_low;
 
-    enum class interpol_type_t { uniform, pchip, beta, linear };
+    enum class interpol_type_t { uniform, pchip, bin_beta, bin_linear, pdf_linear };
     interpol_type_t interpol_type;
 
     std::optional<boost::math::interpolators::pchip<std::vector<tdouble>>> pchip_cdf;

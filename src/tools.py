@@ -21,8 +21,8 @@
 import fesslix as flx
 
 import numpy as np
-from scipy import stats as scipy_stats
-from scipy import optimize as scipy_opt
+import scipy.stats
+import scipy.optimize
 import scipy.interpolate
 
 
@@ -111,42 +111,43 @@ def fit_tail_to_data(tail_data_transformed, bound=None):
     ## Fit generalized pareto
     ## ======================
     ## Fit GPD to the tail data
-    gpd_params = scipy_stats.genpareto.fit(tail_data_transformed,floc=0.)
+    gpd_params = scipy.stats.genpareto.fit(tail_data_transformed,floc=0.)
     res_ = { 'type':'genpareto', 'xi':gpd_params[0], 'scale':gpd_params[2] }
+    res_['pdf_0'] = scipy.stats.genpareto.pdf(0., *gpd_params)
     ## Kolmogorov–Smirnov Test
-    D_gpd, p_gpd = scipy_stats.kstest(tail_data_transformed, 'genpareto', args=gpd_params)
+    D_gpd, p_gpd = scipy.stats.kstest(tail_data_transformed, 'genpareto', args=gpd_params)
     res_['kstest_D'] = D_gpd
     res_['kstest_p'] = p_gpd
     ## Log-Likelihood
-    res_['nll'] = neg_log_likelihood(scipy_stats.genpareto, tail_data_transformed, gpd_params)
+    res_['nll'] = neg_log_likelihood(scipy.stats.genpareto, tail_data_transformed, gpd_params)
     ## store results
     res['models']['genpareto'] = res_
     ## ==========================
     ## Fit lognormal distribution
     ## ==========================
     ## Fit log-Normal distribution to the tail data
-    logn_params = scipy_stats.lognorm.fit(tail_data_transformed,floc=0.)
+    logn_params = scipy.stats.lognorm.fit(tail_data_transformed,floc=0.)
     res_ = { 'type':'logn', 'lambda':logn_params[2], 'zeta':logn_params[0] }
     ## Kolmogorov–Smirnov Test
-    D_logn, p_logn = scipy_stats.kstest(tail_data_transformed, 'lognorm', args=logn_params)
+    D_logn, p_logn = scipy.stats.kstest(tail_data_transformed, 'lognorm', args=logn_params)
     res_['kstest_D'] = D_logn
     res_['kstest_p'] = p_logn
     ## Log-Likelihood
-    res_['nll'] = neg_log_likelihood(scipy_stats.lognorm, tail_data_transformed, logn_params)
+    res_['nll'] = neg_log_likelihood(scipy.stats.lognorm, tail_data_transformed, logn_params)
     ## store results
     res['models']['logn'] = res_
     ## ==========================
     ## fit beta distribution in case there is a bound
     ## ==========================
     if bound is not None:
-        beta_params = scipy_stats.beta.fit(tail_data_transformed,floc=0.,fscale=bound)
+        beta_params = scipy.stats.beta.fit(tail_data_transformed,floc=0.,fscale=bound)
         res_ = { 'type':'beta', 'alpha':beta_params[0], 'beta':beta_params[1], 'a':beta_params[2], 'b':beta_params[3] }
         ## Kolmogorov–Smirnov Test
-        D_beta, p_beta = scipy_stats.kstest(tail_data_transformed, 'beta', args=beta_params)
+        D_beta, p_beta = scipy.stats.kstest(tail_data_transformed, 'beta', args=beta_params)
         res_['kstest_D'] = D_beta
         res_['kstest_p'] = p_beta
         ## Log-Likelihood
-        res_['nll'] = neg_log_likelihood(scipy_stats.beta, tail_data_transformed, beta_params)
+        res_['nll'] = neg_log_likelihood(scipy.stats.beta, tail_data_transformed, beta_params)
         ## store results
         res['models']['beta'] = res_
     ## ==========================
@@ -167,23 +168,9 @@ def fit_tail_to_data(tail_data_transformed, bound=None):
     return res
 
 
-def _fit_linear_inclined(x_data):
-    def neg_log_likelihood(m):
-        # Keep inside domain to avoid log of negative numbers
-        if not (-1 <= m <= 1):
-            return np.inf
-        pdf_values = 1 + m * (2 * x_data - 1)
-        if np.any(pdf_values <= 0):
-            return np.inf
-        return -np.sum(np.log(pdf_values))
 
-    result = scipy_opt.minimize_scalar(neg_log_likelihood, bounds=(-1., 1.), method='bounded')
-    return result.x
-
-
-
-def get_quantiles_from_data(data, p_vec=None, N_points_per_bin=100, data_is_sorted=False, lower_bound=None, upper_bound=None):
-    """Extract quantiles from data."""
+def discretize_x_from_data(data,config, data_is_sorted=False, lower_bound=None, upper_bound=None):
+    """discretize parameter space based on a data array"""
     res = {}
     ## ===============
     ## Sort data array
@@ -194,86 +181,127 @@ def get_quantiles_from_data(data, p_vec=None, N_points_per_bin=100, data_is_sort
         sdata = np.sort(data, axis=None)
     N_total = sdata.size
     res['N_total'] = N_total    ## total number of samples considered
-    ## ==============
-    ## Assemble p_vec
-    ## ==============
-    if p_vec is None:
+    ## ========================
+    ## Assemble p_vec and q_vec
+    ## ========================
+    mode = config['mode']
+
+    def assemble_q_from_p(p_vec):
+        N_bins = len(p_vec)-1
+        q_vec = np.empty(N_bins+1)
+        for i in range(N_bins+1):
+            p = p_vec[i]
+            if p<=0.:
+                if lower_bound is None:
+                    q_vec[i] = sdata[0] - (sdata[1]-sdata[0])/2
+                else:
+                    q_vec[i] = lower_bound
+                    if lower_bound>sdata[0]:
+                        raise NameError(f"ERROR 202504250831: lower bound is larger than minimum in data. {lower_bound = }, {sdata[0] = }")
+            elif p>=1.:
+                if upper_bound is None:
+                    q_vec[i] = sdata[-1] + (sdata[-1]-sdata[-2])/2
+                else:
+                    q_vec[i] = upper_bound
+                    if upper_bound<sdata[-1]:
+                        raise NameError(f"ERROR 202504250832: upper bound is smaller than maximum in data. {upper_bound = }, {sdata[-1] = }")
+            else:
+                ## linear interpolation
+                nf = p*N_total - 0.5
+                j = int(nf)
+                nf -= j
+                q_vec[i] = sdata[j] + (sdata[j+1]-sdata[j])*nf
+        return q_vec
+
+    ## -----------------
+    ## equidistant p_vec
+    ## -----------------
+    if mode=='equidist_p':
         ## ---------------------
         ## select number of bins
         ## ---------------------
-        if N_total < N_points_per_bin*10:
-            raise NameError(f'ERROR 202504241439: Not enough data. {N_total = }, {N_points_per_bin = }')
-        N_bins = int(N_total / N_points_per_bin)
+        if 'N_bins' in config:
+            N_bins = config['N_bins']
+        else:
+            N_points_per_bin = 100 # default
+            if 'N_points_per_bin' in config:
+                N_points_per_bin = config['N_points_per_bin']
+            if N_total < N_points_per_bin*5:
+                raise NameError(f'ERROR 202504241439: Not enough data. {N_total = }, {N_points_per_bin = }')
+            N_bins = int(N_total / N_points_per_bin)
         ## --------------------
         ## assign probabilities
         ## --------------------
         p_vec = discretize_x(x_low=0., x_up=1., x_disc_N=N_bins+1, x_disc_shift=False, x_disc_on_log=False)
-    else:
+        q_vec = assemble_q_from_p(p_vec)
+    ## -----------------
+    ## equidistant p_vec
+    ## -----------------
+    elif mode=='fixed_p':
+        ## ensure pre-specified p_vec is sorted
+        p_vec = np.sort(config['p_vec'], axis=None)
         N_bins = p_vec.size()-1
+        q_vec = assemble_q_from_p(p_vec)
+    ## -----------------
+    ## unknown mode
+    ## -----------------
+    else:
+        raise NameError(f"ERROR 202504280813: unknown mode ('{mode}' in config.")
+    ## ========================
+    ## general consistency checks
+    ## ========================
+    ## -----
+    ## p_vec
+    ## -----
+    ## check bounds of p_vec
     if p_vec[0]!=0. or p_vec[-1]!=1.:
         raise NameError(f"ERROR 202504241513: First and last value of 'p_vec' must be 0.0 and 1.0, respectively.")
+    ## check values of p_vec
+    for i in range(N_bins+1):
+        p_target = np.count_nonzero(sdata<=q_vec[i])/float(N_total)
+        if abs(p_vec[i]-p_target)>1e-12:
+            raise NameError(f"ERROR 202504280845")
+    res['p_vec'] = p_vec    ## vector of probabilities (for quantile evaluation)
+    ## ------
+    ## N_bins
+    ## ------
+    ## ensure 'sufficient' number of bins
     if N_bins < 5:
         raise NameError(f'ERROR 202504250716: Not enough bins. {N_bins = }')
     res['N_bins'] = N_bins
-    res['p_vec'] = p_vec    ## vector of probabilities (for quantile evaluation)
-    ## ==============
-    ## Assemble q_vec
-    ## ==============
-    res['nf_points_per_bin'] = N_total/float(N_bins)  ## (average) number of points per bin
-    q_vec = np.empty(N_bins+1)
-    N_vec = np.empty(N_bins,dtype=int)
-    j_first = None
-    j_last  = None
-    j_prev = 0
-    for i in range(N_bins+1):
-        p = p_vec[i]
-        if p<=0.:
-            if lower_bound is None:
-                q_vec[i] = sdata[0] - (sdata[1]-sdata[0])/2
-            else:
-                q_vec[i] = lower_bound
-                if lower_bound>sdata[0]:
-                    raise NameError(f"ERROR 202504250831: lower bound is larger than minimum in data. {lower_bound = }, {sdata[0] = }")
-            j = 0
-        elif p>=1.:
-            if upper_bound is None:
-                q_vec[i] = sdata[-1] + (sdata[-1]-sdata[-2])/2
-            else:
-                q_vec[i] = upper_bound
-                if upper_bound<sdata[-1]:
-                    raise NameError(f"ERROR 202504250832: upper bound is smaller than maimum in data. {upper_bound = }, {sdata[-1] = }")
-            j = N_total
-        else:
-            ## linear interpolation
-            nf = p*N_total - 0.5
-            j = int(nf)
-            nf -= j
-            q_vec[i] = sdata[j] + (sdata[j+1]-sdata[j])*nf
-            ## remember relevant indices for tail-fitting
-            if i==1:
-                j_first = j+1
-                if nf<1e-12:  ## if quantile matches 'exactly' the relevant data-point it is not part of the tail
-                    j_first -= 1
-            if i==N_bins-1:
-                j_last = j+1
-            ## increase j by 1 for assembling N_vec
-            j += 1
-        ## store number of samples per bin
-        if i>0:
-            N_vec[i-1] = j-j_prev
-            j_prev = j
+    ## -----
+    ## q_vec
+    ## -----
     ## make sure that only unique values are in q_vec
     for i in range(N_bins):
         if q_vec[i]==q_vec[i+1]:
             raise NameError(f"ERROR 202504250837: quantiles are not unique. {i = }")
     res['q_vec'] = q_vec    ## vector of quantiles (associated with p_vec)
+    ## ========================
+    ## Assemble N_vec
+    ## ========================
+    N_vec = np.empty(N_bins,dtype=int)
+    for i in range(N_bins):
+        N_vec[i] = np.count_nonzero( np.logical_and( (sdata>q_vec[i]), (sdata<=q_vec[i+1]) ) )
     ## make sure total number of samples is consistent
     if sum(N_vec)!=N_total:
         raise NameError(f"ERROR 202504250841: {sum(N_vec)}, {N_vec = }")
     res['N_vec'] = N_vec
-    ## ==============================================
-    ## fit beta distribution to individual bins
-    ## ==============================================
+    ## ===============================================
+    ## fit beta/linear distribution to individual bins
+    ## ===============================================
+    def _fit_linear_inclined(x_data):
+        def neg_log_likelihood(m):
+            # Keep inside domain to avoid log of negative numbers
+            if not (-1 <= m <= 1):
+                return np.inf
+            pdf_values = 1 + m * (2 * x_data - 1)
+            if np.any(pdf_values <= 0):
+                return np.inf
+            return -np.sum(np.log(pdf_values))
+
+        result = scipy.optimize.minimize_scalar(neg_log_likelihood, bounds=(-1., 1.), method='bounded')
+        return result.x
     bin_rvbeta_params = np.ones(N_bins*2)*-1.
     bin_rvlinear_params = np.zeros(N_bins)
     for i in range(N_bins):
@@ -282,11 +310,11 @@ def get_quantiles_from_data(data, p_vec=None, N_points_per_bin=100, data_is_sort
         x_up  = q_vec[i+1]
         if (x_up-x_low)<1e-12: ## avoid fit if values are 'almost' equivalent
             continue
-        data_bin = data[np.logical_and( (x_low<data), (x_up>data) )]
+        data_bin = sdata[np.logical_and( (x_low<sdata), (x_up>sdata) )]
         data_bin -= x_low
         data_bin /= (x_up-x_low)
         ## fit distribution
-        beta_params = scipy_stats.beta.fit(data_bin,floc=0.,fscale=1.)
+        beta_params = scipy.stats.beta.fit(data_bin,floc=0.,fscale=1.)
         bin_rvbeta_params[i*2] = beta_params[0]
         bin_rvbeta_params[i*2+1] = beta_params[1]
         ## fit linear distribution
@@ -297,7 +325,7 @@ def get_quantiles_from_data(data, p_vec=None, N_points_per_bin=100, data_is_sort
     ## fit upper tail
     ## ==============================================
     Q_tail = q_vec[-2]
-    tail_data_transformed = sdata[j_last:] - Q_tail
+    tail_data_transformed = sdata[sdata>Q_tail] - Q_tail
     if upper_bound is None:
         bound_transformed = upper_bound
     else:
@@ -307,7 +335,7 @@ def get_quantiles_from_data(data, p_vec=None, N_points_per_bin=100, data_is_sort
     ## fit lower tail
     ## ==============================================
     Q_tail = q_vec[1]
-    tail_data_transformed = Q_tail - sdata[:j_first]
+    tail_data_transformed = Q_tail - sdata[sdata<Q_tail]
     if lower_bound is None:
         bound_transformed = lower_bound
     else:
@@ -320,6 +348,124 @@ def get_quantiles_from_data(data, p_vec=None, N_points_per_bin=100, data_is_sort
     res['interpol'] = "uniform"
     res['use_tail_fit'] = True
     return res
+
+
+
+def fit_pdf_based_on_qvec(data, config):
+    """Fit PDF by linear interpolation based on q_vec."""
+    data_in = data
+    Pr_in   = 1.
+    x_vec   = config['q_vec']
+    i_start = 0
+    i_end   = len(x_vec)
+    pdf_vec = np.ones(len(x_vec))
+    ## ==============================================
+    ## handle tails
+    ## ==============================================
+    if config['use_tail_fit']:
+        p_vec = config['p_vec']
+        ## ----------
+        ## lower tail
+        ## ----------
+        has_lower = False
+        if 'tail_lower' in config:
+            tail_dict = config['tail_lower']
+            tail_config = tail_dict['models'][tail_dict['use_model']]
+            Pr_in -= p_vec[1]
+            data_in = data_in[ data_in>x_vec[1] ]
+            x_vec = x_vec[1:]
+            i_end -= 1
+            pdf_vec = pdf_vec[1:]
+            has_lower = True
+            if 'pdf_0' in tail_config:
+                pdf_vec[0] = tail_config['pdf_0']*p_vec[1]
+                i_start = 1
+        ## ----------
+        ## upper tail
+        ## ----------
+        has_upper = False
+        if 'tail_upper' in config:
+            tail_dict = config['tail_upper']
+            tail_config = tail_dict['models'][tail_dict['use_model']]
+            Pr_in -= p_vec[-1] - p_vec[-2]
+            data_in = data_in[ data_in<=x_vec[-2] ]
+            x_vec = x_vec[:-1]
+            i_end -= 1
+            pdf_vec = pdf_vec[:-1]
+            has_upper = True
+            if 'pdf_0' in tail_config:
+                pdf_vec[-1] = tail_config['pdf_0']*(p_vec[-1] - p_vec[-2])
+                i_end -= 1
+    if len(pdf_vec)!=len(x_vec):
+        raise NameError(f"ERROR 202504280926")
+    ## ==============================================
+    ## initial value
+    ## ==============================================
+    p0 = pdf_vec[i_start:i_end]
+    p0 /= x_vec[i_end] - x_vec[i_start]
+    ## ==============================================
+    ## define negative log likelihood
+    ## ==============================================
+    def neg_log_likelihood(p):
+        pdf_vec[i_start:i_end] = p
+        # if p contains negative values, set negative log-likelihood to +∞
+        if np.any(pdf_vec < 0.):
+            return np.inf
+        # define the linear interpolation
+        pdf_interp = scipy.interpolate.interp1d(x_vec, pdf_vec, kind='linear', fill_value=0.0, bounds_error=False)
+        # get values at data-points
+        pdf_vals = pdf_interp(data_in)
+        # if pdf_vals  <= 0, the log is not defined
+        if np.any(pdf_vals <= 0):
+            return np.inf
+        return -np.sum(np.log(pdf_vals))
+    ## ==============================================
+    ## define constraint
+    ## ==============================================
+    # constraint: integral over PDF = 1
+    def integral_constraint(p):
+        pdf_vec[i_start:i_end] = p
+        return np.trapz(pdf_vec, x_vec) - Pr_in
+    constraints = ({
+        'type': 'eq',
+        'fun': integral_constraint
+    })
+    bounds = [(0., None) for _ in range(len(p0))]  # for all p in pdf_vec >= 0
+    ## ==============================================
+    ## perform the optimization
+    ## ==============================================
+    result = scipy.optimize.minimize(
+        neg_log_likelihood,
+        p0,
+        method='SLSQP',
+        bounds=bounds,
+        constraints=constraints,
+        options={'disp': True}
+    )
+    if not result.success:
+        raise RuntimeError("202504280945: optimization failed » " + result.message)
+    pdf_vec[i_start:i_end] = result.x
+    ## ==============================================
+    ## store result in config
+    ## ==============================================
+    config['pdf_vec'] = np.zeros(len(config['q_vec']))
+    if has_lower:
+        i_start = 1
+    else:
+        i_start = 0
+    i_end = len(config['q_vec'])
+    if has_upper:
+        i_end -= 1
+    config['pdf_vec'][i_start:i_end] = pdf_vec
+    config['interpol'] = 'pdf_linear'
+    return None
+
+
+
+
+
+
+
 
 
 

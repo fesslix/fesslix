@@ -22,6 +22,8 @@ import fesslix as flx
 
 import numpy as np
 from scipy import stats as scipy_stats
+from scipy import optimize as scipy_opt
+import scipy.interpolate
 
 
 ##################################################
@@ -165,6 +167,21 @@ def fit_tail_to_data(tail_data_transformed, bound=None):
     return res
 
 
+def _fit_linear_inclined(x_data):
+    def neg_log_likelihood(m):
+        # Keep inside domain to avoid log of negative numbers
+        if not (-1 <= m <= 1):
+            return np.inf
+        pdf_values = 1 + m * (2 * x_data - 1)
+        if np.any(pdf_values <= 0):
+            return np.inf
+        return -np.sum(np.log(pdf_values))
+
+    result = scipy_opt.minimize_scalar(neg_log_likelihood, bounds=(-1., 1.), method='bounded')
+    return result.x
+
+
+
 def get_quantiles_from_data(data, p_vec=None, N_points_per_bin=100, data_is_sorted=False, lower_bound=None, upper_bound=None):
     """Extract quantiles from data."""
     res = {}
@@ -258,6 +275,7 @@ def get_quantiles_from_data(data, p_vec=None, N_points_per_bin=100, data_is_sort
     ## fit beta distribution to individual bins
     ## ==============================================
     bin_rvbeta_params = np.ones(N_bins*2)*-1.
+    bin_rvlinear_params = np.zeros(N_bins)
     for i in range(N_bins):
         ## transform bin-data to [0.,1.] values
         x_low = q_vec[i]
@@ -271,7 +289,10 @@ def get_quantiles_from_data(data, p_vec=None, N_points_per_bin=100, data_is_sort
         beta_params = scipy_stats.beta.fit(data_bin,floc=0.,fscale=1.)
         bin_rvbeta_params[i*2] = beta_params[0]
         bin_rvbeta_params[i*2+1] = beta_params[1]
+        ## fit linear distribution
+        bin_rvlinear_params[i] = _fit_linear_inclined(data_bin)
     res['bin_rvbeta_params'] = bin_rvbeta_params
+    res['bin_rvlinear_params'] = bin_rvlinear_params
     ## ==============================================
     ## fit upper tail
     ## ==============================================
@@ -296,7 +317,7 @@ def get_quantiles_from_data(data, p_vec=None, N_points_per_bin=100, data_is_sort
     ## return
     ## ==============================================
     res['type'] = 'quantiles'
-    res['interpol'] = "linear"
+    res['interpol'] = "uniform"
     res['use_tail_fit'] = True
     return res
 

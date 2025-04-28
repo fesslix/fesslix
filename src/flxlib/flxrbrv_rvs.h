@@ -734,12 +734,12 @@ class PYBIND11_EXPORT RBRV_entry_RV_quantiles : public RBRV_entry_RV_base {
     std::vector<tdouble> qv;
     tdouble* p_vec;   // of size N_bins+1
     tdouble* q_vec;   // of size N_bins+1
-    tdouble* bin_rvbeta_params; // of size N_bins
+    tdouble* bin_rv_params; // of size N_bins
     tuint* N_vec;     // of size N_bins+1  TODO for accounting for prior information
     RBRV_entry_RV_base* tail_up;
     RBRV_entry_RV_base* tail_low;
 
-    enum class interpol_type_t { linear, pchip, beta };
+    enum class interpol_type_t { uniform, pchip, beta, linear };
     interpol_type_t interpol_type;
 
     std::optional<boost::math::interpolators::pchip<std::vector<tdouble>>> pchip_cdf;

@@ -3610,8 +3610,8 @@ RBRV_entry_RV_base* extract_tail_rv(py::dict& dict_tail)
 }
 
 RBRV_entry_RV_quantiles::RBRV_entry_RV_quantiles(const std::string& name, const tuint iID, py::dict config)
-: RBRV_entry_RV_base(name,iID), N_bins(0), p_vec(nullptr), q_vec(nullptr), bin_rvbeta_params(nullptr), N_vec(nullptr), tail_up(nullptr), tail_low(nullptr),
-  interpol_type(interpol_type_t::linear)
+: RBRV_entry_RV_base(name,iID), N_bins(0), p_vec(nullptr), q_vec(nullptr), bin_rv_params(nullptr), N_vec(nullptr), tail_up(nullptr), tail_low(nullptr),
+  interpol_type(interpol_type_t::uniform)
 {
   try {
     N_bins = parse_py_para_as_tuintNo0("N_bins",config,true);
@@ -3645,9 +3645,10 @@ RBRV_entry_RV_quantiles::RBRV_entry_RV_quantiles(const std::string& name, const 
     // type for interpolation
       if (config.contains("interpol")) {
         const std::string str_interpol = parse_py_para_as_word("interpol",config,true,true);
-        if (str_interpol=="linear") interpol_type = interpol_type_t::linear;
+        if (str_interpol=="uniform") interpol_type = interpol_type_t::uniform;
         else if (str_interpol=="pchip") interpol_type = interpol_type_t::pchip;
         else if (str_interpol=="beta") interpol_type = interpol_type_t::beta;
+        else if (str_interpol=="linear") interpol_type = interpol_type_t::linear;
         else {
           throw FlxException("RBRV_entry_RV_quantiles::RBRV_entry_RV_quantiles_02","Unknown identifier for type of interpolation: " + str_interpol);
         }
@@ -3656,11 +3657,21 @@ RBRV_entry_RV_quantiles::RBRV_entry_RV_quantiles(const std::string& name, const 
     // beta-fit of bins
       if (interpol_type == interpol_type_t::beta) {
         if (config.contains("bin_rvbeta_params")) {
-          bin_rvbeta_params = new tdouble[N_bins*2];
-          flxVec brvb_tmp(bin_rvbeta_params,N_bins*2);
+          bin_rv_params = new tdouble[N_bins*2];
+          flxVec brvb_tmp(bin_rv_params,N_bins*2);
           brvb_tmp = parse_py_para_as_flxVec("bin_rvbeta_params",config,true);
         } else {
           throw FlxException("RBRV_entry_RV_quantiles::RBRV_entry_RV_quantiles_03", "'bin_rvbeta_params' required in config.");
+        }
+      }
+    // linear-fit of bins
+      if (interpol_type == interpol_type_t::linear) {
+        if (config.contains("bin_rvlinear_params")) {
+          bin_rv_params = new tdouble[N_bins];
+          flxVec brvb_tmp(bin_rv_params,N_bins);
+          brvb_tmp = parse_py_para_as_flxVec("bin_rvlinear_params",config,true);
+        } else {
+          throw FlxException("RBRV_entry_RV_quantiles::RBRV_entry_RV_quantiles_04", "'bin_rvlinear_params' required in config.");
         }
       }
 
@@ -3685,7 +3696,7 @@ RBRV_entry_RV_quantiles::~RBRV_entry_RV_quantiles()
 
 void RBRV_entry_RV_quantiles::free_mem()
 {
-    if (bin_rvbeta_params) delete [] bin_rvbeta_params;
+    if (bin_rv_params) delete [] bin_rv_params;
     if (N_vec) delete [] N_vec;
     if (tail_up) delete tail_up;
     if (tail_low) delete tail_low;
@@ -3713,7 +3724,7 @@ const tdouble RBRV_entry_RV_quantiles::transform_y2x(const tdouble y_val)
     }
   }
   switch (interpol_type) {
-    case interpol_type_t::linear:
+    case interpol_type_t::uniform:
       return flx_interpolate_linear(p, p_vec, q_vec, N_bins+1);
     case interpol_type_t::pchip:
       return (*pchip_icdf)(p);
@@ -3721,10 +3732,19 @@ const tdouble RBRV_entry_RV_quantiles::transform_y2x(const tdouble y_val)
     {
       const size_t firstPleq = flx_interpolate_find_larger_eq(p,p_vec,N_bins+1);
       if (p==p_vec[firstPleq]) return q_vec[firstPleq];
-      const tdouble alpha = bin_rvbeta_params[(firstPleq-1)*2];
-      const tdouble beta = bin_rvbeta_params[(firstPleq-1)*2+1];
+      const tdouble alpha = bin_rv_params[(firstPleq-1)*2];
+      const tdouble beta = bin_rv_params[(firstPleq-1)*2+1];
       const tdouble p_ = (p-p_vec[firstPleq-1])/(p_vec[firstPleq]-p_vec[firstPleq-1]);
       const tdouble q_bin = iBeta_reg_inv(alpha,beta,p_);
+      return q_bin * (q_vec[firstPleq]-q_vec[firstPleq-1]) + q_vec[firstPleq-1];
+    }
+    case interpol_type_t::linear:
+    {
+      const size_t firstPleq = flx_interpolate_find_larger_eq(p,p_vec,N_bins+1);
+      if (p==p_vec[firstPleq]) return q_vec[firstPleq];
+      const tdouble m = bin_rv_params[firstPleq-1];
+      const tdouble p_ = (p-p_vec[firstPleq-1])/(p_vec[firstPleq]-p_vec[firstPleq-1]);
+      const tdouble q_bin = (fabs(p_)<1e-12)?p_:((-(ONE-m)+sqrt(pow2(ONE-m)+4*m*p))/(2*m));
       return q_bin * (q_vec[firstPleq]-q_vec[firstPleq-1]) + q_vec[firstPleq-1];
     }
     default:
@@ -3763,7 +3783,7 @@ const tdouble RBRV_entry_RV_quantiles::calc_cdf_x(const tdouble& x_val, const bo
     }
   }
   switch (interpol_type) {
-    case interpol_type_t::linear:
+    case interpol_type_t::uniform:
       return flx_interpolate_linear(x_val, q_vec, p_vec, N_bins+1);
     case interpol_type_t::pchip:
       return (*pchip_cdf)(x_val);
@@ -3771,10 +3791,19 @@ const tdouble RBRV_entry_RV_quantiles::calc_cdf_x(const tdouble& x_val, const bo
     {
       const size_t firstXleq = flx_interpolate_find_larger_eq(x_val,q_vec,N_bins+1);
       if (x_val==q_vec[firstXleq]) return p_vec[firstXleq];
-      const tdouble alpha = bin_rvbeta_params[(firstXleq-1)*2];
-      const tdouble beta = bin_rvbeta_params[(firstXleq-1)*2+1];
+      const tdouble alpha = bin_rv_params[(firstXleq-1)*2];
+      const tdouble beta = bin_rv_params[(firstXleq-1)*2+1];
       const tdouble xx = (x_val-q_vec[firstXleq-1])/(q_vec[firstXleq]-q_vec[firstXleq-1]);
       const tdouble p_bin = iBeta_reg(alpha,beta,xx);
+      return p_bin * (p_vec[firstXleq]-p_vec[firstXleq-1]) + p_vec[firstXleq-1];
+    }
+    case interpol_type_t::linear:
+    {
+      const size_t firstXleq = flx_interpolate_find_larger_eq(x_val,q_vec,N_bins+1);
+      if (x_val==q_vec[firstXleq]) return p_vec[firstXleq];
+      const tdouble m = bin_rv_params[firstXleq-1];
+      const tdouble xx = (x_val-q_vec[firstXleq-1])/(q_vec[firstXleq]-q_vec[firstXleq-1]);
+      const tdouble p_bin = (ONE-m)*xx+m*pow2(xx);
       return p_bin * (p_vec[firstXleq]-p_vec[firstXleq-1]) + p_vec[firstXleq-1];
     }
     default:

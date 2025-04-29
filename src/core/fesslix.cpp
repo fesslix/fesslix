@@ -71,7 +71,7 @@ FesslixMain::FesslixMain() : initialized(false)
     funReader = new FlxFunctionReader();
       FlxReadManager::set_funReader(funReader);
     set_ReadManager(&(dataBox.ReadManager));
-  flxPyRV::RndCreator_ptr = &(dataBox.RndCreator);
+  set_RndCreator_ptr( &(dataBox.RndCreator) );
   // FlxObjReadLoadLib::AddOnManager = &AddOnManager;
 
   // create the evaluation class

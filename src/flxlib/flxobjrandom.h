@@ -78,8 +78,9 @@ class PYBIND11_EXPORT flxPyRV {
     py::dict info();
 
     static FlxRndCreator& get_RndCreator();
-    static FlxRndCreator* RndCreator_ptr;
 };
+
+FLXLIB_EXPORT void set_RndCreator_ptr(FlxRndCreator* RndCreator_ptr_);
 
 
 // #################################################################################

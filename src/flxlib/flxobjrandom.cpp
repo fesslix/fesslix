@@ -30,7 +30,7 @@
 flxBayUp* FlxObjReadSuS::lastSuS = nullptr;
 FlxVoidBox<flx_sensi_s1o> sensi_s1o_box;
 
-PYBIND11_EXPORT FlxRndCreator* flxPyRV::RndCreator_ptr = nullptr;
+FlxRndCreator* RndCreator_ptr = nullptr;
 
 void FlxCreateObjReaders_RND::createObjReaders(FlxObjectReadBox* objReadBox) {
   objReadBox->insert("mci", new FlxObjReadMCI());
@@ -59,6 +59,12 @@ void FlxCreateObjReaders_RND::createFunReaders(FlxData* dataBox)
   
   dataBox->FunBox.insert("cdf_smp", new FunReadFunSmpCDF() );
   dataBox->FunBox.insert("sensi_s1o_eval", new FunReadFunSensi_s1o_eval() );
+}
+
+
+void set_RndCreator_ptr(FlxRndCreator* RndCreator_ptr_)
+{
+  RndCreator_ptr = RndCreator_ptr_;
 }
 
 

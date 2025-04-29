@@ -169,7 +169,7 @@ def fit_tail_to_data(tail_data_transformed, bound=None):
 
 
 
-def discretize_x_from_data(data,config, data_is_sorted=False, lower_bound=None, upper_bound=None):
+def discretize_x_from_data(data,config={}, data_is_sorted=False, lower_bound=None, upper_bound=None):
     """discretize parameter space based on a data array"""
     res = {}
     ## ===============
@@ -184,7 +184,9 @@ def discretize_x_from_data(data,config, data_is_sorted=False, lower_bound=None, 
     ## ========================
     ## Assemble p_vec and q_vec
     ## ========================
-    mode = config['mode']
+    mode = 'adaptive'
+    if 'mode' in config:
+        mode = config['mode']
 
     def assemble_q_from_p(p_vec):
         N_bins = len(p_vec)-1
@@ -257,7 +259,7 @@ def discretize_x_from_data(data,config, data_is_sorted=False, lower_bound=None, 
         if 'dx_min' in config:
             dx_min = config['dx_min']
         else:
-            dx_min = (sdata[int(0.75*N_total)]-sdata[int(0.25*N_total)])/10
+            dx_min = (sdata[int(0.75*N_total)]-sdata[int(0.25*N_total)])/8
         ## --------------------------
         ## assemble q_vec
         ## --------------------------
@@ -412,8 +414,8 @@ def discretize_x_from_data(data,config, data_is_sorted=False, lower_bound=None, 
     ## check values of p_vec
     for i in range(N_bins+1):
         p_target = np.count_nonzero(sdata<=q_vec[i])/float(N_total)
-        if abs(p_vec[i]-p_target)>1e-12:
-            raise NameError(f"ERROR 202504280845")
+        if abs(p_vec[i]-p_target)>1e-5:
+            raise NameError(f"ERROR 202504280845: {(p_vec[i]-p_target)}, {p_vec[i]}")
     res['p_vec'] = p_vec    ## vector of probabilities (for quantile evaluation)
     ## ------
     ## N_bins

@@ -234,14 +234,167 @@ def discretize_x_from_data(data,config, data_is_sorted=False, lower_bound=None, 
         ## --------------------
         p_vec = discretize_x(x_low=0., x_up=1., x_disc_N=N_bins+1, x_disc_shift=False, x_disc_on_log=False)
         q_vec = assemble_q_from_p(p_vec)
-    ## -----------------
-    ## equidistant p_vec
-    ## -----------------
+    ## -------------------
+    ## pre-specified p_vec
+    ## -------------------
     elif mode=='fixed_p':
         ## ensure pre-specified p_vec is sorted
         p_vec = np.sort(config['p_vec'], axis=None)
         N_bins = p_vec.size()-1
         q_vec = assemble_q_from_p(p_vec)
+    ## ----------------
+    ## adaptive spacing
+    ## ----------------
+    elif mode=='adaptive':
+        ## --------------------------
+        ## retrieve input from config
+        ## --------------------------
+        ## minimum number of points per bin
+        N_points_per_bin_min = 100
+        if 'N_points_per_bin_min' in config:
+            N_points_per_bin_min = config['N_points_per_bin_min']
+        ## minimum bin size
+        if 'dx_min' in config:
+            dx_min = config['dx_min']
+        else:
+            dx_min = (sdata[int(0.75*N_total)]-sdata[int(0.25*N_total)])/10
+        ## --------------------------
+        ## assemble q_vec
+        ## --------------------------
+        ## ........................
+        ## define helping functions
+        ## ........................
+        N_sum = 0
+        N_low = 0
+        q_vec_low = []
+        b_state_low = False
+        N_up  = 0
+        q_vec_up  = []
+        b_state_up = False
+        adapt_finalize = False
+        def add2lower():
+            nonlocal N_sum
+            nonlocal N_low
+            nonlocal b_state_low
+            nonlocal adapt_finalize
+            ## propose next bin size
+            N_next = N_points_per_bin_min
+            ## ensure that it is larger than dx_min
+            while True:
+                x_up = (sdata[N_next+N_low-1]+sdata[N_next+N_low])/2
+                dx = x_up - q_vec_low[-1]
+                if dx>dx_min:
+                    break
+                if N_sum+N_next>=N_total:
+                    adapt_finalize = True
+                    break
+                N_next += 1
+            if not adapt_finalize:
+                q_vec_low.append(x_up)
+            N_low += N_next
+            N_sum += N_next
+            b_state_low = N_next>N_points_per_bin_min
+            return b_state_low
+        def add2upper():
+            nonlocal N_sum
+            nonlocal N_up
+            nonlocal b_state_up
+            nonlocal adapt_finalize
+            ## propose next bin size
+            N_next = N_points_per_bin_min
+            ## ensure that it is larger than dx_min
+            while True:
+                x_low = (sdata[-(N_next+N_up)]+sdata[-(N_next+N_up+1)])/2
+                dx = q_vec_up[-1] - x_low
+                if dx>dx_min:
+                    break
+                if N_sum+N_next>=N_total:
+                    adapt_finalize = True
+                    break
+                N_next += 1
+            if not adapt_finalize:
+                q_vec_up.append(x_low)
+            N_up += N_next
+            N_sum += N_next
+            b_state_up = N_next>N_points_per_bin_min
+            return b_state_up
+        ## ..........................
+        ## » start with bounds
+        ## ..........................
+        if lower_bound is None:
+            q_vec_low.append( sdata[0] - (sdata[1]-sdata[0])/2 )
+        else:
+            q_vec_low.append( lower_bound )
+            if lower_bound>sdata[0]:
+                raise NameError(f"ERROR 202504282026: lower bound is larger than minimum in data. {lower_bound = }, {sdata[0] = }")
+        if upper_bound is None:
+            q_vec_up.append( sdata[-1] + (sdata[-1]-sdata[-2])/2 )
+        else:
+            q_vec_up.append( upper_bound )
+            if upper_bound<sdata[-1]:
+                raise NameError(f"ERROR 202504282113: upper bound is smaller than minimum in data. {upper_bound = }, {sdata[-1] = }")
+        ## ............................
+        ## » gradually decrease the main body
+        ## ............................
+        while not adapt_finalize:
+            ## ........................
+            ## make sure that we have enough remaining space for discretization
+            ## ........................
+            if N_sum+2*N_points_per_bin_min>N_total:
+                adapt_finalize = True
+            if q_vec_up[-1]-q_vec_low[-1]<2*dx_min:
+                adapt_finalize = True
+            if adapt_finalize:
+                break
+            ## ........................
+            ## decrease from below and from up
+            ## ........................
+            if not b_state_low:
+                add2lower()
+                if adapt_finalize:
+                    break
+            if not b_state_up:
+                add2upper()
+                if adapt_finalize:
+                    break
+            ## ........................
+            ## attempt discretization of main body
+            ## ........................
+            if b_state_low and b_state_up:
+                N_ = int((q_vec_up[-1]-q_vec_low[-1])/dx_min)
+                mesh_vec = discretize_x(x_low=q_vec_low[-1], x_up=q_vec_up[-1], x_disc_N=N_+1, x_disc_shift=False, x_disc_on_log=False)[1:-1]
+                for mesh_point in mesh_vec:
+                    if np.count_nonzero( np.logical_and( sdata>q_vec_low[-1], sdata<mesh_point) )<N_points_per_bin_min:
+                        b_state_low = False
+                        break
+                    if np.count_nonzero( np.logical_and( sdata<q_vec_up[-1], sdata>mesh_point) )<N_points_per_bin_min:
+                        b_state_up = False
+                        break
+                    q_vec_low.append( mesh_point )
+                if b_state_low and b_state_up:
+                    adapt_finalize = True
+        ## ........................
+        ## do the actual assembly
+        ## ........................
+        q_vec = np.empty( len(q_vec_low)+len(q_vec_up) )
+        i = 0
+        for q in q_vec_low:
+            q_vec[i] = q
+            i += 1
+        for q in reversed(q_vec_up):
+            q_vec[i] = q
+            i += 1
+        ## --------------------------
+        ## assemble p_vec
+        ## --------------------------
+        p_vec = np.empty( len(q_vec) )
+        for i in range(0,len(q_vec)):
+            p_vec[i] = np.count_nonzero( sdata<=q_vec[i] )/float(N_total)
+        if p_vec[0] != 0.:
+            raise NameError(f"ERROR 202504290823: {p_vec[0]}")
+        if p_vec[-1]!=1.:
+            raise NameError(f"ERROR 202504290822: {p_vec[-1]-1.}")
+        N_bins = len(p_vec)-1
     ## -----------------
     ## unknown mode
     ## -----------------

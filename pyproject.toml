@@ -10,7 +10,7 @@ readme = "README.md"
 license = {file = "LICENSE"}
 authors = [{ name = "Wolfgang Betz", email = "w.betz@fesslix.org" }]
 maintainers = [{ name = "Wolfgang Betz", email = "w.betz@fesslix.org" }]
-dependencies = [ "pyyaml", "matplotlib", "numpy" ]
+dependencies = [ "pyyaml", "matplotlib", "numpy", "scipy" ]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: C++",
@@ -26,6 +26,7 @@ Issues = "https://github.com/fesslix/fesslix/issues"
 [tool.scikit-build]
 wheel.expand-macos-universal-tags = true
 minimum-version = "build-system.requires"
+
 
 [tool.cibuildwheel]
 build = "cp312-* cp313-*"   # cp39-* cp310-* cp311-* cp312-*

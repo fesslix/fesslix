@@ -30,7 +30,7 @@
 flxBayUp* FlxObjReadSuS::lastSuS = nullptr;
 FlxVoidBox<flx_sensi_s1o> sensi_s1o_box;
 
-FlxRndCreator* flxPyRV::RndCreator_ptr = nullptr;
+PYBIND11_EXPORT FlxRndCreator* flxPyRV::RndCreator_ptr = nullptr;
 
 void FlxCreateObjReaders_RND::createObjReaders(FlxObjectReadBox* objReadBox) {
   objReadBox->insert("mci", new FlxObjReadMCI());

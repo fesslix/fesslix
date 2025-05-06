@@ -639,10 +639,8 @@ void StringFunVarWrite::eval(std::ostream& os)
   }
 }
 
-void StringFunRandStr::eval(std::ostream& os)
+std::string generate_randStr(const tuint N)
 { // code adapted from https://stackoverflow.com/questions/440133/how-do-i-create-a-random-alpha-numeric-string-in-c
-  // length of string
-    const tuint N = fun->cast2tuint();
   // allowed characters
     auto randchar = []() -> char
       {
@@ -651,13 +649,20 @@ void StringFunRandStr::eval(std::ostream& os)
           "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
           "abcdefghijklmnopqrstuvwxyz";
           const size_t L = (sizeof(charset)-1);
-          const tuint rid = data->RndCreator.gen_smp_index(L);
+          const tuint rid = get_RndCreator().gen_smp_index(L);
           return charset[ rid ];
       };
   // sample string
     std::string str(N,0);
     std::generate_n( str.begin(), N, randchar );
-  os << str;
+  return str;
+}
+
+void StringFunRandStr::eval(std::ostream& os)
+{
+  // length of string
+    const tuint N = fun->cast2tuint();
+  os << generate_randStr(N);
 }
 
 const std::string StringFunRandStr::write()

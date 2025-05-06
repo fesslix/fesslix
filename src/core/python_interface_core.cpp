@@ -19,6 +19,7 @@
 #include "fesslix.h"
 #include "flxfunction_data.h"
 #include "flxrbrv_rvs_read.h"
+#include "flxstringfun_fun.h"
 #include "flxobjrbrv.h"
 #include "flxobjrandom.h"
 
@@ -1166,6 +1167,8 @@ PYBIND11_MODULE(core, m) {
         m.def("set_var", &set_var, "assigns a value to a var-variable");
 
         m.def("cdfn_inv", &rv_InvPhi, "inverse of the CDF of the standard Normal distribution");
+
+        m.def("randStr", &generate_randStr, "returns a random string of length N");
 
     // ====================================================
     // random variables

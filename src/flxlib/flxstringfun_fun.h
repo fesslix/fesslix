@@ -366,6 +366,8 @@ class FunReadFlxStringFunVarWrite : public FunReadFlxStringFunBase {
 
 // ------------------------------------------------------------------------------------------------
 
+PYBIND11_EXPORT std::string generate_randStr(const tuint N);
+
 class StringFunRandStr : public StringFunBase, public FlxDataBase {
   private:
     FlxFunction* fun;

@@ -95,6 +95,9 @@ class FLXLIB_EXPORT FlxRndCreator {
     void replay_start(FlxIstream* rndReaderV);
 };
 
+FlxRndCreator& get_RndCreator();
+FLXLIB_EXPORT void set_RndCreator_ptr(FlxRndCreator* RndCreator_ptr_);
+
 
 class FLXLIB_EXPORT FlxBoxBaseR {
   protected:

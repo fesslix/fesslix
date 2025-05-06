@@ -30,7 +30,6 @@
 flxBayUp* FlxObjReadSuS::lastSuS = nullptr;
 FlxVoidBox<flx_sensi_s1o> sensi_s1o_box;
 
-FlxRndCreator* RndCreator_ptr = nullptr;
 
 void FlxCreateObjReaders_RND::createObjReaders(FlxObjectReadBox* objReadBox) {
   objReadBox->insert("mci", new FlxObjReadMCI());
@@ -62,10 +61,6 @@ void FlxCreateObjReaders_RND::createFunReaders(FlxData* dataBox)
 }
 
 
-void set_RndCreator_ptr(FlxRndCreator* RndCreator_ptr_)
-{
-  RndCreator_ptr = RndCreator_ptr_;
-}
 
 
 // #################################################################################
@@ -375,15 +370,6 @@ py::dict flxPyRV::info()
 {
     rv_ptr->eval_para();
     return rv_ptr->info();
-}
-
-FlxRndCreator& flxPyRV::get_RndCreator()
-{
-  if (RndCreator_ptr) {
-    return *RndCreator_ptr;
-  } else {
-    throw FlxException("flxPyRV::get_RndCreator","Please start the engine.");
-  }
 }
 
 

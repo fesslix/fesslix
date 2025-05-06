@@ -76,11 +76,8 @@ class PYBIND11_EXPORT flxPyRV {
     const bool check_x(const tdouble xV);
     const tdouble get_HPD(const tdouble p);
     py::dict info();
-
-    static FlxRndCreator& get_RndCreator();
 };
 
-FLXLIB_EXPORT void set_RndCreator_ptr(FlxRndCreator* RndCreator_ptr_);
 
 
 // #################################################################################

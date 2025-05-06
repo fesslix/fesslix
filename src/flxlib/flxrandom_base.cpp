@@ -29,6 +29,25 @@ FlxRndCreator* FlxBoxBaseR::RndCreator = NULL;
 GaussIntegration* FlxBoxBaseR::GI = NULL;
 
 
+FlxRndCreator* RndCreator_ptr = nullptr;
+
+
+FlxRndCreator& get_RndCreator()
+{
+  if (RndCreator_ptr) {
+    return *RndCreator_ptr;
+  } else {
+    throw FlxException("get_RndCreator","Please start the engine.");
+  }
+}
+
+void set_RndCreator_ptr(FlxRndCreator* RndCreator_ptr_)
+{
+  RndCreator_ptr = RndCreator_ptr_;
+}
+
+
+
 void FlxBoxBaseR::set_Boxes(FlxRndCreator* RndCreatorV)
 {
   RndCreator = RndCreatorV;

@@ -32,7 +32,7 @@ import scipy.interpolate
 
 def replace_in_template(fn_in,fn_out,dmap,var_indi_start="@{",var_indi_end="}"):
     """
-    replaces expresions of the type @{VARNAME} in file fn_in with the values in dmap and writes the processed file to fn_out.
+    replaces expressions of the type @{VARNAME} in file fn_in with the values in dmap and writes the processed file to fn_out.
 
     Parameters
     ----------
@@ -47,16 +47,19 @@ def replace_in_template(fn_in,fn_out,dmap,var_indi_start="@{",var_indi_end="}"):
     var_indi_end
         (default is '}')
     """
-    # ===================
-    # Read the file fn_in
-    # ===================
+    ## ===================
+    ## Read the file fn_in
+    ## ===================
     with open(fn_in, 'r') as fs:
         fstr = fs.read()
 
-    # =============================
-    # iterate over file and replace
-    # =============================
+    ## =============================
+    ## iterate over file and replace
+    ## =============================
     while True:
+        ## ------------------------------
+        ## identify expression to replace
+        ## ------------------------------
         pos1 = fstr.find(var_indi_start)
         if pos1 < 0:
             break
@@ -64,14 +67,26 @@ def replace_in_template(fn_in,fn_out,dmap,var_indi_start="@{",var_indi_end="}"):
         if pos2 < 0:
             raise NameError(f"ERROR 202505061220: opening '{var_indi_start}' without closing '{var_indi_end}'.")
         rexpr = fstr[pos1:pos2+len(var_indi_end)]
+        ## ---------------------------
+        ## identify property to insert
+        ## ---------------------------
         vname = fstr[pos1+len(var_indi_start):pos2]
-        vval  = dmap[vname]
-        if isinstance(vval,float):
-            vval = flx.Double2String(vval)
+        if len(vname)==0:
+            raise NameError(f"ERROR 202505061335: key must have a length larger then zero.")
+        ## ---------------------------
+        ## identify property to insert
+        ## ---------------------------
+        if vname[0]=='!':  ## value of a random variable
+            rvval = flx.get_rv_from_set(vname[1:]).get_value()
+            vval = flx.Double2String(rvval)
+        else:             ## key in dmap
+            vval  = dmap[vname]
+            if isinstance(vval,float):
+                vval = flx.Double2String(vval)
         fstr = fstr.replace(rexpr, vval)
-    # =========================
-    # Save the processed string
-    # =========================
+    ## =========================
+    ## Save the processed string
+    ## =========================
     with open(fn_out, 'w') as fs:
         fs.write(fstr)
 

@@ -27,6 +27,57 @@ import scipy.interpolate
 
 
 ##################################################
+# working with files                             #
+##################################################
+
+def replace_in_template(fn_in,fn_out,dmap,var_indi_start="@{",var_indi_end="}"):
+    """
+    replaces expresions of the type @{VARNAME} in file fn_in with the values in dmap and writes the processed file to fn_out.
+
+    Parameters
+    ----------
+    fn_in
+        file name of the template input file
+    fn_out
+        file name of the output file to generate
+    dmap
+        all variables that can potentially appear in the file
+    var_indi_start
+        (default is '@{')
+    var_indi_end
+        (default is '}')
+    """
+    # ===================
+    # Read the file fn_in
+    # ===================
+    with open(fn_in, 'r') as fs:
+        fstr = fs.read()
+
+    # =============================
+    # iterate over file and replace
+    # =============================
+    while True:
+        pos1 = fstr.find(var_indi_start)
+        if pos1 < 0:
+            break
+        pos2 = fstr.find(var_indi_end,pos1+len(var_indi_start))
+        if pos2 < 0:
+            raise NameError(f"ERROR 202505061220: opening '{var_indi_start}' without closing '{var_indi_end}'.")
+        rexpr = fstr[pos1:pos2+len(var_indi_end)]
+        vname = fstr[pos1+len(var_indi_start):pos2]
+        vval  = dmap[vname]
+        if isinstance(vval,float):
+            vval = flx.Double2String(vval)
+        fstr = fstr.replace(rexpr, vval)
+    # =========================
+    # Save the processed string
+    # =========================
+    with open(fn_out, 'w') as fs:
+        fs.write(fstr)
+
+
+
+##################################################
 # discretization                                 #
 ##################################################
 

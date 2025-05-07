@@ -762,6 +762,7 @@ void flxDataBox::read_from_file(py::dict config)
   // extract config from dict
     const std::string fname = parse_py_para_as_string("fname",config,true);
     const bool ifs_binary = parse_py_para_as_bool("binary",config,false,true);
+    const tuint N_max = parse_py_para_as_tuint("N_max",config,false,0);
   if (ifs_binary) {
     // open file
       std::ifstream ifs(fname.c_str(), std::ios_base::in | std::ios_base::binary );
@@ -785,6 +786,7 @@ void flxDataBox::read_from_file(py::dict config)
     // allocate memory for importing float values
       std::vector<tfloat> buffer(M);
     // import the entire file
+      size_t c = 0;
       while (ifs.read(reinterpret_cast<char*>(buffer.data()), M * sizeof(float))) {
         // cast to tdouble
           for (tuint i=0;i<M;++i) {
@@ -792,6 +794,10 @@ void flxDataBox::read_from_file(py::dict config)
           }
         // import data
           append_data();
+        ++c;
+        if (N_max>0 && c>=N_max) {
+          break;
+        }
       }
 
     // Check if there was an incomplete final chunk (shouldn't happen if total is multiple of M)
@@ -800,6 +806,7 @@ void flxDataBox::read_from_file(py::dict config)
       }
   } else {
     ReadStream rs(fname.c_str());
+    size_t c = 0;
     while (rs.check_eof()==false) {
       // read next data point
         for (tuint i = 0; i < M; ++i) {
@@ -819,6 +826,10 @@ void flxDataBox::read_from_file(py::dict config)
         }
       // import data
         append_data();
+      ++c;
+      if (N_max>0 && c>=N_max) {
+        break;
+      }
     }
   }
 }

@@ -179,6 +179,56 @@ void flxPyRV::ensure_is_a_basic_rv()
     }
 }
 
+py::array_t<tdouble> flxPyRV::array_help(py::array_t<tdouble> arr, const bool safeCalc, const tuint mode)
+{
+    rv_ptr->eval_para();
+
+    // Access the input data as a raw pointer
+    py::buffer_info buf_info = arr.request();
+    tdouble* input_ptr = static_cast<tdouble*>(buf_info.ptr);
+
+    // Get the size of the input array
+    size_t size = buf_info.size;
+
+    // Allocate memory for the return array
+    auto res_buf = py::array_t<tdouble>(size);
+
+    // Get the buffer info to access the underlying return data
+    py::buffer_info res_buf_info = res_buf.request();
+    tdouble* res_ptr = static_cast<tdouble*>(res_buf_info.ptr);
+
+    // Fill the array with values
+    switch (mode) {
+      case 0:
+      {
+        for (size_t i = 0; i < size; ++i) {
+            res_ptr[i] = rv_ptr->calc_pdf_x(input_ptr[i],safeCalc);
+        }
+        break;
+      }
+      case 1:
+      {
+        for (size_t i = 0; i < size; ++i) {
+            res_ptr[i] = rv_ptr->calc_cdf_x(input_ptr[i],safeCalc);
+        }
+        break;
+      }
+      case 2:
+      {
+        for (size_t i = 0; i < size; ++i) {
+            res_ptr[i] = rv_ptr->calc_sf_x(input_ptr[i],safeCalc);
+        }
+        break;
+      }
+      default:
+        throw FlxException_Crude("flxPyRV::array_help_99");
+    }
+
+    // Return the array
+    return res_buf;
+
+}
+
 const std::string flxPyRV::get_name() const
 {
     return rv_ptr->name;
@@ -245,28 +295,7 @@ const tdouble flxPyRV::pdf(const tdouble x_val, const bool safeCalc)
 
 py::array_t<tdouble> flxPyRV::pdf_array(py::array_t<tdouble> arr, const bool safeCalc)
 {
-    rv_ptr->eval_para();
-    // Access the input data as a raw pointer
-    py::buffer_info buf_info = arr.request();
-    tdouble* input_ptr = static_cast<tdouble*>(buf_info.ptr);
-
-    // Get the size of the input array
-    size_t size = buf_info.size;
-
-    // Allocate memory for the return array
-    auto res_buf = py::array_t<tdouble>(size);
-
-    // Get the buffer info to access the underlying return data
-    py::buffer_info res_buf_info = res_buf.request();
-    tdouble* res_ptr = static_cast<tdouble*>(res_buf_info.ptr);
-
-    // Fill the array with values
-    for (size_t i = 0; i < size; ++i) {
-        res_ptr[i] = rv_ptr->calc_pdf_x(input_ptr[i],safeCalc);    // TODO avoid re-evaluating the parameters of the random variable
-    }
-
-    // Return the array
-    return res_buf;
+    return array_help(arr, safeCalc, 0);
 }
 
 const tdouble flxPyRV::pdf_log(const tdouble x_val, const bool safeCalc)
@@ -283,31 +312,7 @@ const tdouble flxPyRV::cdf(const tdouble x_val, const bool safeCalc)
 
 py::array_t<tdouble> flxPyRV::cdf_array(py::array_t<tdouble> arr, const bool safeCalc)
 {
-    rv_ptr->eval_para();
-
-    // Access the input data as a raw pointer
-    py::buffer_info buf_info = arr.request();
-    tdouble* input_ptr = static_cast<tdouble*>(buf_info.ptr);
-
-    // Get the size of the input array
-    size_t size = buf_info.size;
-
-    // Allocate memory for the return array
-    auto res_buf = py::array_t<tdouble>(size);
-
-    // Get the buffer info to access the underlying return data
-    py::buffer_info res_buf_info = res_buf.request();
-    tdouble* res_ptr = static_cast<tdouble*>(res_buf_info.ptr);
-
-    // Fill the array with values
-    for (size_t i = 0; i < size; ++i) {
-        res_ptr[i] = rv_ptr->calc_cdf_x(input_ptr[i],safeCalc);    // TODO avoid re-evaluating the parameters of the random variable
-    }
-
-    // Return the array
-    return res_buf;
-
-
+    return array_help(arr, safeCalc, 1);
 }
 
 const tdouble flxPyRV::icdf(const tdouble p)
@@ -321,6 +326,11 @@ const tdouble flxPyRV::sf(const tdouble x_val, const bool safeCalc)
 {
     rv_ptr->eval_para();
     return rv_ptr->calc_sf_x(x_val,safeCalc);
+}
+
+py::array_t<tdouble> flxPyRV::sf_array(py::array_t<tdouble> arr, const bool safeCalc)
+{
+    return array_help(arr, safeCalc, 2);
 }
 
 const tdouble flxPyRV::entropy()

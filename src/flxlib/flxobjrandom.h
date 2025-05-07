@@ -39,6 +39,8 @@ class PYBIND11_EXPORT flxPyRV {
     bool mem_managed;
 
     void ensure_is_a_basic_rv();
+
+    py::array_t<tdouble> array_help(py::array_t<tdouble> arr, const bool safeCalc, const tuint mode);
   public:
     flxPyRV(py::dict config);
     flxPyRV(RBRV_entry* rv_ptr, const bool mem_managed=false);
@@ -67,7 +69,10 @@ class PYBIND11_EXPORT flxPyRV {
     py::array_t<tdouble> cdf_array(py::array_t<tdouble> arr, const bool safeCalc);
 
     const tdouble icdf(const tdouble p);
+
     const tdouble sf(const tdouble x_val, const bool safeCalc);
+    py::array_t<tdouble> sf_array(py::array_t<tdouble> arr, const bool safeCalc);
+
     const tdouble entropy();
     const tdouble mean();
     const tdouble sd();

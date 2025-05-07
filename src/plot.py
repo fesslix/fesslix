@@ -132,14 +132,17 @@ def _complete_era_dict(era_dict):
 
 
 
-
 ##################################################
-# plot PDF                                       #
+# plotting of distributions                      #
 ##################################################
 
-def draw_pdf(ax, rv, config_dict={}, param_dict={}, reverse_axis=False):
+##================================================
+# helping function
+##================================================
+
+def _draw_distribution(ax, rv, mode, config_dict={}, param_dict={}, reverse_axis=False):
     """
-    Draws the PDF of rv on ax.
+    Draws the PDF/CDF/SF of rv on ax.
 
     Parameters
     ----------
@@ -164,8 +167,13 @@ def draw_pdf(ax, rv, config_dict={}, param_dict={}, reverse_axis=False):
     flx_tools.detect_bounds_x(rv, ed, q_low=ed['q_low'], q_up=ed['q_up'])
     ## obtain values for the x-axis
     x = flx_tools.discretize_x( x_low=ed['x_low'], x_up=ed['x_up'], x_disc_N=ed['x_disc_N'], x_disc_shift=ed['x_disc_shift'], x_disc_on_log=ed['x_disc_on_log'] )
-    ## evaluate values for thy y-axis
-    y = rv.pdf_array(x)
+    ## evaluate values for the y-axis
+    if mode=='pdf':
+        y = rv.pdf_array(x)
+    elif mode=='cdf':
+        y = rv.cdf_array(x)
+    elif mode=='sf':
+        y = rv.sf_array(x)
     ## Colors
     param_dict_ = param_dict.copy()
     _assign_color(param_dict_,ed)
@@ -182,51 +190,26 @@ def draw_pdf(ax, rv, config_dict={}, param_dict={}, reverse_axis=False):
     return out
 
 
-##################################################
-# plot CDF                                       #
-##################################################
+##================================================
+# plot PDF
+##================================================
+
+def draw_pdf(ax, rv, config_dict={}, param_dict={}, reverse_axis=False):
+    return _draw_distribution(ax, rv, 'pdf', config_dict, param_dict, reverse_axis)
+
+
+##================================================
+# plot CDF
+##================================================
 
 def draw_cdf(ax, rv, config_dict={}, param_dict={}, reverse_axis=False):
-    """
-    Draws the CDF of rv on ax.
+    return _draw_distribution(ax, rv, 'cdf', config_dict, param_dict, reverse_axis)
 
-    Parameters
-    ----------
-    ax : axes
-        The axes object to draw onto.
-    rv : rv_base
-        The random variable of which to draw the PDF.
-    config_dict : dictionary
-        A dictionary for plotting properties related to this module.
-    param_dict : dictionary
-        A dictionary for plotting properties related to matplotlib.
-    reverse_axis : bool
-        the horizontal and vertical axes of the plot are switched
+##================================================
+# plot SF
+##================================================
 
-    Returns
-    -------
-    the object returned by ax.plot(...)
-    """
-    ## get a full list of all module-related plotting properties
-    ed = _complete_era_dict(config_dict)
-    ## make sure that the bounds on the x-axis are defined
-    flx_tools.detect_bounds_x(rv, ed, q_low=ed['q_low'], q_up=ed['q_up'])
-    ## obtain values for the x-axis
-    x = flx_tools.discretize_x( x_low=ed['x_low'], x_up=ed['x_up'], x_disc_N=ed['x_disc_N'], x_disc_shift=ed['x_disc_shift'], x_disc_on_log=ed['x_disc_on_log'] )
-    ## evaluate values for thy y-axis
-    y = rv.cdf_array(x)
-    ## Colors
-    param_dict_ = param_dict.copy()
-    _assign_color(param_dict_,ed)
-    ## Label
-    if ed["label"] is None:
-        lbl = rv.get_name()
-    else:
-        lbl = ed["label"]
-    ## draw the CDF
-    if reverse_axis:
-        out = ax.plot(y, x, label=lbl, **param_dict_)
-    else:
-        out = ax.plot(x, y, label=lbl, **param_dict_)
-    return out
+def draw_sf(ax, rv, config_dict={}, param_dict={}, reverse_axis=False):
+    return _draw_distribution(ax, rv, 'sf', config_dict, param_dict, reverse_axis)
+
 

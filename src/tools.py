@@ -459,7 +459,7 @@ def discretize_x_from_data(data,config={}, data_is_sorted=False, lower_bound=Non
         for i in range(0,len(q_vec)):
             p_vec[i] = np.count_nonzero( sdata<=q_vec[i] )/float(N_total)
         if p_vec[0] != 0.:
-            raise NameError(f"ERROR 202504290823: {p_vec[0]}")
+            raise NameError(f"ERROR 202504290823: {p_vec[0]}, {q_vec}")
         if p_vec[-1]!=1.:
             raise NameError(f"ERROR 202504290822: {p_vec[-1]-1.}")
         N_bins = len(p_vec)-1

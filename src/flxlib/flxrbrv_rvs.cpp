@@ -3598,6 +3598,9 @@ const bool RBRV_entry_RV_maxminTransform::search_circref(FlxFunction* fcr)
 RBRV_entry_RV_base* extract_tail_rv(py::dict& dict_tail)
 {
   const std::string tail_model = parse_py_para_as_string("use_model", dict_tail, true);
+  if (tail_model=="None") {
+    return nullptr;
+  }
   if (dict_tail.contains("models")==false) {
     throw FlxException("extract_tail_rv_01", "Key 'models' not found in tail configuration.");
   }

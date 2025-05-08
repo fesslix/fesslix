@@ -1189,6 +1189,7 @@ PYBIND11_MODULE(core, m) {
             .def("cdf", &flxPyRV::cdf, pybind11::arg("x_val"), pybind11::arg("safeCalc") = true, "evaluates the cdf of the random variable at x_val")
             .def("cdf_array", &flxPyRV::cdf_array, pybind11::arg("x_vec"), pybind11::arg("safeCalc") = true, "evaluates the cdf of the random variable for array x_vec")
             .def("icdf", &flxPyRV::icdf, "evaluates the inverse of the cdf of the random variable for probability p")
+            .def("icdf_array", &flxPyRV::icdf_array, "evaluates the inverse of the cdf of the random variable for array p_vec")
             .def("sf", &flxPyRV::sf, pybind11::arg("x_val"), pybind11::arg("safeCalc") = true, "returns the survival function of the random variable; i.e., 1-cdf(x_val)")
             .def("sf_array", &flxPyRV::sf_array, pybind11::arg("x_vec"), pybind11::arg("safeCalc") = true, "evaluates the survival function of the random variable for array x_vec")
             .def("entropy", &flxPyRV::entropy, "returns the entropy of the random variable")

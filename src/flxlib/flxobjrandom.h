@@ -70,6 +70,7 @@ class PYBIND11_EXPORT flxPyRV {
     py::array_t<tdouble> cdf_array(py::array_t<tdouble> arr, const bool safeCalc);
 
     const tdouble icdf(const tdouble p);
+    py::array_t<tdouble> icdf_array(py::array_t<tdouble> arr);
 
     const tdouble sf(const tdouble x_val, const bool safeCalc);
     py::array_t<tdouble> sf_array(py::array_t<tdouble> arr, const bool safeCalc);

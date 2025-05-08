@@ -223,6 +223,13 @@ py::array_t<tdouble> flxPyRV::array_help(py::array_t<tdouble> arr, const bool sa
         }
         break;
       }
+      case 3:
+      {
+        for (size_t i = 0; i < size; ++i) {
+            res_ptr[i] = rv_ptr->calc_icdf_x(input_ptr[i]);
+        }
+        break;
+      }
       default:
         throw FlxException_Crude("flxPyRV::array_help_99");
     }
@@ -328,6 +335,11 @@ const tdouble flxPyRV::icdf(const tdouble p)
     ensure_is_a_basic_rv();
     rv_ptr_->eval_para();
     return rv_ptr_->calc_icdf_x(p);
+}
+
+py::array_t<tdouble> flxPyRV::icdf_array(py::array_t<tdouble> arr)
+{
+    return array_help(arr, false, 3);
 }
 
 const tdouble flxPyRV::sf(const tdouble x_val, const bool safeCalc)

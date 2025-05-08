@@ -74,6 +74,8 @@ RBRV_entry_RV_base * parse_py_obj_as_rv(py::dict config, const bool name_require
         const std::string rv_type = parse_str_as_word(parse_py_para_as_string("type",config,true),true);
     // retrieve name
         std::string rv_name = family + parse_str_as_word(parse_py_para_as_string("name",config,name_required,"name_unspecified"),true);
+    // retrieve description
+        std::string rv_descr = parse_py_para_as_string("descr",config,false);
     // select rbrv-class based on type
         if (rv_type=="stdn") {
             rv_ptr = new RBRV_entry_RV_stdN(rv_name,iID,config);
@@ -130,6 +132,7 @@ RBRV_entry_RV_base * parse_py_obj_as_rv(py::dict config, const bool name_require
             ssV << "Unknown random variable type '" << rv_type << "'.";
             throw FlxException("flxPyRV::flxPyRV_50", ssV.str() );
         }
+    rv_ptr->descr = rv_descr;
     return rv_ptr;
 }
 
@@ -232,6 +235,11 @@ py::array_t<tdouble> flxPyRV::array_help(py::array_t<tdouble> arr, const bool sa
 const std::string flxPyRV::get_name() const
 {
     return rv_ptr->name;
+}
+
+const std::string flxPyRV::get_descr() const
+{
+    return rv_ptr->descr;
 }
 
 const std::string flxPyRV::get_type() const

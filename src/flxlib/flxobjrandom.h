@@ -52,6 +52,7 @@ class PYBIND11_EXPORT flxPyRV {
     flxPyRV& operator=(const flxPyRV& rhs) = delete;
 
     const std::string get_name() const;
+    const std::string get_descr() const;
     const std::string get_type() const;
     const tdouble get_value() const;
     const tdouble x2y(const tdouble x_val);

@@ -35,6 +35,9 @@ class PYBIND11_EXPORT RBRV_entry {
   
     RBRV_entry(const std::string& name);
     virtual ~RBRV_entry() {}
+
+    // an arbitrary description of the random variable
+    std::string descr;
   
     virtual const std::string get_type() const = 0;
     virtual void eval_para();

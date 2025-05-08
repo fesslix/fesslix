@@ -1176,6 +1176,7 @@ PYBIND11_MODULE(core, m) {
         py::class_<flxPyRV>(m, "rv")
             .def(py::init<py::dict>())
             .def("get_name", &flxPyRV::get_name, "get name of random variable")
+            .def("get_descr", &flxPyRV::get_descr, "get description of random variable")
             .def("get_type", &flxPyRV::get_type, "get type of random variable")
             .def("get_value", &flxPyRV::get_value, "get the value currently assigned to the random variable")
             .def("x2y", &flxPyRV::x2y, "transformation from 'original space' to standard normal space")

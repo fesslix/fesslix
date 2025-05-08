@@ -179,7 +179,9 @@ def _draw_distribution(ax, rv, mode, config_dict={}, param_dict={}, reverse_axis
     _assign_color(param_dict_,ed)
     ## Label
     if ed["label"] is None:
-        lbl = rv.get_name()
+        lbl = rv.get_descr()
+        if lbl=="":
+            lbl = rv.get_name()
     else:
         lbl = ed["label"]
     ## draw the PDF

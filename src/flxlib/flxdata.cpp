@@ -117,18 +117,22 @@ FlxFunction* FlxReadManager::parse_function(py::object pyobj, std::string descr,
       try {
           // Get the function's __code__ object
           py::object code_obj = pyobj.attr("__code__");
-          int arg_count = code_obj.attr("co_argcount").cast<int>();
-
-          // Check if it takes zero arguments
-          if (arg_count == 0) {
-              py::function pyfunc = py::reinterpret_borrow<py::function>(pyobj);
-              vector< FunBase*>* paraL = new vector< FunBase*>(0);
-              return new FlxFunction(new FunBaseFun_Python("INTERNAL_CALLABLE", pyfunc, paraL));
-          } else {
+          // Check if it takes the expected number of arguments
+            int arg_count = code_obj.attr("co_argcount").cast<int>();
+            if (arg_count<0) throw FlxException_Crude("FlxReadManager::parse_function_20");
+            if (NumbOfPara==0 && arg_count!=0) {
               std::ostringstream ssV;
-              ssV << "The parameter is a callable function, but it requires " << arg_count << " parameters." << descr_;
-              throw FlxException("FlxReadManager::parse_function_20", ssV.str());
-          }
+              ssV << "The parameter is a callable function, but it requires " << arg_count << " parameters; none are allowed." << descr_;
+              throw FlxException("FlxReadManager::parse_function_21", ssV.str());
+            }
+            if (NumbOfPara>0 && arg_count!=1) {
+              std::ostringstream ssV;
+              ssV << "The parameter is a callable function, but it requires " << arg_count << " parameters; a single parameter (an array) is expected." << descr_;
+              throw FlxException("FlxReadManager::parse_function_22", ssV.str());
+            }
+          // put Python function inside a FlxFunction
+            py::function pyfunc = py::reinterpret_borrow<py::function>(pyobj);
+            return new FlxFunction(new FunBaseFun_Python("INTERNAL_CALLABLE", pyfunc, NumbOfPara));
       } catch (const py::error_already_set &e) {
           std::ostringstream ssV;
           ssV << "Error retrieving function signature: " << e.what() << descr_;

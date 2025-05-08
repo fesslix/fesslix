@@ -242,9 +242,10 @@ class PYBIND11_EXPORT FunBaseFun_Python : public FunBaseFun_multPara {
   protected:
     const std::string pyFunName;
     py::function pyfunc;
+    const tuint ParaN;
 
   public:
-    FunBaseFun_Python (const std::string& pyFunName, py::function pyfunc, std::vector<FunBase*> *ParaListV) : FunBaseFun_multPara(ParaListV), pyFunName(pyFunName), pyfunc(pyfunc) {};
+    FunBaseFun_Python (const std::string& pyFunName, py::function pyfunc, const tuint ParaN);
     virtual ~FunBaseFun_Python() {}
     const tdouble calc();
     const std::string write_v() { return "pyfun"; }

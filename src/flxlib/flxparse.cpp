@@ -318,6 +318,7 @@ py::array_t<T> py_wrap_array_no_ownership(T* ptr, size_t N)
 }
 template py::array_t<tfloat> py_wrap_array_no_ownership<tfloat>(tfloat*, size_t);
 template py::array_t<tdouble> py_wrap_array_no_ownership<tdouble>(tdouble*, size_t);
+template py::array_t<const tdouble> py_wrap_array_no_ownership<const tdouble>(const tdouble*, size_t);
 
 
 

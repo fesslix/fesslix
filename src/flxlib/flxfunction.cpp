@@ -22,6 +22,9 @@
 #include "flxfunction_ope.h"
 #include "flxfunction_ope_calc.h"
 
+#include "flxparse.h"
+
+
 using namespace std;
 
 FunReadBase* FunReadBase::startLink = NULL;
@@ -575,22 +578,39 @@ const bool FunBaseFun_multPara::optimize(FunBasePtr& optf, const Fun_OptimizeInf
   }
 }
 
+FunBaseFun_Python::FunBaseFun_Python(const std::string& pyFunName, py::function pyfunc, const tuint ParaN)
+: FunBaseFun_multPara(new vector< FunBase*>(0)), pyFunName(pyFunName), pyfunc(pyfunc), ParaN(ParaN)
+{
+
+}
+
 const tdouble FunBaseFun_Python::calc()
 {
   if (ParaList->size()==0) {
-    py::object result;
-    try {
-       result = pyfunc();
-    } catch (const py::error_already_set &e) {
-        std::ostringstream ssV;
-        ssV << "Error in evaluating Python expression: " << e.what();
-        throw FlxException("FunBaseFun_Python::calc_01", ssV.str() );
-    }
-    if (py::isinstance<py::float_>(result)) {
-        return result.cast<tdouble>();
-    } else {
-        throw FlxException("FunBaseFun_Python::calc_02", "Result of Python function has wrong type.");
-    }
+    // extract parameter vector
+      if (FunPara::ParaListSize!=ParaN) {
+        throw FlxException_Crude("FunBaseFun_Python::calc_01");
+      }
+    // evaluate Python function
+      py::object result;
+      try {
+        if (ParaN==0) {
+            result = pyfunc();
+        } else {
+            auto para_vec = py_wrap_array_no_ownership<const tdouble>(FunPara::ParaList,ParaN);
+            result = pyfunc(para_vec);
+        }
+      } catch (const py::error_already_set &e) {
+          std::ostringstream ssV;
+          ssV << "Error in evaluating Python expression: " << e.what();
+          throw FlxException("FunBaseFun_Python::calc_02", ssV.str() );
+      }
+    // cast result as tdouble
+      try {
+          return result.cast<tdouble>();
+      } catch (const py::cast_error &e) {
+          throw FlxException("FunBaseFun_Python::calc_03", "Result of Python function has wrong type.");
+      }
   } else {
     throw FlxException_NotImplemented("FunBaseFun_Python::calc_03");
   }

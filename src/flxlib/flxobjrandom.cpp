@@ -514,13 +514,14 @@ py::dict post_proc_mean_reliability::eval()
 }
 
 post_proc_filter::post_proc_filter(const tuint colID, const tuint N_reserve, FlxFunction* fun_cond)
-: colID(colID), N_reserve(N_reserve), fun_cond(fun_cond), N(0), mem_ptr(new tfloat[N_reserve])
+: colID(colID), N_reserve(N_reserve), fun_cond(fun_cond), N(0), N_total(0), mem_ptr(new tfloat[N_reserve])
 {
 
 }
 
 void post_proc_filter::append_data(const flxVec& vec_full)
 {
+  ++N_total;
   const tdouble val2add = vec_full[colID];
   bool accept;
   if (fun_cond) {
@@ -547,6 +548,7 @@ py::dict post_proc_filter::eval()
 {
     py::dict res;
     res["N"] = N;
+    res["p"] = tdouble(N)/N_total;
     res["data"] = py_wrap_array_no_ownership<tfloat>(mem_ptr,N);
     return res;
 }

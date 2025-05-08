@@ -162,6 +162,7 @@ class PYBIND11_EXPORT post_proc_filter : public post_proc_base {
     const tuint N_reserve;
     FlxFunction* fun_cond;
     tuint N;  // total number of samples accepted by the filter
+    tulong N_total;
     tfloat* mem_ptr;
   public:
     post_proc_filter(const tuint colID, const tuint N_reserve, FlxFunction* fun_cond);

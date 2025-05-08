@@ -469,6 +469,64 @@ def discretize_x_from_data(data,config={}, data_is_sorted=False, lower_bound=Non
     else:
         raise NameError(f"ERROR 202504280813: unknown mode ('{mode}' in config.")
     ## ========================
+    ## take tail-specific properties into account
+    ## ========================
+    ## ----------
+    ## upper tail
+    ## ----------
+    if 'tail_upper' in config:
+        tail_prop = config['tail_upper']
+        tail_p = tail_prop['p']
+        tail_x = tail_prop['x']
+        j = None
+        for i in range(len(p_vec)):
+            if p_vec[i]>=tail_p or q_vec[i]>=tail_x:
+                j = i
+                break
+        if j==None:
+            raise NameError(f"ERROR 202505081442")
+        p_vec_ = p_vec
+        q_vec_ = q_vec
+        N_bins = j+1
+        p_vec = np.empty( N_bins+1 )
+        p_vec[:j] = p_vec_[:j]
+        p_vec[-1] = 1.
+        p_vec[-2] = tail_p
+        q_vec = np.empty( N_bins+1 )
+        q_vec[:j] = q_vec_[:j]
+        q_vec[-2] = tail_x
+        q_vec[-1] = q_vec_[-1]
+        if q_vec[-1]<=q_vec[-2]:
+            q_vec[-1] = q_vec[-2] + 1e-6
+    ## ----------
+    ## lower tail
+    ## ----------
+    if 'tail_lower' in config:
+        tail_prop = config['tail_lower']
+        tail_p = tail_prop['p']
+        tail_x = tail_prop['x']
+        j = None
+        for i in range(len(p_vec)):
+            if p_vec[i]>tail_p or q_vec[i]>tail_x:
+                j = i
+                break
+        if j==None:
+            raise NameError(f"ERROR 202505081535")
+        p_vec_ = p_vec
+        q_vec_ = q_vec
+        N_bins = j+1
+        N_bins = N_bins + 2 - j
+        p_vec = np.empty( N_bins+1 )
+        p_vec[2:] = p_vec_[j:]
+        p_vec[0]  = 0.
+        p_vec[1]  = tail_p
+        q_vec = np.empty( N_bins+1 )
+        q_vec[2:] = q_vec_[j:]
+        q_vec[1]  = tail_x
+        q_vec[0]  = q_vec_[0]
+        if q_vec[1]<=q_vec[0]:
+            q_vec[0] = q_vec[1] - 1e-6
+    ## ========================
     ## general consistency checks
     ## ========================
     ## -----
@@ -478,10 +536,16 @@ def discretize_x_from_data(data,config={}, data_is_sorted=False, lower_bound=Non
     if p_vec[0]!=0. or p_vec[-1]!=1.:
         raise NameError(f"ERROR 202504241513: First and last value of 'p_vec' must be 0.0 and 1.0, respectively.")
     ## check values of p_vec
-    for i in range(N_bins+1):
+    rc_end = N_bins+1
+    rc_start = 0
+    if 'tail_lower' in config:
+        rc_start = 2
+    if 'tail_upper' in config:
+        rc_end -= 2
+    for i in range(rc_start,rc_end) :
         p_target = np.count_nonzero(sdata<=q_vec[i])/float(N_total)
         if abs(p_vec[i]-p_target)>1e-5:
-            raise NameError(f"ERROR 202504280845: {(p_vec[i]-p_target)}, {p_vec[i]}")
+            raise NameError(f"ERROR 202504280845: {i = }, {N_bins = }, {(p_vec[i]-p_target)}, {p_vec[i]}, {p_target}")
     res['p_vec'] = p_vec    ## vector of probabilities (for quantile evaluation)
     ## ------
     ## N_bins
@@ -546,21 +610,45 @@ def discretize_x_from_data(data,config={}, data_is_sorted=False, lower_bound=Non
     ## fit upper tail
     ## ==============================================
     Q_tail = q_vec[-2]
-    tail_data_transformed = sdata[sdata>Q_tail] - Q_tail
+    ## transform data
+    tail_data_transformed = None
+    if 'tail_upper' in config:
+        if 'data' in config['tail_upper']:
+            tail_data_transformed = config['tail_upper']['data']
+    if tail_data_transformed is None:
+        tail_data_transformed = sdata
+    tail_data_transformed = tail_data_transformed[tail_data_transformed>Q_tail] - Q_tail
+    ## consistency checks
+    if np.count_nonzero(tail_data_transformed<=0.)>0:
+        raise NameError(f"ERROR 202505081612: {np.count_nonzero(tail_data_transformed<=0.)}")
+    ## identify if there is a bound
     if upper_bound is None:
         bound_transformed = upper_bound
     else:
         bound_transformed = upper_bound - Q_tail
+    ## perform the fitting
     res['tail_upper'] = fit_tail_to_data(tail_data_transformed,bound_transformed)
     ## ==============================================
     ## fit lower tail
     ## ==============================================
     Q_tail = q_vec[1]
-    tail_data_transformed = Q_tail - sdata[sdata<Q_tail]
+    ## transform data
+    tail_data_transformed = None
+    if 'tail_lower' in config:
+        if 'data' in config['tail_lower']:
+            tail_data_transformed = config['tail_lower']['data']
+    if tail_data_transformed is None:
+        tail_data_transformed = sdata
+    tail_data_transformed = Q_tail - tail_data_transformed[tail_data_transformed<Q_tail]
+    ## consistency checks
+    if np.count_nonzero(tail_data_transformed<=0.)>0:
+        raise NameError(f"ERROR 202505081613")
+    ## identify if there is a bound
     if lower_bound is None:
         bound_transformed = lower_bound
     else:
         bound_transformed = Q_tail - lower_bound
+    ## perform the fitting
     res['tail_lower'] = fit_tail_to_data(tail_data_transformed,bound_transformed)
     ## ==============================================
     ## return

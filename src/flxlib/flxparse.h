@@ -20,7 +20,7 @@
 #include "flxfunction.h"
 
 
-PYBIND11_EXPORT FlxFunction* parse_py_para(const std::string& para_name, py::dict config, const bool required=true);
+PYBIND11_EXPORT FlxFunction* parse_py_para(const std::string& para_name, py::dict config, const bool required=true, const tuint NumbOfPara=0);
 PYBIND11_EXPORT const bool parse_py_para_as_bool(const std::string& para_name, py::dict config, const bool required, const bool def_val=false);
 PYBIND11_EXPORT const tuint parse_py_para_as_tuint(const std::string& para_name, py::dict config, const bool required, const tuint def_val=0);
 PYBIND11_EXPORT const tuint parse_py_para_as_tuintNo0(const std::string& para_name, py::dict config, const bool required, const tuint def_val=1);
@@ -52,7 +52,7 @@ PYBIND11_EXPORT std::string parse_str_as_word(std::string strV, const bool lower
 std::vector<std::string> parse_strseq_as_vec(const std::string& strseq, const char sep=',');
 
 FLXLIB_EXPORT FlxFunction* parse_function(const std::string& funStr);
-PYBIND11_EXPORT FlxFunction* parse_function(py::object pyobj, std::string descr="");
+PYBIND11_EXPORT FlxFunction* parse_function(py::object pyobj, std::string descr="", const tuint NumbOfPara=0);
 
 
 class FlxObjBase;

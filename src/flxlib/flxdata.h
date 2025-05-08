@@ -45,8 +45,8 @@ class FLXLIB_EXPORT FlxReadManager : public FlxReaderBase2 {
     */
     void pop();
     
-    FlxFunction* parse_function(const std::string& funStr);
-    FlxFunction* parse_function(py::object pyobj, std::string descr="");
+    FlxFunction* parse_function(const std::string& funStr, const tuint NumbOfPara=0);
+    FlxFunction* parse_function(py::object pyobj, std::string descr="", const tuint NumbOfPara=0);
     FlxMtxFun_base* parse_FlxMtxFun(const tuint N, py::object pyobj, std::string descr="");
     FlxCodeBlock* parse_code(const std::string& codeStr);
     

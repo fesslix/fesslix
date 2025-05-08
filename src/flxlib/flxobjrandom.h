@@ -156,7 +156,19 @@ class PYBIND11_EXPORT post_proc_mean_reliability : public post_proc_base {
     virtual py::dict eval();
 };
 
+class PYBIND11_EXPORT post_proc_filter : public post_proc_base {
+  private:
+    const tuint colID;
+    const tuint N_reserve;
+    FlxFunction* fun_cond;
+    tuint N;  // total number of samples accepted by the filter
+    tfloat* mem_ptr;
+  public:
+    post_proc_filter(const tuint colID, const tuint N_reserve, FlxFunction* fun_cond);
 
+    virtual void append_data(const flxVec& vec_full);
+    virtual py::dict eval();
+};
 
 // #################################################################################
 // dataBox

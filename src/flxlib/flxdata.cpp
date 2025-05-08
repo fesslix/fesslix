@@ -87,13 +87,15 @@ void FlxReadManager::pop()
   }
 }
 
-FlxFunction* FlxReadManager::parse_function(const std::string& funStr)
+FlxFunction* FlxReadManager::parse_function(const std::string& funStr, const tuint NumbOfPara)
 {
   ReadStream* rs = new ReadStream(std::string(funStr));
   push(rs);
   FlxFunction* value = NULL;
   try {
-    value = new FlxFunction(funReader);        
+    FunReadPara::set_NumbOfPara(NumbOfPara);
+    value = new FlxFunction(funReader);
+    FunReadPara::set_NumbOfPara(0);
   } catch (FlxException &e) {
     FLXMSG("FlxReadManager::parse_function_1",1);
     pop();
@@ -105,7 +107,7 @@ FlxFunction* FlxReadManager::parse_function(const std::string& funStr)
   return value;
 }
 
-FlxFunction* FlxReadManager::parse_function(py::object pyobj, std::string descr)
+FlxFunction* FlxReadManager::parse_function(py::object pyobj, std::string descr, const tuint NumbOfPara)
 {
   const std::string descr_ = (descr.empty()?"":(" ("+descr+")"));
   // ==================================================
@@ -138,7 +140,7 @@ FlxFunction* FlxReadManager::parse_function(py::object pyobj, std::string descr)
   // ==================================================
   if (py::isinstance<py::str>(pyobj)) {
     const std::string val = py::cast<std::string>(pyobj);
-    return parse_function(val);
+    return parse_function(val,NumbOfPara);
   }
   // ==================================================
   // float

@@ -22,7 +22,7 @@
 #include <pybind11/numpy.h>  // For NumPy support
 
 
-FlxFunction* parse_py_para(const std::string& para_name, py::dict config, const bool required)
+FlxFunction* parse_py_para(const std::string& para_name, py::dict config, const bool required, const tuint NumbOfPara)
 {
   if (config.contains(para_name.c_str()) == false) {
     if (required) {
@@ -33,7 +33,7 @@ FlxFunction* parse_py_para(const std::string& para_name, py::dict config, const 
       return nullptr;
     }
   }
-  return parse_function(config[para_name.c_str()], "key '"+para_name+"' in Python <dict>");
+  return parse_function(config[para_name.c_str()], "key '"+para_name+"' in Python <dict>", NumbOfPara);
 }
 
 const bool parse_py_para_as_bool(const std::string& para_name, py::dict config, const bool required, const bool def_val)
@@ -285,9 +285,9 @@ FlxFunction* parse_function(const std::string& funStr)
   return get_ReadManager()->parse_function(funStr);
 }
 
-FlxFunction* parse_function(py::object pyobj, std::string descr)
+FlxFunction* parse_function(py::object pyobj, std::string descr, const tuint NumbOfPara)
 {
-  return get_ReadManager()->parse_function(pyobj, descr);
+  return get_ReadManager()->parse_function(pyobj, descr, NumbOfPara);
 }
 
 FlxObjBase* parse_code(py::object pyobj, std::string descr)

@@ -513,6 +513,45 @@ py::dict post_proc_mean_reliability::eval()
     return res;
 }
 
+post_proc_filter::post_proc_filter(const tuint colID, const tuint N_reserve, FlxFunction* fun_cond)
+: colID(colID), N_reserve(N_reserve), fun_cond(fun_cond), N(0), mem_ptr(new tfloat[N_reserve])
+{
+
+}
+
+void post_proc_filter::append_data(const flxVec& vec_full)
+{
+  const tdouble val2add = vec_full[colID];
+  bool accept;
+  if (fun_cond) {
+    const tdouble* const tT = FunPara::ParaList;
+    const tuint tTS = FunPara::ParaListSize;
+    FunPara::ParaList = vec_full.get_tmp_vptr_const();
+    FunPara::ParaListSize = vec_full.get_N();
+    accept = (fun_cond->calc()>ZERO);
+    FunPara::ParaList = tT;
+    FunPara::ParaListSize = tTS;
+  } else {
+    accept = (val2add<=ZERO);
+  }
+  if (accept) {
+    if (N>=N_reserve) {
+      throw FlxException("post_proc_filter::append_data", "Memory of dataBox::filter is full.");
+    }
+    mem_ptr[N] = val2add;
+    ++N;
+  }
+}
+
+py::dict post_proc_filter::eval()
+{
+    py::dict res;
+    res["N"] = N;
+    res["data"] = py_wrap_array_no_ownership<tfloat>(mem_ptr,N);
+    return res;
+}
+
+
 // #################################################################################
 // dataBox
 // #################################################################################
@@ -871,6 +910,11 @@ post_proc_base& flxDataBox::register_post_processor(py::dict config)
       } else if (pp_type=="reliability") {
         const tuint colID = extract_colID_(config);
         pp_ptr = new post_proc_mean_reliability(colID);
+      } else if (pp_type=="filter") {
+        const tuint N_reserve = parse_py_para_as_tuintNo0("N_reserve",config,false,1000000);
+        const tuint colID = extract_colID_(config);
+        FlxFunction* fun_cond = parse_py_para("cond",config,false,M);
+        pp_ptr = new post_proc_filter(colID,N_reserve,fun_cond);
       } else {
         throw FlxException("flxDataBox::register_post_processor_99","Unknown type ('" + pp_type + "' for post-processor.");
       }

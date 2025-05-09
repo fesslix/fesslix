@@ -80,10 +80,60 @@ message("202502240926 Boost_INCLUDE_DIR=${Boost_INCLUDE_DIR}")
 
 git push -u origin main
 
-## commit messages
+## common commit messages
 
 increase patch number
 attempt package build
+
+## work on features in a separate branch
+
+### list existing branches
+
+locally:
+    git branch
+    
+remotely
+    git branch -r
+    
+
+### Create a new branch
+
+git switch -c GPR
+
+### Switch branches
+
+git switch main
+git switch GPR
+
+### Save local changes without commiting
+
+git stash
+
+»»» now, you can switch branches and do other stuff (on the version of the latest commit)
+»»» afterwards, make sure you are in the intendend branch
+
+git stash pop
+
+
+### merge changes in the main branch into the feature branch
+
+git switch GPR
+
+#### merge from remote main branch
+git fetch origin
+git merge origin/main
+
+#### merge from local main branch
+git merge main
+
+
+### merge changes back to main branch
+
+git switch main
+git pull origin main
+git merge GPR
+git branch -d GPR
+
 
 
 # Check for memory leaks

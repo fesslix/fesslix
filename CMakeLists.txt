@@ -70,6 +70,8 @@ else("${FLX_DEBUG_COUT}" STREQUAL "ON")
 set ( FLX_DEBUG_COUTb 0 )
 endif("${FLX_DEBUG_COUT}" STREQUAL "ON")
 
+
+
 option ( FLX_KAHAN_MCI "use Kahan summation for Monte Carlo Integration" ON )
   if("${FLX_KAHAN_MCI}" STREQUAL "ON")
     set ( FLX_KAHAN_MCIb 1 )
@@ -284,6 +286,31 @@ MARK_AS_ADVANCED(
   FLX_USE_BOOST_RX
 )
 
+
+#==========================================================
+# NLopt library
+#==========================================================
+
+FIND_PACKAGE(NLopt)
+if (NLopt_FOUND)
+  option ( FLX_USE_NLOPT "compile with NLopt support" ON )
+else()
+  option ( FLX_USE_NLOPT "compile with NLopt support" OFF )
+endif()
+
+if("${FLX_USE_NLOPT}" STREQUAL "ON")
+set ( FLX_USE_NLOPTb 1 )
+else("${FLX_USE_NLOPT}" STREQUAL "ON")
+set ( FLX_USE_NLOPTb 0 )
+endif("${FLX_USE_NLOPT}" STREQUAL "ON")
+
+if("${FLX_USE_NLOPT}" STREQUAL "ON")
+  message(STATUS "using nlopt » include dir: ${NLOPT_INCLUDE_DIR} libdir: ${NLOPT_LIBRARY}")
+  include_directories(${NLOPT_INCLUDE_DIR})
+  link_directories(${NLOPT_LIBRARY})
+endif()
+
+
 #==========================================================
 # ARPACK library
 #==========================================================
@@ -314,6 +341,22 @@ MARK_AS_ADVANCED(
   FLX_USE_ARPACK
 )
 
+
+#==========================================================
+# parallel processing
+#==========================================================
+
+option ( FLX_PARALLEL "use multithreading" ON )
+
+if("${FLX_PARALLEL}" STREQUAL "ON")
+set ( FLX_PARALLELb 1 )
+else("${FLX_PARALLEL}" STREQUAL "ON")
+set ( FLX_PARALLELb 0 )
+endif("${FLX_PARALLEL}" STREQUAL "ON")
+
+
+
+
 ###################################################################################
 # compile
 ###################################################################################
@@ -331,6 +374,7 @@ include_directories(${PROJECT_BINARY_DIR})
 include_directories("${PROJECT_BINARY_DIR}/src")
 include_directories("${PROJECT_SOURCE_DIR}/src/flxlib")
 include_directories("${PROJECT_SOURCE_DIR}/src/core")
+include_directories("${PROJECT_SOURCE_DIR}/src/gpr")
 
 # Determine platform-specific RPATH
 if(APPLE)
@@ -391,6 +435,8 @@ add_library(flxlib SHARED   # python_add_library add_library
   src/flxlib/flxobjrandom.cpp
   src/flxlib/flxsensi.cpp
   src/flxlib/flxStatBox.cpp
+  src/flxlib/flxgp_kernel.cpp
+  src/flxlib/flxgp_relmeth.cpp
 )
 if(MSVC)
   generate_export_header(flxlib)
@@ -403,9 +449,16 @@ if(GSL_FOUND_STATIC)
 else()
     target_link_libraries(flxlib PRIVATE GSL::gsl)
 endif()
+if("${FLX_USE_NLOPT}" STREQUAL "ON")
+    message(STATUS "nlopt: linking")
+  target_link_libraries(flxlib PRIVATE NLopt::nlopt)
+endif()
 if("${FLX_USE_ARPACK}" STREQUAL "ON")
     target_link_libraries(flxlib PRIVATE ${ARPACK_LIBRARIES})
 endif()
+# if("${FLX_PARALLEL}" STREQUAL "ON")
+#     target_link_libraries(flxlib PRIVATE -fopenmp)
+# endif()
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   ## somehow Debug-builds required this library ...
   find_package(TBB REQUIRED)
@@ -437,11 +490,29 @@ target_compile_definitions(core PRIVATE VERSION_INFO=${PROJECT_VERSION})
 target_compile_options(core PRIVATE -fvisibility=hidden)
 
 #==========================================================
+# gpr » interface for Gaussian Process Regression
+#==========================================================
+
+# Add a library using FindPython's tooling (pybind11 also provides a helper like this)
+python_add_library(gpr MODULE
+  src/gpr/python_interface_gpr.cpp
+  WITH_SOABI)
+target_link_libraries(gpr PRIVATE flxlib PRIVATE pybind11::module)  # pybind11::headers #  PRIVATE GSL::gsl
+if(DEFINED RPATH_STRING)
+  set_target_properties(gpr PROPERTIES INSTALL_RPATH ${RPATH_STRING} )
+endif()
+
+target_compile_definitions(gpr PRIVATE VERSION_INFO=${PROJECT_VERSION})
+target_compile_options(gpr PRIVATE -fvisibility=hidden)
+
+
+#==========================================================
 # install
 #==========================================================
 
 # The install directory is the output (wheel) directory
 install(TARGETS core DESTINATION fesslix)
+install(TARGETS gpr  DESTINATION fesslix)
 install(TARGETS flxlib
     RUNTIME DESTINATION fesslix  # For Windows (.dll)
     LIBRARY DESTINATION fesslix  # For Linux (.so)

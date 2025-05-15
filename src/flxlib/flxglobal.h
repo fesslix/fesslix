@@ -146,7 +146,7 @@ class FLXLIB_EXPORT strGlobalVar {
     void set_stdcerr(ostreamp stdcerrV) { stdcerr= stdcerrV; }
     const ostreamp& get_cout() { return stdcout; }                     // TODO obsolete? delete?
     const ostreamp& get_cerr() { return stdcerr; }                     // TODO obsolete? delete?
-    const ostreamp& get_log() { return slogP; }                        // TODO obsolete? delete?
+    const ostreamp& get_log() { return slogP; }
     const ostreamp& get_true_cout() { return true_stdcout; }           // TODO obsolete? delete?
     const ostreamp& get_true_cerr() { return true_cerr; }              // TODO obsolete? delete?
     const std::string& get_exe_dir() { return exe_dir; }               // TODO obsolete? delete?
@@ -164,7 +164,8 @@ class FLXLIB_EXPORT strGlobalVar {
     */
     std::ostream& slog(const int logLevel_);
     std::ostream& slogcout(const int logLevel_);
-    void slog_flush() { slogP->flush(); }                             // TODO obsolete? delete?
+    void slog_flush() { slogP->flush(); }                             // TODO obsolete? delete?                      // TODO obsolete? delete?
+    std::ostream& slog_dummy() { return *sdummy; }
     /**
     * @returns true if log-stream is not cout
     */

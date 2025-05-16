@@ -185,9 +185,9 @@ void flxPyGP::noise_white(const tdouble noise_sd)
     gp_ptr->register_noise(noise_sd);
 }
 
-const tdouble flxPyGP::optimize(const tuint itermax)
+const tdouble flxPyGP::optimize(const tuint itermax, const bool opt_noise)
 {
-    return gp_ptr->optimize(itermax);
+    return gp_ptr->optimize(itermax, opt_noise);
 }
 
 py::object flxPyGP::predict(py::array_t<tdouble> arr, const std::string& type, const bool predict_noise)
@@ -263,7 +263,7 @@ PYBIND11_MODULE(gpr, m) {
             .def("get_descr", &flxPyGP::get_descr, "get description of gaussian process")
             .def("condition_on", &flxPyGP::condition_on, pybind11::arg("dm_in"), pybind11::arg("dv_out"), pybind11::arg("init_pvec") = true, pybind11::arg("opt_noise") = true, "conditions the tp-model on an observation")
             .def("noise_white", &flxPyGP::noise_white, "model error of the gp-model")
-            .def("optimize", &flxPyGP::optimize, pybind11::arg("itermax") = 500, "optimizes the parameters of the gp-model")
+            .def("optimize", &flxPyGP::optimize, pybind11::arg("itermax") = 500, pybind11::arg("opt_noise") = false, "optimizes the parameters of the gp-model")
             .def("predict", &flxPyGP::predict, pybind11::arg("x_vec"), pybind11::arg("type"), pybind11::arg("predict_noise") = false, "evaluate/predict quantities of the gp-model conditioned on the observations")
             .def("unassemble", &flxPyGP::unassemble, "forces the gp-model to re-assemble the covariance matrix on the next call")
             .def("info", &flxPyGP::info, "return a dict with properties of the gp-model")

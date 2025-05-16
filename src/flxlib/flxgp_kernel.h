@@ -185,7 +185,7 @@ class flxGPProj_base {
     virtual const tdouble register_observation(const flxGP_data_base& d_info_, const bool initialize_pVec, const bool optimize_noise_val) = 0;
     virtual void register_noise(const tdouble noise_sd) = 0;
     virtual void unassemble() = 0;
-    virtual const tdouble optimize(const tuint iterMax) = 0;
+    virtual const tdouble optimize(const tuint iterMax, const bool opt_noise) = 0;
 
     virtual const tdouble get_log_likeli_obsv() = 0;
     virtual void predict_mean_var(const flxVec& x_vec, const bool predict_noise, tdouble& res_mean, tdouble& res_var) = 0;
@@ -266,7 +266,7 @@ class flxGPProj : public flxGPProj_base {
     * the returned prior_var is WITHOUT noise
     */
     void eval_covar_point(flxVec& K_star, const flxVec& x_vec, tdouble& prior_mean, tdouble& prior_var);
-    const tdouble optimize_help(const tdouble step_size, const tuint iterMax, const bool output_ini, std::ostream& ostrm);
+    const tdouble optimize_help(const tdouble step_size, const tuint iterMax, const bool opt_noise, const bool output_ini, std::ostream& ostrm);
   public:
     flxGPProj(const std::string& name, const tuint Ndim, flxGP_mean_base* gp_mean, flxGP_kernel_base* gp_kernel, const bool use_LSE);
     virtual ~flxGPProj();
@@ -279,7 +279,7 @@ class flxGPProj : public flxGPProj_base {
     * call this function whenever either the process parameters or the data change
     */
     virtual void unassemble() { obsv_changed = true; }
-    virtual const tdouble optimize(const tuint iterMax);
+    virtual const tdouble optimize(const tuint iterMax, const bool opt_noise);
     
     virtual const tdouble get_log_likeli_obsv();
     virtual void predict_mean_var(const flxVec& x_vec, const bool predict_noise, tdouble& res_mean, tdouble& res_var);
@@ -318,7 +318,7 @@ class flxGP_avgModel : public flxGPProj_base {
     virtual const tdouble register_observation(const flxGP_data_base& d_info_, const bool initialize_pVec, const bool optimize_noise_val);
     virtual void register_noise(const tdouble noise_sd);
     virtual void unassemble();
-    virtual const tdouble optimize(const tuint iterMax);
+    virtual const tdouble optimize(const tuint iterMax, const bool opt_noise);
 
     virtual const tdouble get_log_likeli_obsv();
     virtual void predict_mean_var(const flxVec& x_vec, const bool predict_noise, tdouble& res_mean, tdouble& res_var);

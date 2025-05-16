@@ -113,7 +113,7 @@ void flxGP_MCI::register_sample(const tdouble lsfval, const flxVec& uvec_, const
 
 void flxGP_MCI::optimize_gp_para(const tuint iterMax)
 {
-    gp.optimize(iterMax);
+    gp.optimize(iterMax,false);
 }
 
 const tdouble flxGP_MCI::tqi_eval(const tdouble m, const tdouble n) const

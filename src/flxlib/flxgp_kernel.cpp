@@ -788,9 +788,10 @@ double gp_likeli_f(const gsl_vector *v, void *params)
 {
   flxGPProj *p = (flxGPProj *)params;
 
-  // store initial parameters (for use_LSE)
-    const tdouble noise_sd_ini = (p->use_LSE)?(p->noise_val):ZERO;
-    const tdouble kernel_sd_ini = (p->use_LSE)?(p->gp_kernel->eval_kernel_sd()):ZERO;
+  #if FLX_USE_NLOPT
+  #else
+  const size_t n = v->size;
+  #endif
 
   // assign parameters
     bool bchange = false;
@@ -822,6 +823,20 @@ double gp_likeli_f(const gsl_vector *v, void *params)
       if (fabs(pkp->operator[](i)-pv)>GlobalVar.TOL()) bchange = true;
       pkp->operator[](i) = pv;
     }
+    if (c<n) {
+      #if FLX_USE_NLOPT
+      const tdouble pv = exp(v[c++]);
+      #else
+      const tdouble pv = exp(gsl_vector_get (v, c++));
+      #endif
+      if (fabs(p->noise_val-pv)>GlobalVar.TOL()) bchange = true;
+      p->noise_val = pv;
+    }
+
+  // store initial parameters (for use_LSE)
+    const tdouble noise_sd_ini = (p->use_LSE)?(p->noise_val):ZERO;
+    const tdouble kernel_sd_ini = (p->use_LSE)?(p->gp_kernel->eval_kernel_sd()):ZERO;
+
   // evaluate likelihood
     if (bchange) p->unassemble();
     tdouble res;
@@ -856,14 +871,14 @@ double gp_likeli_f(const gsl_vector *v, void *params)
 }
 
 
-const tdouble flxGPProj::optimize_help(const tdouble step_size, const tuint iterMax, const bool output_ini, std::ostream& ostrm)
+const tdouble flxGPProj::optimize_help(const tdouble step_size, const tuint iterMax, const bool opt_noise, const bool output_ini, std::ostream& ostrm)
 {
   // make sure that process is assembeld before log-likelihood is evaluated
     assemble_observations(false,false);
     keep_LSE_results = false;
     // we can only optimize the process, if it is conditioned on some data
   // count the number of uncertain parameters
-    const tuint Npara = use_LSE?(gp_kernel->get_Npara()-1):(gp_mean->get_Npara() + gp_kernel->get_Npara());
+    const tuint Npara = (use_LSE?(gp_kernel->get_Npara()-1):(gp_mean->get_Npara() + gp_kernel->get_Npara())) + (opt_noise?1:0);
     const tuint NparaMean   = use_LSE?0:(gp_mean->get_Npara());
     const tuint NparaKernel = gp_kernel->get_Npara();
 
@@ -909,6 +924,9 @@ const tdouble flxGPProj::optimize_help(const tdouble step_size, const tuint iter
           }
           x_ini[c++] = pv;
         }
+        if (opt_noise) {
+          x_ini[c++] = log(max(noise_val,1e-4*(gp_kernel->eval_kernel_sd())));
+        }
       }
       if (output_ini) {
           const tdouble lres_ini = -gp_likeli_f(Npara,&x_ini[0],NULL,this);
@@ -919,7 +937,7 @@ const tdouble flxGPProj::optimize_help(const tdouble step_size, const tuint iter
               }
               ostrm << GlobalVar.Double2String(x_ini[i]);
           }
-          ostrm << " ) " << std::endl;
+          ostrm << " ) dim=" << Npara << std::endl;
       }
       std::vector<double> x(x_ini);
 
@@ -990,6 +1008,7 @@ const tdouble flxGPProj::optimize_help(const tdouble step_size, const tuint iter
           pvec_ini[c] = pv;
           gsl_vector_set (x, c++, pv);
         }
+        gsl_vector_set (x, c++, log(max(noise_val,1e-4*(gp_kernel->eval_kernel_sd()))));
       }
 
       /* Set initial step sizes to 1 */
@@ -1013,7 +1032,7 @@ const tdouble flxGPProj::optimize_help(const tdouble step_size, const tuint iter
                 }
                 ostrm << GlobalVar.Double2String(pvec_ini[i]);
             }
-            ostrm << " ) " << std::endl;
+            ostrm << " ) dim=" << Npara << std::endl;
         }
 
     // perform iteration
@@ -1098,7 +1117,7 @@ const tdouble flxGPProj::optimize_help(const tdouble step_size, const tuint iter
   return lres;
 }
 
-const tdouble flxGPProj::optimize(const tuint iterMax)
+const tdouble flxGPProj::optimize(const tuint iterMax, const bool opt_noise)
 {
   // reset logging-stream
     para_opt_stream.str("");
@@ -1106,7 +1125,7 @@ const tdouble flxGPProj::optimize(const tuint iterMax)
   tdouble lres = log(ZERO);
   tdouble step_size = 0.1;
   #if FLX_USE_NLOPT
-    lres = optimize_help(step_size,iterMax,true,para_opt_stream);
+    lres = optimize_help(step_size,iterMax,opt_noise,true,para_opt_stream);
   #else
     const tuint itermaxMLEstep = 20;
     tuint i = 0;
@@ -1131,7 +1150,7 @@ const tdouble flxGPProj::optimize(const tuint iterMax)
         }
       // for all other iterations, perform an optimization
         try {
-          lres = optimize_help(step_size,iterMax,i<=1,para_opt_stream);
+          lres = optimize_help(step_size,iterMax,opt_noise,i<=1,para_opt_stream);
         } catch (FlxException_math& e) {
             step_size /= 2; // in case of an error, use only half the step size
             continue;
@@ -1431,7 +1450,7 @@ const tdouble flxGP_avgModel::register_observation(const flxGP_data_base& d_info
           }
         }
         // optimize model
-          const tdouble lres = model_ptr->optimize(iterMax);
+          const tdouble lres = model_ptr->optimize(iterMax,false);
         // evaluate model probability
           const tdouble lpenalty = model_ptr->get_AIC_penalty();
           modProbVec[c++] = lres - lpenalty;
@@ -1466,7 +1485,7 @@ void flxGP_avgModel::unassemble()
   }
 }
 
-const tdouble flxGP_avgModel::optimize(const tuint iterMax)
+const tdouble flxGP_avgModel::optimize(const tuint iterMax, const bool opt_noise)
 {
   return log(ZERO);
 }

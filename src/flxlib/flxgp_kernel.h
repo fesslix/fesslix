@@ -182,10 +182,10 @@ class flxGPProj_base {
     flxGPProj_base(const std::string& name, const tuint Ndim);
     virtual ~flxGPProj_base() {}
 
-    virtual void register_observation(const flxGP_data_base& d_info_, const bool initialize_pVec, const bool optimize_noise_val, std::ostream& ostrm) = 0;
+    virtual const tdouble register_observation(const flxGP_data_base& d_info_, const bool initialize_pVec, const bool optimize_noise_val) = 0;
     virtual void register_noise(const tdouble noise_sd) = 0;
     virtual void unassemble() = 0;
-    virtual const tdouble optimize(const tuint iterMax, std::ostream& ostrm) = 0;
+    virtual const tdouble optimize(const tuint iterMax) = 0;
 
     virtual const tdouble get_log_likeli_obsv() = 0;
     virtual void predict_mean_var(const flxVec& x_vec, const bool predict_noise, tdouble& res_mean, tdouble& res_var) = 0;
@@ -209,38 +209,77 @@ class flxGPProj : public flxGPProj_base {
     const tdouble* dm_ptr;  // pointer to observed model input data; matrix of size N_obsv x Ndim
     const tdouble* do_ptr;  // pointer to observed model output data; vector of size N_obsv
     
+    /**
+    * @brief Covariance/Correlation matrix
+    *
+    * for use_LSE=true: Q
+    * otherwise:        sigma_Z^2 R + sigma_eps^2 I
+    */
     FlxMtxSym* cov_mtx_obsv;    // covariance matrix of observed data-points
-    FlxMtxSym* cov_mtx2_obsv;    // covariance matrix of observed data-points
-    FlxMtxSym* covinv_mtx_obsv;    // inverse covariance matrix of observed data-points
     FlxMtxLTri* lt_mtx_obsv;    // cholesky decomposition of cov_mtx_obsv
-    FlxMtxLTri* ltinv_mtx_obsv;
-    FlxMtxSym* FRinvF_mtx;
-    FlxMtxLTri* FRinvF_cdc_mtx;
+    // matrices required for LSE
+      FlxMtxLTri* ltinv_mtx_obsv;
+      FlxMtxSym* covinv_mtx_obsv;    // inverse covariance matrix of observed data-points
+      FlxMtxSym* FRinvF_mtx;
+      FlxMtxLTri* FRinvF_cdc_mtx;
     tdouble noise_val;
     tdouble lt_mtx_obsv_ldet;   // determinant of matrix lt_mtx_obsv (log-transform)
     tdouble lpr_obsv;           // log-likelihood of the observation
-    flxVec* do_0mean;            // vector of trend-corrected observations-mean
+    /**
+    * @brief trend-corrected observation vector » y - Ba
+    */
+    flxVec* do_0mean;
+    /**
+    * @brief alpha = (sigma_Z^2 R + sigma_eps^2 I)^-1 * (y-Ba) = (sigma_Y^2*Q)^-1 * (y-Ba)
+    */
     flxVec* alpha;               // = L^T^-1 * L^-1 * do_0mean
+    /**
+    * @brief matrix B (only assembled if use_LSE==true)
+    */
     FlxMtx* Fmtx;               // shape functions of trend
     
+    // parameters for optimizing the noise value
+      std::stringstream noise_opt_stream;
+      tdouble noise_best_guess_val;
+      tdouble noise_best_guess_sdZ;
+      tdouble noise_best_guess_logl;
+    // parameters for optimizing the process parameters
+      std::stringstream para_opt_stream;
+      bool keep_LSE_results;
     flxGP_data_base* d_info;    // contains information about the observed model data
 
+    /**
+    * @brief actually assemble the Gaussian process ond data and (free) process parameters
+    *
+    * If use_LSE==true, this method modifies the standard deviation of noise (noise_val) and the standrd deviation associated with the kernel.
+    *
+    * @returns log-likelihood of observation (conditional on (free) process parameters
+    */
     const tdouble assemble_observations_help();
+    /**
+    * @brief ensures that observations are assembled
+    */
     void assemble_observations(const bool initialize_pVec, const bool optimize_noise_val);
     /**
     * @brief evaluates the covariance between x_vec and the observed points
-    * if use_LSE==true, it returns the correlation instead of the covariance, since cov_mtx2_obsv is also the correlation matrix
+    *
+    * the returned prior_var is WITHOUT noise
     */
-    void eval_covar_point(flxVec& K_star, const flxVec& x_vec, const bool predict_noise, tdouble& prior_mean, tdouble& prior_var);
+    void eval_covar_point(flxVec& K_star, const flxVec& x_vec, tdouble& prior_mean, tdouble& prior_var);
     const tdouble optimize_help(const tdouble step_size, const tuint iterMax, const bool output_ini, std::ostream& ostrm);
   public:
     flxGPProj(const std::string& name, const tuint Ndim, flxGP_mean_base* gp_mean, flxGP_kernel_base* gp_kernel, const bool use_LSE);
     virtual ~flxGPProj();
     
-    virtual void register_observation(const flxGP_data_base& d_info_, const bool initialize_pVec, const bool optimize_noise_val, std::ostream& ostrm);
+    virtual const tdouble register_observation(const flxGP_data_base& d_info_, const bool initialize_pVec, const bool optimize_noise_val);
     virtual void register_noise(const tdouble noise_sd);
+    /**
+    * @brief unassemble the Gaussian process
+    *
+    * call this function whenever either the process parameters or the data change
+    */
     virtual void unassemble() { obsv_changed = true; }
-    virtual const tdouble optimize(const tuint iterMax, std::ostream& ostrm);
+    virtual const tdouble optimize(const tuint iterMax);
     
     virtual const tdouble get_log_likeli_obsv();
     virtual void predict_mean_var(const flxVec& x_vec, const bool predict_noise, tdouble& res_mean, tdouble& res_var);
@@ -268,16 +307,18 @@ class flxGP_avgModel : public flxGPProj_base {
     std::vector<flxGPProj*> model_lst;
     flxVec modProbVec;
     const tuint iterMax;
+    // parameters for optimizing the process parameters
+      std::stringstream para_opt_stream;
 
     const bool increase_kernel_switch(iVec& tVec) const;
   public:
     flxGP_avgModel(const std::string& name, const tuint Ndim, const tuint iterMax, const bool use_LSE);
     virtual ~flxGP_avgModel();
 
-    virtual void register_observation(const flxGP_data_base& d_info_, const bool initialize_pVec, const bool optimize_noise_val, std::ostream& ostrm);
+    virtual const tdouble register_observation(const flxGP_data_base& d_info_, const bool initialize_pVec, const bool optimize_noise_val);
     virtual void register_noise(const tdouble noise_sd);
     virtual void unassemble();
-    virtual const tdouble optimize(const tuint iterMax, std::ostream& ostrm);
+    virtual const tdouble optimize(const tuint iterMax);
 
     virtual const tdouble get_log_likeli_obsv();
     virtual void predict_mean_var(const flxVec& x_vec, const bool predict_noise, tdouble& res_mean, tdouble& res_var);

@@ -256,7 +256,8 @@ py::dict flxGP_mean_universal::info()
 {
   py::dict res;
   res["type"] = "universal";
-  res["para_vec"] =  py_wrap_array_no_ownership<tdouble>(pVec.get_tmp_vptr(),pVec.get_N());;
+  res["para_vec"] =  py_wrap_array_no_ownership<tdouble>(pVec.get_tmp_vptr(),pVec.get_N());
+  res["normalizef"] = normalizef;
   return res;
 }
 
@@ -447,8 +448,8 @@ flxGPProj_base::flxGPProj_base(const std::string& name, const tuint Ndim)
 
 flxGPProj::flxGPProj(const std::string& name, const tuint Ndim, flxGP_mean_base* gp_mean, flxGP_kernel_base* gp_kernel, const bool use_LSE)
 : flxGPProj_base(name,Ndim), gp_mean(gp_mean), gp_kernel(gp_kernel), use_LSE(use_LSE), obsv_changed(true), N_obsv(0), dm_ptr(NULL), do_ptr(NULL),
-  cov_mtx_obsv(NULL), cov_mtx2_obsv(NULL), covinv_mtx_obsv(NULL), lt_mtx_obsv(NULL), ltinv_mtx_obsv(NULL), FRinvF_mtx(NULL), FRinvF_cdc_mtx(NULL),
-  noise_val(use_LSE?1e-4:ZERO), lt_mtx_obsv_ldet(ZERO), lpr_obsv(ZERO), do_0mean(NULL), alpha(NULL), Fmtx(NULL), d_info(NULL)
+  cov_mtx_obsv(NULL), lt_mtx_obsv(NULL), ltinv_mtx_obsv(NULL), covinv_mtx_obsv(NULL), FRinvF_mtx(NULL), FRinvF_cdc_mtx(NULL),
+  noise_val(ZERO), lt_mtx_obsv_ldet(ZERO), lpr_obsv(ZERO), do_0mean(NULL), alpha(NULL), Fmtx(NULL), d_info(NULL)
 {
   gp_mean->initialize_pVec(ONE);
 }
@@ -464,7 +465,6 @@ flxGPProj::~flxGPProj()
   if (do_0mean) delete do_0mean;
   if (alpha) delete alpha;
   if (Fmtx) delete Fmtx;
-  if (use_LSE && cov_mtx2_obsv) delete cov_mtx2_obsv;
   if (d_info) delete d_info;
   delete gp_mean;
   delete gp_kernel;
@@ -472,28 +472,43 @@ flxGPProj::~flxGPProj()
 
 const tdouble flxGPProj::assemble_observations_help()
 {
-  // correct correlation matrix for noise in case of use_LSE
-    if (use_LSE) {
-      *cov_mtx2_obsv = *cov_mtx_obsv;
-      #if FLX_DEBUG
-        tdouble s = ZERO;
-        for (tuint i=0;i<N_obsv;++i) {
-          s += cov_mtx2_obsv->operator()(i,i);
+  // assemble covariance/correlation matrix
+    // Define parameter vector for covariance kernel
+      flxVec pV(Ndim*2);
+      tdouble* pVp = pV.get_tmp_vptr();
+      flxVec pV_1(pVp,Ndim);
+      flxVec pV_2(pVp+Ndim,Ndim);
+      tdouble* cmop = cov_mtx_obsv->get_VecPointer();
+    // loop over data-points
+      // for LSE » eval scaling factors
+        const tdouble kernel_sd_ini = use_LSE?(gp_kernel->eval_kernel_sd()):ONE;
+        const tdouble sigma_Z_2_ini = use_LSE?pow2(kernel_sd_ini):ONE;
+        const tdouble sigma_eps_2_ini = pow2(noise_val);
+        const tdouble sigma_Y_2_ini = sigma_Z_2_ini + sigma_eps_2_ini;
+        const tdouble scale_Z_ini = sigma_Z_2_ini/sigma_Y_2_ini;
+        //const tdouble scale_eps = sigma_eps_2_ini/sigma_Y_2_ini;
+      for (size_t i=0;i<N_obsv;++i) {
+        // update parameter vector
+          pV_1 = flxVec(dm_ptr+i*Ndim,Ndim);
+        for (size_t j=0;j<=i;++j) {
+          // update parameter vector
+            pV_2 = flxVec(dm_ptr+j*Ndim,Ndim);
+          if (use_LSE) {
+            *cmop = scale_Z_ini*gp_kernel->eval_kernel_corrl_f(pVp);
+          } else {
+            *cmop = gp_kernel->eval_kernel_f(pVp);
+          }
+          ++cmop;
         }
-        s /= N_obsv;
-        if (fabs(s-ONE)>GlobalVar.TOL()) {
-          throw FlxException("flxGPProj::assemble_observations_help");
+        if (use_LSE) {
+          *(cmop-1) = ONE;   // by definition ( equals » *(cmop-1) += scale_eps;
+        } else {
+          *(cmop-1) += sigma_eps_2_ini;
         }
-      #endif
-      const tdouble ncf = ONE/(ONE+pow2(noise_val));
-      *cov_mtx2_obsv *= ncf;
-      for (tuint i=0;i<N_obsv;++i) {
-        cov_mtx2_obsv->operator()(i,i) = ONE;
       }
-    }
   // compute cholesky decomposition
     try {
-      lt_mtx_obsv->CholeskyDec(*cov_mtx2_obsv,false);
+      lt_mtx_obsv->CholeskyDec(*cov_mtx_obsv,false);
       lt_mtx_obsv_ldet = lt_mtx_obsv->det_log();
     } catch (FlxException &e) {
       return log(ZERO);
@@ -520,42 +535,86 @@ const tdouble flxGPProj::assemble_observations_help()
         }
       }
   // remove mean-trend from assemble_observations
-    flxVec pV_1(Ndim);
     for (size_t i=0;i<N_obsv;++i) {
       pV_1 = flxVec(dm_ptr+i*Ndim,Ndim);
       do_0mean->operator[](i) = do_ptr[i] - gp_mean->eval_mean_f(pV_1.get_tmp_vptr());
     }
   // compute the log-likelihood of the observation
+    pdouble nres(lt_mtx_obsv_ldet);  // = log(det(L)) = 0.5*log(det(sigma_Z^2 R + sigma_eps^2 I))  ; for use_LSE = 0.5*log(det(Q))
     // evaluate the alpha-vector
       alpha->operator=(*do_0mean);
       lt_mtx_obsv->MultInv(*alpha,*alpha);
       lt_mtx_obsv->TransMultInv(*alpha,*alpha);
-    const tdouble mhd2 = (*alpha) * (*do_0mean);
-    const tdouble sigma2 = use_LSE?(mhd2/N_obsv):ONE;
-    gp_kernel->set_sd(sqrt(sigma2));
-    const tdouble res = -0.5*mhd2/sigma2 - lt_mtx_obsv_ldet - 0.5*log(2*PI*sigma2)*N_obsv;
+      // compute remaining terms of log-likelihood
+        const tdouble mhd2 = (*alpha) * (*do_0mean);  // we need this when evaluating the log-likelihood
+        const tdouble sigma_Y_2 = use_LSE?(mhd2/N_obsv):ONE;
+        nres += 0.5*log(2*PI*sigma_Y_2)*N_obsv;
+        nres += 0.5*mhd2/sigma_Y_2;
+        const tdouble neg_logl = -(nres.cast2double());
+      // for use_LSE, evaluate variance estimate
+        if (use_LSE) {
+          const tdouble sigma_Z_2 = sigma_Y_2 * scale_Z_ini;
+          const tdouble sigma_eps_2 = max(sigma_Y_2 - sigma_Z_2,ZERO);
+          noise_opt_stream << "»» LSE-results  logl=" << GlobalVar.Double2String(neg_logl) << "  "
+            << "»»  sd_obsv [" << GlobalVar.Double2String(sqrt(sigma_Y_2)) << " <- " << GlobalVar.Double2String(sqrt(sigma_Y_2_ini)) << "] "
+            << "»»  sd_Z [" << GlobalVar.Double2String(sqrt(sigma_Z_2)) << " <- " << GlobalVar.Double2String(sqrt(sigma_Z_2_ini)) << "] "
+            << "»»  sd_noise [" << GlobalVar.Double2String(sqrt(sigma_eps_2)) << " <- " << GlobalVar.Double2String(sqrt(sigma_eps_2_ini)) << "] " << std::endl;
+          gp_kernel->set_sd(sqrt(sigma_Z_2));
+          noise_val = sqrt(sigma_eps_2);
+          alpha->operator/=(sigma_Y_2);
+        }
   // GlobalVar.slogcout(1) << "  flxGPProj::assemble_observations_74 " << res << "  " << 0.5*((*alpha) * (*do_0mean))/sigma2 << "  " << (lt_mtx_obsv_ldet+0.5*log(sigma2)*N_obsv) << "  " << 0.5*log(2*PI)*N_obsv << std::endl;
-  return res;
+  return neg_logl;
 }
 
 double gp_likeli_f_nv (const tdouble lnv, void *params)
 {
   flxGPProj *p = (flxGPProj *)params;
-  const tdouble nv = exp(lnv);
-  if (fabs(p->noise_val-nv)<=GlobalVar.TOL() && p->obsv_changed==false) return p->get_log_likeli_obsv();
-  p->unassemble();
-  p->noise_val = nv;
-  const tdouble res = p->assemble_observations_help();
+  // remember starting values
+    const tdouble nv = exp(lnv);
+    const tdouble sdZ_ini = p->gp_kernel->eval_kernel_sd();
+  // consistency checks
+    if (fabs(p->noise_val-nv)/sdZ_ini<=GlobalVar.TOL() && p->obsv_changed==false) return p->get_log_likeli_obsv();
+    if (nv<sdZ_ini*1e-6) {
+      throw FlxException_math("flxGPProj::likeli_f_b01","Noise value is effectively zero.");
+    }
+  // assemble/evaluate for specified noise value
+    p->unassemble();
+    p->noise_val = nv;
+    tdouble res;
+    try {
+      res = p->assemble_observations_help();
+    } catch (FlxException& e) {
+      // restore original values (we just want to optimize noise conditional on the initial configuration)
+        if (p->use_LSE) {
+          p->gp_kernel->set_sd(sdZ_ini);
+        }
+        p->noise_val = nv;
+      throw;
+    }
+
+  // restore original values (we just want to optimize noise conditional on the initial configuration)
+    if (p->use_LSE) {
+      p->gp_kernel->set_sd(sdZ_ini);
+    }
+    p->noise_val = nv;
 
   // output
     //GlobalVar.slogcout(5) << "      " << GlobalVar.Double2String(res) << ": " << nv << std::endl;
 
   // error checking
     if (std::isnan(res)) {
-        throw FlxException_math("flxGPProj::likeli_f_b01");
+        throw FlxException_math("flxGPProj::likeli_f_b02","Negative log-likelihood is NaN.");
     }
     if (std::isinf(res)) {
-        throw FlxException_math("flxGPProj::likeli_f_b02");
+        throw FlxException_math("flxGPProj::likeli_f_b03","Negative log-likelihood is infinite.");
+    }
+  // keep track of 'best guess'
+    if (res > p->noise_best_guess_logl) {
+      p->noise_best_guess_val = nv;
+      p->noise_best_guess_sdZ = sdZ_ini;
+      p->noise_best_guess_logl = res;
+      p->noise_opt_stream << "    *** best guess ***  logl=" << GlobalVar.Double2String(res) << "  noise=" << GlobalVar.Double2String(nv) << "  sd_Z=" << GlobalVar.Double2String(sdZ_ini) << std::endl;
     }
   return -res;
 }
@@ -563,6 +622,9 @@ double gp_likeli_f_nv (const tdouble lnv, void *params)
 void flxGPProj::assemble_observations(const bool initialize_pVec, const bool optimize_noise_val)
 {
   if (obsv_changed == false) return;
+  // reset logging stream
+    noise_opt_stream.str("");
+    noise_opt_stream.clear();
   if (d_info==NULL) {
       std::ostringstream ssV;
       ssV << "The Gaussian process '" << name << "' has not yet been conditioned on data.";
@@ -592,10 +654,14 @@ void flxGPProj::assemble_observations(const bool initialize_pVec, const bool opt
             }
             sd_vec[i] = dmv.get_sd(dmv.get_Mean());
           }
-          gp_kernel->initialize_pVec(use_LSE?ONE:dov.get_sd(dov_mean),sd_vec);
+          const tdouble sample_sd_out = dov.get_sd(dov_mean);
+          gp_kernel->initialize_pVec(use_LSE?ONE:sample_sd_out,sd_vec);
+          if (use_LSE) {
+            gp_kernel->set_sd(sample_sd_out);
+          }
         // noise_val
-          if (use_LSE && optimize_noise_val) {
-            noise_val = 1e-4;
+          if (optimize_noise_val) {
+            noise_val = 0.1*sample_sd_out;
           }
       }
   // allocate memory
@@ -604,19 +670,10 @@ void flxGPProj::assemble_observations(const bool initialize_pVec, const bool opt
         if (cov_mtx_obsv->nrows() != N_obsv) {
           delete cov_mtx_obsv;
           cov_mtx_obsv = NULL;
-          if (use_LSE) {
-            delete cov_mtx2_obsv;
-            cov_mtx2_obsv = NULL;
-          }
         }
       }
       if (cov_mtx_obsv == NULL) {
         cov_mtx_obsv = new FlxMtxSym(N_obsv);
-        if (use_LSE) {
-          cov_mtx2_obsv = new FlxMtxSym(N_obsv);
-        } else {
-          cov_mtx2_obsv = cov_mtx_obsv;
-        }
       }
     // Cholesky decomposition: allocate lower-triangular matrix that has correct size
       if (lt_mtx_obsv) {
@@ -674,60 +731,47 @@ void flxGPProj::assemble_observations(const bool initialize_pVec, const bool opt
             gp_mean->assemble_F(*Fmtx,dm_ptr);
           } else {
             if (initialize_pVec) {
+              // NOTE this is INCORRECT, if the dm_ptr changes but its size remains the same (unlikely in practice!)
               gp_mean->assemble_F(*Fmtx,dm_ptr);
             }
           }
         }
       }
 
-  // assemble covariance/correlation matrix
-    // Define parameter vector for covariance kernel
-      flxVec pV(Ndim*2);
-      tdouble* pVp = pV.get_tmp_vptr();
-      flxVec pV_1(pVp,Ndim);
-      flxVec pV_2(pVp+Ndim,Ndim);
-      tdouble* cmop = cov_mtx_obsv->get_VecPointer();
-    // loop over data-points
-      for (size_t i=0;i<N_obsv;++i) {
-        // update parameter vector
-          pV_1 = flxVec(dm_ptr+i*Ndim,Ndim);
-        for (size_t j=0;j<=i;++j) {
-          // update parameter vector
-            pV_2 = flxVec(dm_ptr+j*Ndim,Ndim);
-          if (use_LSE) {
-            *cmop = gp_kernel->eval_kernel_corrl_f(pVp);
-          } else {
-            *cmop = gp_kernel->eval_kernel_f(pVp);
-          }
-          ++cmop;
-        }
-        if (!use_LSE) {
-          *(cmop-1) += pow2(noise_val);
-        }
+  // minimize noise parameter
+    if (optimize_noise_val) {
+      tdouble lnvt = log(noise_val);
+      noise_best_guess_val = noise_val;
+      noise_best_guess_sdZ = use_LSE?(gp_kernel->eval_kernel_sd()):ONE;
+      noise_best_guess_logl = -std::numeric_limits<double>::infinity();
+      try {
+        flx_optim(log(noise_val/10), log(noise_val*10), lnvt, gp_likeli_f_nv, this, true, true, 100, 20, 1e-4, 1e-4, &noise_opt_stream );
+      } catch (FlxException& e) {
+        noise_opt_stream << "»»» setting noise to best guess (" << GlobalVar.Double2String(noise_best_guess_val) << ")" << std::endl;
       }
-    // minimize noise parameter
-      if (use_LSE && optimize_noise_val) {
-        const tdouble noise_orig = noise_val;
-        tdouble lnvt = log(noise_val);
-        try {
-          flx_optim(log(noise_val/10), log(noise_val*10), lnvt, gp_likeli_f_nv, this, true, true, 100, 20, 1e-4, 1e-4 );
-        } catch (FlxException& e) {
-          lnvt = log(noise_orig);
+      // ensure that minimum is set
+        noise_val = noise_best_guess_val;
+        if (use_LSE) {
+          gp_kernel->set_sd(noise_best_guess_sdZ);
         }
-        // ensure that minimum is set
-          lpr_obsv = -gp_likeli_f_nv(lnvt,this);
-      } else {
         lpr_obsv = assemble_observations_help();
-      }
+        // consistency checks
+          if (fabs(lpr_obsv-noise_best_guess_logl)/max(ONE,fabs(noise_best_guess_logl))>1e-6) {
+            throw FlxException_Crude("flxGPProj::assemble_observations_02");
+          }
+    } else {
+      lpr_obsv = assemble_observations_help();
+    }
   obsv_changed = false;
 }
 
-void flxGPProj::register_observation(const flxGP_data_base& d_info_, const bool initialize_pVec, const bool optimize_noise_val, std::ostream& ostrm)
+const tdouble flxGPProj::register_observation(const flxGP_data_base& d_info_, const bool initialize_pVec, const bool optimize_noise_val)
 {
   if (d_info) delete d_info;
   d_info = d_info_.copy();
   unassemble();
   assemble_observations(initialize_pVec, optimize_noise_val);
+  return lpr_obsv;
 }
 
 void flxGPProj::register_noise(const tdouble noise_sd)
@@ -743,6 +787,10 @@ double gp_likeli_f(const gsl_vector *v, void *params)
 #endif
 {
   flxGPProj *p = (flxGPProj *)params;
+
+  // store initial parameters (for use_LSE)
+    const tdouble noise_sd_ini = (p->use_LSE)?(p->noise_val):ZERO;
+    const tdouble kernel_sd_ini = (p->use_LSE)?(p->gp_kernel->eval_kernel_sd()):ZERO;
 
   // assign parameters
     bool bchange = false;
@@ -776,7 +824,23 @@ double gp_likeli_f(const gsl_vector *v, void *params)
     }
   // evaluate likelihood
     if (bchange) p->unassemble();
-    const tdouble res = p->get_log_likeli_obsv();
+    tdouble res;
+    try {
+      res = p->get_log_likeli_obsv();
+    } catch (FlxException& e) {
+      // restore original values (we just want to optimize noise conditional on the initial configuration)
+        if (p->use_LSE && p->keep_LSE_results==false) {
+          p->gp_kernel->set_sd(kernel_sd_ini);
+          p->noise_val = noise_sd_ini;
+        }
+      throw;
+    }
+
+    // restore original values (we just want to optimize noise conditional on the initial configuration)
+      if (p->use_LSE && p->keep_LSE_results==false) {
+        p->gp_kernel->set_sd(kernel_sd_ini);
+        p->noise_val = noise_sd_ini;
+      }
 
   // error checking
     if (std::isnan(res)) {
@@ -786,7 +850,7 @@ double gp_likeli_f(const gsl_vector *v, void *params)
         throw FlxException_math("flxGPProj::likeli_f_02");
     }
     #if FLX_USE_NLOPT
-        // GlobalVar.slogcout(1) << " flxGPProj::likeli_f_89 " << res << "   " << flxVec(v,n) << std::endl;
+        p->para_opt_stream << "    flxGPProj::likeli_f_89 " << res << "   " << flxVec(v,n) << "   " << (bchange?"yes":"no") << std::endl;
     #endif
   return -res;
 }
@@ -796,6 +860,7 @@ const tdouble flxGPProj::optimize_help(const tdouble step_size, const tuint iter
 {
   // make sure that process is assembeld before log-likelihood is evaluated
     assemble_observations(false,false);
+    keep_LSE_results = false;
     // we can only optimize the process, if it is conditioned on some data
   // count the number of uncertain parameters
     const tuint Npara = use_LSE?(gp_kernel->get_Npara()-1):(gp_mean->get_Npara() + gp_kernel->get_Npara());
@@ -846,7 +911,8 @@ const tdouble flxGPProj::optimize_help(const tdouble step_size, const tuint iter
         }
       }
       if (output_ini) {
-          ostrm << "       initial point estimate: " << GlobalVar.Double2String(-gp_likeli_f(Npara,&x_ini[0],NULL,this)) << " at ( ";
+          const tdouble lres_ini = -gp_likeli_f(Npara,&x_ini[0],NULL,this);
+          ostrm << "       initial point estimate: " << GlobalVar.Double2String(lres_ini) << " at ( ";
           for (tuint i=0;i<x_ini.size(); ++i) {
               if (i>0) {
                   ostrm << ", ";
@@ -875,12 +941,17 @@ const tdouble flxGPProj::optimize_help(const tdouble step_size, const tuint iter
           ostrm << " ) :: niter = " << opt.get_numevals() << ", dim = " << Npara << std::endl;
 
         // make sure MLE-model parameters are actually set
-          if ((gp_likeli_f(Npara,&x[0],NULL,this)+lres)>=GlobalVar.TOL()) {
-            throw FlxException("flxGPProj::optimize_help_NLopt_02");
+          keep_LSE_results = true;
+          const tdouble res_err = fabs(gp_likeli_f(Npara,&x[0],NULL,this)+lres)/max(ONE,fabs(lres));
+          if (res_err>=1e-6) {
+            std::ostringstream ssV;
+            ssV << GlobalVar.Double2String(lpr_obsv) << "  " << GlobalVar.Double2String(lres) << "  " << GlobalVar.Double2String(res_err);
+            throw FlxException("flxGPProj::optimize_help_NLopt_02", ssV.str());
           }
 
       } catch(...) {
         // re-run evaluation for initial model
+          keep_LSE_results = true;
           lres = -gp_likeli_f(Npara,&x_ini[0],NULL,this);
         throw;
       }
@@ -994,10 +1065,13 @@ const tdouble flxGPProj::optimize_help(const tdouble step_size, const tuint iter
         ostrm << " ) :: niter = " << iter << ", dim = " << Npara << std::endl;
 
       // make sure MLE-model parameters are actually set
-        if ((gp_likeli_f(s->x,this)+lres)>=GlobalVar.TOL()) {
-          throw FlxException("flxGPProj::optimize_help_GSL_02");
+        keep_LSE_results = true;
+        const tdouble res_err = fabs(gp_likeli_f(s->x,this)+lres)/max(ONE,fabs(lres));
+        if (res_err>=1e-6) {
+            std::ostringstream ssV;
+            ssV << GlobalVar.Double2String(lpr_obsv) << "  " << GlobalVar.Double2String(lres) << "  " << GlobalVar.Double2String(res_err);
+          throw FlxException("flxGPProj::optimize_help_GSL_02", ssV.str());
         }
-
 
     // if an error occurs, reset parameters to initial values
     } catch (...) {
@@ -1006,6 +1080,7 @@ const tdouble flxGPProj::optimize_help(const tdouble step_size, const tuint iter
           gsl_vector_set (x, i, pvec_ini[i]);
         }
       // re-run evaluation for initial model
+        keep_LSE_results = true;
         lres = -gp_likeli_f(x,this);
       // free memory
         gsl_vector_free(x);
@@ -1023,12 +1098,15 @@ const tdouble flxGPProj::optimize_help(const tdouble step_size, const tuint iter
   return lres;
 }
 
-const tdouble flxGPProj::optimize(const tuint iterMax, std::ostream& ostrm)
+const tdouble flxGPProj::optimize(const tuint iterMax)
 {
+  // reset logging-stream
+    para_opt_stream.str("");
+    para_opt_stream.clear();
   tdouble lres = log(ZERO);
   tdouble step_size = 0.1;
   #if FLX_USE_NLOPT
-    lres = optimize_help(step_size,iterMax,true,ostrm);
+    lres = optimize_help(step_size,iterMax,true,para_opt_stream);
   #else
     const tuint itermaxMLEstep = 20;
     tuint i = 0;
@@ -1053,7 +1131,7 @@ const tdouble flxGPProj::optimize(const tuint iterMax, std::ostream& ostrm)
         }
       // for all other iterations, perform an optimization
         try {
-          lres = optimize_help(step_size,iterMax,i<=1,ostrm);
+          lres = optimize_help(step_size,iterMax,i<=1,para_opt_stream);
         } catch (FlxException_math& e) {
             step_size /= 2; // in case of an error, use only half the step size
             continue;
@@ -1071,7 +1149,7 @@ const tdouble flxGPProj::get_log_likeli_obsv()
   return lpr_obsv;
 }
 
-void flxGPProj::eval_covar_point(flxVec& K_star, const flxVec& x_vec, const bool predict_noise, tdouble& prior_mean, tdouble& prior_var)
+void flxGPProj::eval_covar_point(flxVec& K_star, const flxVec& x_vec, tdouble& prior_mean, tdouble& prior_var)
 {
   // check dimension of x_vec
     x_vec.check_size(Ndim);
@@ -1085,49 +1163,30 @@ void flxGPProj::eval_covar_point(flxVec& K_star, const flxVec& x_vec, const bool
     flxVec pV_2(pVp+Ndim,Ndim);
     pV_1 = x_vec;
   // loop over data-points
-    const tdouble ncf = use_LSE?(ONE/(ONE+pow2(noise_val))):ONE;
     for (size_t i=0;i<N_obsv;++i) {
       pV_2 = flxVec(dm_ptr+i*Ndim,Ndim);
-      if (use_LSE) {
-        K_star[i] = gp_kernel->eval_kernel_corrl_f(pVp);
-        if (predict_noise && pV_1.comp_dist_NOroot(pV_2)>GlobalVar.TOL()) {
-          K_star[i] *= ncf;
-        }
-      } else {
-        K_star[i] = gp_kernel->eval_kernel_f(pVp);
-        if (predict_noise) {
-          K_star[i] += pow2(noise_val);
-        }
-      }
+      K_star[i] = gp_kernel->eval_kernel_f(pVp);
     }
   // evaluate mean at point
     prior_mean = gp_mean->eval_mean_f(pVp);
   // evaluate variance at point
     pV_2 = x_vec;
-    if (use_LSE) {
-      prior_var = pow2(gp_kernel->eval_kernel_sd());
-      // noise is accounted for in K_star, however, it would go against the definition to use it here
-    } else {
-      prior_var = gp_kernel->eval_kernel_f(pVp);
-      if (predict_noise) {
-        prior_var += pow2(noise_val);
-      }
-    }
+    prior_var = gp_kernel->eval_kernel_f(pVp);
 }
 
 void flxGPProj::predict_mean_var(const flxVec& x_vec, const bool predict_noise, tdouble& res_mean, tdouble& res_var)
 {
   x_vec.check_size(Ndim);
-  // compute covariance between x_vec and input-data
-    flxVec K_star(N_obsv);
-    tdouble prior_mean, prior_var;
-    eval_covar_point(K_star,x_vec,predict_noise, prior_mean, prior_var);
   // in case there is a problem
     if (obsv_changed) {
       res_mean = ONE/ZERO;
       res_var = ONE/ZERO;
       return;
     }
+  // compute covariance between x_vec and input-data
+    flxVec K_star(N_obsv);
+    tdouble prior_mean, prior_var_noise_free;
+    eval_covar_point(K_star,x_vec, prior_mean, prior_var_noise_free);
   // evaluate mean
    res_mean = prior_mean + K_star.operator*(*alpha);
   // evaluate variance
@@ -1135,38 +1194,63 @@ void flxGPProj::predict_mean_var(const flxVec& x_vec, const bool predict_noise, 
       // assemble v-vector
         //lt_mtx_obsv->MultInv(K_star,K_star,true);
         //res_var = prior_var - K_star*K_star;
-    if (use_LSE) {
-      // evaluate u-vector
-        flxVec Rinvr(K_star.get_N());
-        lt_mtx_obsv->MultInv(K_star,Rinvr);
-        lt_mtx_obsv->TransMultInv(Rinvr,Rinvr);
-        // as an alternative to the two lines above (maybe faster, but less accurate)
-          // covinv_mtx_obsv->MultMv(K_star,Rinvr);
-        // evaluate variance -- without impact of gp_mean
-          res_var = ONE - K_star*Rinvr;
-        // correct for impact of gp_mean
-        if (gp_mean->get_Npara()>0) {
-          flxVec uvec(Fmtx->ncols());
-          Fmtx->TransposeMmultVec(Rinvr,uvec);
-          flxVec fvec(Fmtx->ncols());
-          gp_mean->assemble_f_vec(fvec,x_vec.get_tmp_vptr_const());
-          uvec -= fvec;
-          // evaluate last term
-            flxVec uhelp(uvec);
-            FRinvF_cdc_mtx->MultInv(uhelp,uhelp);
-            FRinvF_cdc_mtx->TransMultInv(uhelp,uhelp);
-          // finally, correct variance
-            res_var += uvec*uhelp;
+    // evaluate reduction in variance
+      flxVec Rinvr(K_star.get_N());
+      lt_mtx_obsv->MultInv(K_star,Rinvr);
+      lt_mtx_obsv->TransMultInv(Rinvr,Rinvr);
+      // as an alternative to the two lines above (maybe faster, but less accurate)
+        // covinv_mtx_obsv->MultMv(K_star,Rinvr);
+      tdouble var_red = K_star*Rinvr;
+      if (use_LSE) {
+        tdouble sigma_Y_2 = prior_var_noise_free + pow2(noise_val);    // = sigma_Y_2
+        var_red /= sigma_Y_2;
+      }
+    // evaluate variance
+      res_var = prior_var_noise_free - var_red;
+      // avoid round-off errors that lead to small negative variances
+        // a problem is that due to round-off errors in obtaining Rinvr, K_star*Rinvr>1 !!!
+        if (res_var<ZERO && fabs(res_var)<=sqrt(GlobalVar.TOL())) {
+          res_var = ZERO;
         }
-        // avoid round-off errors that lead to small negative variances
-          // a problem is that due to round-off errors in obtaining Rinvr, K_star*Rinvr>1 !!!
-          if (res_var<ZERO && fabs(res_var)<=sqrt(GlobalVar.TOL())) {
-            res_var = ZERO;
-          }
-        res_var *= prior_var;
-    } else {
-      throw FlxException_NotImplemented("flxGPProj::predict_mean_var");
-    }
+        if (res_var<ZERO) {
+          throw FlxException_Crude("flxGPProj::predict_mean_var");
+        }
+      if (predict_noise) {
+        res_var += pow2(noise_val);
+      }
+
+    // if (use_LSE) {
+    //   // evaluate u-vector
+    //     flxVec Rinvr(K_star.get_N());
+    //     lt_mtx_obsv->MultInv(K_star,Rinvr);
+    //     lt_mtx_obsv->TransMultInv(Rinvr,Rinvr);
+    //     // as an alternative to the two lines above (maybe faster, but less accurate)
+    //       // covinv_mtx_obsv->MultMv(K_star,Rinvr);
+    //     // evaluate variance -- without impact of gp_mean
+    //       res_var = ONE - K_star*Rinvr;
+    //     // correct for impact of gp_mean
+    //     if (gp_mean->get_Npara()>0) {
+    //       flxVec uvec(Fmtx->ncols());
+    //       Fmtx->TransposeMmultVec(Rinvr,uvec);
+    //       flxVec fvec(Fmtx->ncols());
+    //       gp_mean->assemble_f_vec(fvec,x_vec.get_tmp_vptr_const());
+    //       uvec -= fvec;
+    //       // evaluate last term
+    //         flxVec uhelp(uvec);
+    //         FRinvF_cdc_mtx->MultInv(uhelp,uhelp);
+    //         FRinvF_cdc_mtx->TransMultInv(uhelp,uhelp);
+    //       // finally, correct variance
+    //         res_var += uvec*uhelp;
+    //     }
+    //     // avoid round-off errors that lead to small negative variances
+    //       // a problem is that due to round-off errors in obtaining Rinvr, K_star*Rinvr>1 !!!
+    //       if (res_var<ZERO && fabs(res_var)<=sqrt(GlobalVar.TOL())) {
+    //         res_var = ZERO;
+    //       }
+    //     res_var *= prior_var;
+    // } else {
+    //   throw FlxException_NotImplemented("flxGPProj::predict_mean_var");
+    // }
 }
 
 const tdouble flxGPProj::eval_trend(const flxVec& x_vec, const bool predict_noise)
@@ -1179,23 +1263,11 @@ const tdouble flxGPProj::eval_trend(const flxVec& x_vec, const bool predict_nois
 const tdouble flxGPProj::eval_kernel(const flxVec& x_vec, const bool predict_noise)
 {
   x_vec.check_size(Ndim*2);
-  if (use_LSE) {
-    const tdouble ncf = ONE/(ONE+pow2(noise_val));
-    const flxVec x1(x_vec.get_tmp_vptr_const(),Ndim);
-    const flxVec x2(x_vec.get_tmp_vptr_const()+Ndim,Ndim);
-    tdouble prior_cov = gp_kernel->eval_kernel_corrl_f(x_vec.get_tmp_vptr_const());
-    if (predict_noise && x1.comp_dist_NOroot(x2)>GlobalVar.TOL()) {
-      prior_cov *= ncf;
-    }
-    prior_cov *= pow2(gp_kernel->eval_kernel_sd());
-    return prior_cov;
-  } else {
-    tdouble prior_cov = gp_kernel->eval_kernel_f(x_vec.get_tmp_vptr_const());
-    if (predict_noise) {
-      prior_cov += pow2(noise_val);
-    }
-    return prior_cov;
+  tdouble prior_cov = gp_kernel->eval_kernel_f(x_vec.get_tmp_vptr_const());
+  if (predict_noise) {
+    prior_cov += pow2(noise_val);
   }
+  return prior_cov;
 }
 
 py::dict flxGPProj::info()
@@ -1208,6 +1280,8 @@ py::dict flxGPProj::info()
   // parameters of kernel
     res["kernel"] = gp_kernel->info();
   res["noise"] = noise_val;
+  res["noise_log"] = noise_opt_stream.str();
+  res["opt_log"] = para_opt_stream.str();
   if (d_info) {
     res["logl_obsv"] = get_log_likeli_obsv();
   }
@@ -1312,11 +1386,14 @@ const bool flxGP_avgModel::increase_kernel_switch(iVec& tVec) const
   return true;
 }
 
-void flxGP_avgModel::register_observation(const flxGP_data_base& d_info_, const bool initialize_pVec, const bool optimize_noise_val, std::ostream& ostrm)
+const tdouble flxGP_avgModel::register_observation(const flxGP_data_base& d_info_, const bool initialize_pVec, const bool optimize_noise_val)
 {
+  // reset logging-stream
+    para_opt_stream.str("");
+    para_opt_stream.clear();
   // register the observation
     for (auto const& model_ptr : model_lst) {
-      model_ptr->register_observation(d_info_,initialize_pVec, optimize_noise_val,ostrm);
+      model_ptr->register_observation(d_info_,initialize_pVec, optimize_noise_val);
     }
   // optimize model parameters
     iVec tVec(Ndim);
@@ -1328,7 +1405,7 @@ void flxGP_avgModel::register_observation(const flxGP_data_base& d_info_, const 
       tuint c_inner = 0;
       do {
         flxGPProj* model_ptr = model_lst[c];
-        ostrm << "Optimize parameters of model " << model_ptr->get_name() << " ..." << std::endl;
+        para_opt_stream << "Optimize parameters of model " << model_ptr->get_name() << " ..." << std::endl;
         if (initialize_pVec) {
         // use results from previous optimizations as starting solution
           // trend
@@ -1354,11 +1431,11 @@ void flxGP_avgModel::register_observation(const flxGP_data_base& d_info_, const 
           }
         }
         // optimize model
-          const tdouble lres = model_ptr->optimize(iterMax,ostrm);
+          const tdouble lres = model_ptr->optimize(iterMax);
         // evaluate model probability
           const tdouble lpenalty = model_ptr->get_AIC_penalty();
           modProbVec[c++] = lres - lpenalty;
-        ostrm << "    log-likelihood: " << GlobalVar.Double2String(lres) << " penalty: " << lpenalty  << std::endl;
+        para_opt_stream << "    log-likelihood: " << GlobalVar.Double2String(lres) << " penalty: " << lpenalty  << std::endl;
       } while (increase_kernel_switch(tVec));
     }
   // evaluate model probabilities
@@ -1368,10 +1445,11 @@ void flxGP_avgModel::register_observation(const flxGP_data_base& d_info_, const 
       modProbVec[i] = exp(modProbVec[i]);
     }
     modProbVec /= modProbVec.get_sum();
-    ostrm << "Model probabilities:" << std::endl;
+    para_opt_stream << "Model probabilities:" << std::endl;
     for (tuint i=0;i<modProbVec.get_N();++i) {
-      ostrm << "     " << model_lst[i]->get_name() << ": " << GlobalVar.Double2String(modProbVec[i]) << std::endl;
+      para_opt_stream << "     " << model_lst[i]->get_name() << ": " << GlobalVar.Double2String(modProbVec[i]) << std::endl;
     }
+    return modProbVec.get_Mean();
 }
 
 void flxGP_avgModel::register_noise(const tdouble noise_sd)
@@ -1388,7 +1466,7 @@ void flxGP_avgModel::unassemble()
   }
 }
 
-const tdouble flxGP_avgModel::optimize(const tuint iterMax, std::ostream& ostrm)
+const tdouble flxGP_avgModel::optimize(const tuint iterMax)
 {
   return log(ZERO);
 }
@@ -1443,6 +1521,7 @@ py::dict flxGP_avgModel::info()
   res["type"] = "mavggp";
   res["name"] = name;
   // TODO return other information
+  res["opt_log"] = para_opt_stream.str();
   return res;
 }
 

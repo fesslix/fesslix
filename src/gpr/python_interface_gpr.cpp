@@ -172,9 +172,9 @@ const std::string& flxPyGP::get_descr() const
     return descr;
 }
 
-void flxPyGP::condition_on(py::array_t<tdouble> dm_in, py::array_t<tdouble> dv_out, const bool init_pvec, const bool opt_noise)
+const tdouble flxPyGP::condition_on(py::array_t<tdouble> dm_in, py::array_t<tdouble> dv_out, const bool init_pvec, const bool opt_noise)
 {
-    gp_ptr->register_observation(flxGP_data_from_Py(dm_in,dv_out),init_pvec,opt_noise,GlobalVar.slogcout(3));
+    return gp_ptr->register_observation(flxGP_data_from_Py(dm_in,dv_out),init_pvec,opt_noise);
 }
 
 void flxPyGP::noise_white(const tdouble noise_sd)
@@ -185,10 +185,9 @@ void flxPyGP::noise_white(const tdouble noise_sd)
     gp_ptr->register_noise(noise_sd);
 }
 
-const tdouble flxPyGP::optimize(const tuint itermax, const bool log_opt)
+const tdouble flxPyGP::optimize(const tuint itermax)
 {
-    std::ostream& ostrm = log_opt?(GlobalVar.slogcout(3)):(GlobalVar.slog_dummy());
-    return gp_ptr->optimize(itermax,ostrm);
+    return gp_ptr->optimize(itermax);
 }
 
 py::object flxPyGP::predict(py::array_t<tdouble> arr, const std::string& type, const bool predict_noise)
@@ -264,7 +263,7 @@ PYBIND11_MODULE(gpr, m) {
             .def("get_descr", &flxPyGP::get_descr, "get description of gaussian process")
             .def("condition_on", &flxPyGP::condition_on, pybind11::arg("dm_in"), pybind11::arg("dv_out"), pybind11::arg("init_pvec") = true, pybind11::arg("opt_noise") = true, "conditions the tp-model on an observation")
             .def("noise_white", &flxPyGP::noise_white, "model error of the gp-model")
-            .def("optimize", &flxPyGP::optimize, pybind11::arg("itermax") = 500, pybind11::arg("log_opt") = false, "optimizes the parameters of the gp-model")
+            .def("optimize", &flxPyGP::optimize, pybind11::arg("itermax") = 500, "optimizes the parameters of the gp-model")
             .def("predict", &flxPyGP::predict, pybind11::arg("x_vec"), pybind11::arg("type"), pybind11::arg("predict_noise") = false, "evaluate/predict quantities of the gp-model conditioned on the observations")
             .def("unassemble", &flxPyGP::unassemble, "forces the gp-model to re-assemble the covariance matrix on the next call")
             .def("info", &flxPyGP::info, "return a dict with properties of the gp-model")

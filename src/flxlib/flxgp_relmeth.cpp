@@ -107,13 +107,13 @@ void flxGP_MCI::register_sample(const tdouble lsfval, const flxVec& uvec_, const
         dmV.push_back(uvec_[i]);
     }
     if (condition_GP) {
-        gp.register_observation(flxGP_data_ptr(this),register_pvec,learn_noise,logStream);
+        gp.register_observation(flxGP_data_ptr(this),register_pvec,learn_noise);
     }
 }
 
 void flxGP_MCI::optimize_gp_para(const tuint iterMax)
 {
-    gp.optimize(iterMax,logStream);
+    gp.optimize(iterMax);
 }
 
 const tdouble flxGP_MCI::tqi_eval(const tdouble m, const tdouble n) const

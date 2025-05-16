@@ -65,9 +65,9 @@ class PYBIND11_EXPORT flxPyGP {
     const std::string get_name() const;
     const std::string& get_descr() const;
 
-    void condition_on(py::array_t<tdouble> dm_in, py::array_t<tdouble> dv_out, const bool init_pvec, const bool opt_noise);
+    const tdouble condition_on(py::array_t<tdouble> dm_in, py::array_t<tdouble> dv_out, const bool init_pvec, const bool opt_noise);
     void noise_white(const tdouble noise_sd);
-    const tdouble optimize(const tuint itermax, const bool log_opt);
+    const tdouble optimize(const tuint itermax);
     py::object predict(py::array_t<tdouble> arr, const std::string& type, const bool predict_noise);
     void unassemble();
     py::dict info();

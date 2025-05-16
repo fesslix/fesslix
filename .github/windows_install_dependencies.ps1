@@ -4,7 +4,7 @@ git clone https://github.com/Microsoft/vcpkg.git
 .\vcpkg\vcpkg integrate install
 
 Write-Output 'Installing dependencies ...'
-.\vcpkg\vcpkg install gsl:x64-windows-static gsl:x86-windows-static gsl:arm64-windows-static boost-format:x64-windows-static boost-math:x64-windows-static boost-concept-check:x64-windows-static boost-random:x64-windows-static boost-algorithm:x64-windows-static
+.\vcpkg\vcpkg install gsl:x64-windows-static gsl:x86-windows-static gsl:arm64-windows-static boost-format:x64-windows-static boost-math:x64-windows-static boost-concept-check:x64-windows-static boost-random:x64-windows-static boost-algorithm:x64-windows-static nlopt:x64-windows-static nlopt:x86-windows-static nlopt:arm64-windows-static
 
 .\vcpkg\vcpkg integrate install
 

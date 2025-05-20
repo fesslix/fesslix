@@ -143,6 +143,7 @@ before-all= [ "brew install gsl boost",
               "ls -l $(brew --prefix gsl)/lib",  # list installed libgsl.*
               "source ./.github/macOS_install_dependencies.sh",
             ]
+environment = "NLOPT_INCLUDE_DIR=/Users/runner/work/fesslix/fesslix/nlopt/install/include/ NLOPT_LIBRARY=/Users/runner/work/fesslix/fesslix/nlopt/install/lib/libnlopt.a"
 #archs = ["x86_64", "arm64"]
 
 [[tool.cibuildwheel.overrides]]

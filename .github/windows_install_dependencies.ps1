@@ -4,14 +4,14 @@ git clone https://github.com/Microsoft/vcpkg.git
 .\vcpkg\vcpkg integrate install
 
 Write-Output 'Installing dependencies ...'
-.\vcpkg\vcpkg install gsl:x64-windows-static gsl:x86-windows-static gsl:arm64-windows-static boost-format:x64-windows-static boost-math:x64-windows-static boost-concept-check:x64-windows-static boost-random:x64-windows-static boost-algorithm:x64-windows-static nlopt:x64-windows-static nlopt:x86-windows-static nlopt:arm64-windows-static
+.\vcpkg\vcpkg install gsl:x64-windows-static-md gsl:x86-windows-static-md gsl:arm64-windows-static-md boost-format:x64-windows-static-md boost-math:x64-windows-static-md boost-concept-check:x64-windows-static-md boost-random:x64-windows-static-md boost-algorithm:x64-windows-static-md nlopt:x64-windows-static-md nlopt:x86-windows-static-md nlopt:arm64-windows-static-md
 
 .\vcpkg\vcpkg integrate install
 
 Write-Output 'Check if pkg-config Can Find GSL ...'
 .\vcpkg\vcpkg list | Select-String gsl
 .\vcpkg\vcpkg list | Select-String boost
-$env:PKG_CONFIG_PATH="D:\a\fesslix\fesslix\vcpkg\installed\x64-windows-static\lib\pkgconfig"
+$env:PKG_CONFIG_PATH="D:\a\fesslix\fesslix\vcpkg\installed\x64-windows-static-md\lib\pkgconfig"
 Write-Output '   pkg-config ...'
 pkg-config --cflags gsl
 pkg-config --libs gsl

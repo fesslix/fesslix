@@ -121,17 +121,17 @@ environment = "VCPKG_ROOT=D:/a/fesslix/fesslix/vcpkg/ CMAKE_TOOLCHAIN_FILE=D:/a/
 [[tool.cibuildwheel.overrides]]
 select ="*-win32*"
 inherit.environment="append"
-environment = "TRIPLET=x86-windows-static Boost_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/share/boost"
+environment = "TRIPLET=x86-windows-static-md Boost_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static-md/share/boost"
 
 [[tool.cibuildwheel.overrides]]
 select ="*-win_amd64*"
 inherit.environment="append"
-environment = "TRIPLET=x64-windows-static Boost_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/share/boost"
+environment = "TRIPLET=x64-windows-static-md Boost_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static-md/share/boost"
 
 [[tool.cibuildwheel.overrides]]
 select ="*-win_arm64*"
 inherit.environment="append"
-environment = "TRIPLET=arm64-windows-static Boost_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static/share/boost"
+environment = "TRIPLET=arm64-windows-static-md Boost_DIR=D:/a/fesslix/fesslix/vcpkg/installed/x64-windows-static-md/share/boost"
 
 #################################################################################
 # macOS

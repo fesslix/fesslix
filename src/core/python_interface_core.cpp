@@ -1166,6 +1166,7 @@ PYBIND11_MODULE(core, m) {
         m.def("set_const", &set_const, "assigns a value to a const-variable");
         m.def("set_var", &set_var, "assigns a value to a var-variable");
 
+        m.def("cdfn", &rv_Phi, "the CDF of the standard Normal distribution");
         m.def("cdfn_inv", &rv_InvPhi, "inverse of the CDF of the standard Normal distribution");
 
         m.def("randStr", &generate_randStr, "returns a random string of length N");

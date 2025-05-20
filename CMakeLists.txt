@@ -17,6 +17,10 @@
 cmake_minimum_required(VERSION 3.15)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
+message(STATUS "=======================")
+message(STATUS "Fesslix » Configuration")
+message(STATUS "=======================")
+
 if(NOT DEFINED SKBUILD_PROJECT_VERSION)
   set(SKBUILD_PROJECT_VERSION "0.0.0")
 endif()

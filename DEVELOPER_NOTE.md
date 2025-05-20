@@ -82,7 +82,9 @@ git push -u origin main
 
 ## common commit messages
 
-increase patch number
+versioning: increase patch number
+versioning: increase minor number
+versioning: increase major number
 attempt package build
 
 ## work on features in a separate branch

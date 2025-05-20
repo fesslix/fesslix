@@ -28,10 +28,14 @@ FlxStringFunBox* FlxString::StrFunBox = NULL;
 
 
 
-const string& trim(string& str)
+const string trim(string& str)
 {
-  boost::algorithm::trim(str);
-  return str;
+  auto start = std::find_if_not(str.begin(), str.end(), ::isspace);
+  auto end   = std::find_if_not(str.rbegin(), str.rend(), ::isspace).base();
+  return (start < end ? std::string(start, end) : std::string{});
+  // TODO delete, when the above solution gives no problems
+  // boost::algorithm::trim(str);
+  // return str;
 }
 
 const std::string& find_and_replace_all(std::string& source_str, const std::string& find_str, const std::string& replace_str)

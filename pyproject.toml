@@ -71,8 +71,7 @@ before-all = [ #"yum install -y gsl-devel",
 #               ]
 before-build = "python --version"
 test-command = "echo 'installed gsl-devel boost-devel'"
-environment = "Boost_skip_search=1 VCPKG_ROOT=/project/vcpkg/"
-#environment = "NLOPT_INCLUDE_DIR=../nlopt/install/include/ NLOPT_LIBRARY=../nlopt/install/lib/libnlopt.a"
+environment = "Boost_skip_search=1 VCPKG_ROOT=/project/vcpkg/ NLOPT_INCLUDE_DIR=/project/nlopt/install/include/ NLOPT_LIBRARY=/project/nlopt/install/lib64/libnlopt.a"
 
 [[tool.cibuildwheel.overrides]]
 select ="*-manylinux_x86_64"

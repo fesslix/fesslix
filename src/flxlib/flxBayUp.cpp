@@ -967,13 +967,13 @@ void flxBayUp_adaptive_ctrl_dcs::append_smpl(const flxVec& lastS, const bool acc
 void flxBayUp_adaptive_ctrl_dcs::write_adaptive_info(std::ostream& sout)
 {
   if (csm_dcs==NULL) throw FlxException_Crude("flxBayUp_adaptive_ctrl_dcs::write_adaptive_info");
-  sout << boost::format("  sdR=%6.2e  sdW=%6.2e  ") % rv_Phi(cur_sdR_ut) % rv_Phi(cur_sdW_ut);
+  sout << std::format("  sdR={:6.2e}  sdW={:6.2e}  ", rv_Phi(cur_sdR_ut), rv_Phi(cur_sdW_ut));
   if (cur_pSD>ZERO) {
-    sout << boost::format("sdS=%4.2f  ") % rv_Phi(cur_sdWS_ut);
-    sout << boost::format("pSD=%4.2f  ") % (cur_pSD);
+    sout << std::format("sdS={:4.2f}  ", rv_Phi(cur_sdWS_ut));
+    sout << std::format("pSD={:4.2f}  ", (cur_pSD));
   }
   if (omega_N>0) {
-    sout << boost::format("cosw=%4.2f  ") % (omega_sum/omega_N);
+    sout << std::format("cosw={:4.2f}  ", (omega_sum/omega_N));
   }
 }
 
@@ -1097,7 +1097,7 @@ const tdouble flxBayUp_adaptive_ctrl_velo::get_working_sd() const
 
 void flxBayUp_adaptive_ctrl_velo::write_adaptive_info(std::ostream& sout)
 {
-  sout << boost::format("  h=%4.2f   ") % rv_Phi(cur_sd_ut);
+  sout << std::format("  h={:4.2f}   ", rv_Phi(cur_sd_ut));
 }
 
 void flxBayUp_adaptive_ctrl_velo::print_info(std::ostream& sout) const
@@ -2506,7 +2506,7 @@ void FlxBayUp_Update_List::MHRS_uBUS(tdouble& p_mod)
       w_i = log(w_i);
       w_i += (max_L - c_next);
       p_mod += w_i;
-      ext_out << boost::format("qw=%4.2f ") % exp(w_i);
+      ext_out << std::format("qw={:4.2f} ", exp(w_i));
   // perform a re-sampling to alter the sampling distribution
     // pick the seed randomly
       tuint sid = parent.get_data().RndCreator.gen_smp_index2(w_vec);
@@ -2541,10 +2541,10 @@ void FlxBayUp_Update_List::MHRS_uBUS(tdouble& p_mod)
           }
       }
       acr /= (N_in_list-1);
-      ext_out << boost::format("qacr=%4.2f qCoV=%4.2f ") % acr % w_cov;
+      ext_out << std::format("qacr={:4.2f} qCoV={:4.2f} ", acr, w_cov);
   // correct s_thr
     s_thr += max_L - c_next;
-    ext_out << boost::format("gt2=%9.2e ") % s_thr;
+    ext_out << std::format("gt2={:9.2e} ", s_thr);
 }
 
 const bool FlxBayUp_Update_List::update_c(tdouble& p_mod, const bool is_first)
@@ -2575,7 +2575,7 @@ const bool FlxBayUp_Update_List::update_c(tdouble& p_mod, const bool is_first)
       if (meth_id==UBUS) {
         const tdouble delta = max_L - c;
         s_thr += delta;
-        ext_out << boost::format("gt1=%9.2e ") % s_thr;
+        ext_out << std::format("gt1={:9.2e} ", s_thr);
       } else {
         if (oldC_N>=max_runs) throw FlxException_Crude("FlxBayUp_Update_List::update_c_5");
         oldC_list[oldC_N] = c;                // this is the max. Likelihood of the previous step
@@ -3255,7 +3255,7 @@ const tuint FlxBayUp_Update_List::update_thr(Flx_SuS_CLevelStat& curLevelStat_ne
           }
           if (cP2>0) {
             const tdouble pts = (tdouble(cP3)/tdouble(cP2))/(tdouble(Nse)/tdouble(N_in_list));
-            ext_out2 << boost::format("pts=%4.2f  ") % pts;
+            ext_out2 << std::format("pts={:4.2f}  ", pts);
           }
         // append output to ext_out2
           if (ext_out.str().empty()==false && ext_out2.str().empty()==false) {
@@ -3674,7 +3674,7 @@ void FlxBayUP_csm_cwmh_MCMC::write_adaptive_info(std::ostream& sout, const bool 
     adpt_velo->write_adaptive_info(sout);
     return;
   }
-  sout << boost::format("  h=%4.2f   ") % kernel->get_h();
+  sout << std::format("  h={:4.2f}   ", kernel->get_h());
 }
 
 FlxBayUP_csm_cov_MCMC::FlxBayUP_csm_cov_MCMC(FlxRndCreator& RndCreator, const tuint M, const std::string& kernelName, const tdouble h_value, FlxFunction* h_fun, const tdouble p, const tuint Nmax, const tdouble p_single, const tuint Nmax_single, FlxBayUp_Update_List& listV)
@@ -3792,7 +3792,7 @@ const std::string FlxBayUP_csm_cov_MCMC::print_info()
 void FlxBayUP_csm_cov_MCMC::write_adaptive_info(std::ostream& sout, const bool is_adaptive)
 {
   if (!is_adaptive && h_fun==NULL) return;
-  sout << boost::format("  h=%4.2f   ") % h;
+  sout << std::format("  h=%4.2f   ", h);
 }
 
 FlxBayUP_csm_csus_MCMC::FlxBayUP_csm_csus_MCMC(FlxRndCreator& RndCreator, const tdouble sD, FlxFunction* h_fun)
@@ -3899,7 +3899,7 @@ const std::string FlxBayUP_csm_csus_MCMC::print_info()
 void FlxBayUP_csm_csus_MCMC::write_adaptive_info(std::ostream& sout, const bool is_adaptive)
 {
   if (!is_adaptive && h_fun==NULL) return;
-  sout << boost::format("  h=%4.2f   ") % sD;
+  sout << std::format("  h={:4.2f}   ", sD);
   if (adpt_ctrl) adpt_ctrl->write_adaptive_info(sout);
 }
 
@@ -4137,7 +4137,7 @@ const std::string FlxBayUP_csm_TMCMC::print_info()
 void FlxBayUP_csm_TMCMC::write_adaptive_info(std::ostream& sout, const bool is_adaptive)
 {
   if (!is_adaptive && h_fun==NULL) return;
-  sout << boost::format("  h=%4.2f   ") % beta;
+  sout << std::format("  h={:4.2f}   ", beta);
 }
 
 Flx_SuS_CLevelStat::Flx_SuS_CLevelStat(const tuint level, Flx_SuS_CLevelStat* prev)
@@ -5152,15 +5152,15 @@ void FlxBayUp_Update::output_forwardEstimators()
       delete [] delta;
     #endif
   // C.o.V.
-    scout3 << "                      C.o.V.: " << boost::format("%9.2e") % sqrt(p1.cast2double())
+    scout3 << "                      C.o.V.: " << std::format("{:9.2e}", sqrt(p1.cast2double()))
             << "          (assuming that the p_i are uncorrelated)" << std::endl;
     data->ConstantBox.insert("sus_fwd_coeffofvar",sqrt(p1.cast2double()));
     p1 += p2;
-    scout3 << "                              " << boost::format("%9.2e") % sqrt(p1.cast2double())
+    scout3 << "                              " << std::format("{:9.2e}", sqrt(p1.cast2double()))
             << " + o(1/N) (assuming that the p_i are fully correlated)" << std::endl;
     data->ConstantBox.insert("sus_fwd_coeffofvar_fc",sqrt(p1.cast2double()));
   // bias
-    scout3 << "        upper bound for bias: " << boost::format("%9.2e") % (p2.cast2double()/2)
+    scout3 << "        upper bound for bias: " << std::format("{:9.2e}", (p2.cast2double()/2))
             << " + o(1/N) (equality for full correlation of the p_i)" << std::endl;
     
 }
@@ -5409,7 +5409,7 @@ void FlxBayUp_Update::output_credibleIntervals()
             const tdouble bay_up = FunSmpCDF::inv_cdf(ONE-(ONE-pcT)/2,tp,Ncs);
             crp[crp_id++] = bay_low;
             crp[crp_id++] = bay_up;
-            scout3 << "[" << boost::format("%10.3e") % bay_low << ";" << boost::format("%10.3e") % bay_up << "]" << std::endl;
+            scout3 << "[" << std::format("{:10.3e}", bay_low) << ";" << std::format("{:10.3e}", bay_up) << "]" << std::endl;
         }
       }
       // where to store the credible intervals (upper bound) to?:
@@ -5426,7 +5426,7 @@ void FlxBayUp_Update::output_credibleIntervals()
             crp[crp_id++] = pcT;
             const tdouble bay_ub = FunSmpCDF::inv_cdf(pcT,tp,Ncs);
             crp[crp_id++] = bay_ub;
-            scout3 << "       " << boost::format("%10.3e") % bay_ub << std::endl;;
+            scout3 << "       " << std::format("{:10.3e}", bay_ub) << std::endl;;
         }
       }
   } catch (FlxException& e) {
@@ -5991,10 +5991,10 @@ void FlxBayUp_Update::update(FlxBayUp_Update_List* listV, FlxBayUP_csm_base* csm
     }
     scout << std::endl;
   }
-  scout << "  Number of random variables:   " << boost::format("%-10.0f") % list->get_Nrv();
+  scout << "  Number of random variables:   " << std::format("{:<10d}", list->get_Nrv());
     if (list->get_Nrv()!=list->get_NOX()) {
       scout << " (standard normal space)"<< std::endl;
-      scout << "                                " << boost::format("%-10.0f") % list->get_NOX() << " (original space)";
+      scout << "                                " << std::format("{:<10d}", list->get_NOX()) << " (original space)";
     }
     scout << std::endl;
   if (list->parent.is_subsetRel==false) {
@@ -6005,7 +6005,7 @@ void FlxBayUp_Update::update(FlxBayUp_Update_List* listV, FlxBayUP_csm_base* csm
     if (list->meth_id==FlxBayUp_Update_List::TMCMC) {
     scout << "  Burn-in phase before level:   " << list->get_Nburn() << std::endl;
     } else {
-    scout << "  Threshold level:              " << boost::format("%4.2f") % (ONE/tdouble(list->get_Ncl())) << std::endl;
+    scout << "  Threshold level:              " << std::format("{:4.2f}", (ONE/tdouble(list->get_Ncl()))) << std::endl;
     }
     scout << "  Type of conditional sampling: " << csm->print_info() << std::endl;
     list->get_adpt_ctrl().eval();
@@ -6060,7 +6060,7 @@ void FlxBayUp_Update::update(FlxBayUp_Update_List* listV, FlxBayUP_csm_base* csm
       std::ostringstream scout_ext; bool scout_ext_nempty = false;
       bool err_first = susControl.prt_alert;
       // do MCI in a first step
-        scout << boost::format("  iter %2.0f:") % N_runs << "  ";
+        scout << std::format("  iter {:2d}:", N_runs) << "  ";
         os_smpl = open_smpl_file4write();
         // register the progress-bar
           op.flush();
@@ -6101,9 +6101,9 @@ void FlxBayUp_Update::update(FlxBayUp_Update_List* listV, FlxBayUP_csm_base* csm
             list->update_c(p_mod,true);
             const tdouble mhml = list->get_maxL();
             if (mhml>=log(GlobalVar.TOL()) && mhml<=100.) {
-              scout << boost::format("maxL=%9.2e  ") % exp(mhml) << "           ";
+              scout << std::format("maxL={:9.2e}  ", exp(mhml)) << "           ";
             } else {
-              scout << boost::format("mlnL=%9.2e  ") % mhml << "           ";
+              scout << std::format("mlnL={:9.2e}  ", mhml) << "           ";
             }
             break;
           }
@@ -6116,7 +6116,7 @@ void FlxBayUp_Update::update(FlxBayUp_Update_List* listV, FlxBayUP_csm_base* csm
           default:
             throw FlxException_Crude("FlxBayUp_Update::update_b3");
         };
-        scout << boost::format("velo=%4.2f  ") % list->get_velo();
+        scout << std::format("velo={:4.2f}  ", list->get_velo());
           const tdouble p_0 = ONE/tdouble(list->get_Ncl());
       // stores statistics of the previous level
           Flx_SuS_CLevelStat* curLevelStat = new Flx_SuS_CLevelStat(0,NULL);
@@ -6144,7 +6144,7 @@ void FlxBayUp_Update::update(FlxBayUp_Update_List* listV, FlxBayUP_csm_base* csm
                   if (Nc_now<list->get_Ns_final()) {        // only if we are not already done
                     const tdouble rt = tdouble(Nc_now) / tdouble(curLevelStat->Nsamples);
                     curLevelStat->pi = rt;
-                    scout << boost::format("pt=%9.2e") % rt;
+                    scout << std::format("pt={:9.2e}",rt);
                   }
                 } else {
                   if (fullList_prev) {
@@ -6152,7 +6152,7 @@ void FlxBayUp_Update::update(FlxBayUp_Update_List* listV, FlxBayUP_csm_base* csm
                   } else {
                     curLevelStat->pi = p_0;
                   }
-                  scout << boost::format("gt=%9.2e") % list->get_thr();
+                  scout << std::format("gt={:9.2e}",list->get_thr());
                 }
                 break;
               }
@@ -6161,9 +6161,9 @@ void FlxBayUp_Update::update(FlxBayUp_Update_List* listV, FlxBayUP_csm_base* csm
                 if (Nc_now<list->get_Ns_final()) {        // only if we are not already done
                   curLevelStat->pi = pnow;
                   if (gt_is_zero) {
-                    scout << boost::format("pt=%9.2e") % pnow;
+                    scout << std::format("pt={:9.2e}",pnow);
                   } else {
-                    scout << boost::format("gt=%9.2e") % list->get_thr();
+                    scout << std::format("gt={:9.2e}",list->get_thr());
                   }
                 }
                 break;
@@ -6175,15 +6175,15 @@ void FlxBayUp_Update::update(FlxBayUp_Update_List* listV, FlxBayUP_csm_base* csm
               if (susControl.comp_gamma && Nc_now!=curLevelStat->Nsamples) {        // compute gamma
                 list->compute_gamma(*curLevelStat,susControl);
                 if (susControl.verbose && N_runs>1) {
-                  scout_ext << boost::format("Ge=%2.0f") % (curLevelStat->eff_Gelman*100) << "% ";
-                  scout_ext << boost::format("eff=%2.0f") % (curLevelStat->eff*100) << "% ";
-                  scout_ext << boost::format("lag1c=%2.0f") % (curLevelStat->lag1_corr*100) << "% ";
+                  scout_ext << std::format("Ge={:2.0f}", (curLevelStat->eff_Gelman*100)) << "% ";
+                  scout_ext << std::format("eff={:2.0f}", (curLevelStat->eff*100)) << "% ";
+                  scout_ext << std::format("lag1c={:2.0f}", (curLevelStat->lag1_corr*100)) << "% ";
                   if (N_runs>2 && susControl.consider_seed_corr) {
-                    scout_ext << boost::format("sc2eff=%2.0f") % (curLevelStat->gamma_from_seed/curLevelStat->gamma*100) << "% ";
+                    scout_ext << std::format("sc2eff={:2.0f}", (curLevelStat->gamma_from_seed/curLevelStat->gamma*100)) << "% ";
                     if (curLevelStat->corr_pi_prev>0.01) {
-                      scout_ext << boost::format("piCorr=%2.0f") % (curLevelStat->corr_pi_prev*100) << "% ";
+                      scout_ext << std::format("piCorr={:2.0f}", (curLevelStat->corr_pi_prev*100)) << "% ";
                       #if FLX_DEBUG
-                        scout_ext << boost::format("piCnF=%1.1f") % (curLevelStat->corr_pi_prev_negFrac) << " ";
+                        scout_ext << std::format("piCnF={:1.1f}", (curLevelStat->corr_pi_prev_negFrac)) << " ";
                       #endif
                     }
                   }
@@ -6230,7 +6230,7 @@ void FlxBayUp_Update::update(FlxBayUp_Update_List* listV, FlxBayUP_csm_base* csm
             if (gt_is_zero) {
               scout << "        *:  ";
             } else {
-              scout << "  " << boost::format("iter %2.0f:  ") % N_runs;
+              scout << "  " << std::format("iter {:2d}:  ", N_runs);
             }
             // visibility of progress-bar
               op.flush();
@@ -6369,9 +6369,9 @@ void FlxBayUp_Update::update(FlxBayUp_Update_List* listV, FlxBayUP_csm_base* csm
               {
                 const tdouble mhml = list->get_maxL();
                 if (mhml>=log(GlobalVar.TOL()) && mhml<=100.) {
-                  scout << boost::format("maxL=%9.2e  ") % exp(mhml) << " ";
+                  scout << std::format("maxL={:9.2e}  ", exp(mhml)) << " ";
                 } else {
-                  scout << boost::format("mlnL=%9.2e  ") % mhml << " ";
+                  scout << std::format("mlnL={:9.2e}  ", mhml) << " ";
                 }
                 break;
               }
@@ -6387,22 +6387,22 @@ void FlxBayUp_Update::update(FlxBayUp_Update_List* listV, FlxBayUP_csm_base* csm
           // output acceptance rate
             {
               const tdouble acr_val = ONE-tdouble(nac)/tdouble(tc2);
-              scout << boost::format("acr=%4.2f  ") % acr_val;
+              scout << std::format("acr={:4.2f}  ", acr_val);
               if (susControl.verbose && acr_val>GlobalVar.TOL()) {
                 if (list->get_Nrv()>1 && csm->get_ac1d()<0.995) {
-                  scout_ext << boost::format("ac1d=%4.2f ") % csm->get_ac1d();
+                  scout_ext << std::format("ac1d={:4.2f} ", csm->get_ac1d());
                   scout_ext_nempty = true;
                 }
                 const tdouble acr1 = ONE-tdouble(nac1)/tdouble(tc2);
                 if (acr1<0.995) {
-                  scout_ext << boost::format("acr1=%4.2f ") % (acr1);
-                  scout_ext << boost::format("acr2=%4.2f ") % (ONE-tdouble((nac-nac1))/tdouble(tc2-nac1));
+                  scout_ext << std::format("acr1={:4.2f} ", (acr1));
+                  scout_ext << std::format("acr2={:4.2f} ", (ONE-tdouble((nac-nac1))/tdouble(tc2-nac1)));
                   scout_ext_nempty = true;
                 }
               }
             }
           // output velocity
-            scout << boost::format("velo=%4.2f  ") % list->get_velo(Nc_now);
+            scout << std::format("velo={:4.2f}  ", list->get_velo(Nc_now));
           ++N_runs;
           {        // check whether we are done
             bool b_done = false;        
@@ -6496,7 +6496,7 @@ void FlxBayUp_Update::update(FlxBayUp_Update_List* listV, FlxBayUP_csm_base* csm
         }
       try {
       // do MCI in a first step
-        scout << boost::format("  iter %2.0f:") % N_runs << "  ";
+        scout << std::format("  iter {:2d}:", N_runs) << "  ";
         // register the progress-bar
           op.flush();
           prg.start(list->get_Nc());
@@ -6561,9 +6561,9 @@ void FlxBayUp_Update::update(FlxBayUp_Update_List* listV, FlxBayUP_csm_base* csm
               const tdouble l_max_level = L_vec_prev.get_max();
               if (l_max_level>l_max) l_max = l_max_level;
               if (exp(l_max_level)>=GlobalVar.TOL() && l_max_level<=100.) {
-                scout << boost::format("maxL=%9.2e  ") % exp(l_max_level);
+                scout << std::format("maxL={:9.2e}  ", exp(l_max_level));
               } else {
-                scout << boost::format("mlnL=%9.2e  ") % l_max_level << " ";
+                scout << std::format("mlnL={:9.2e}  ", l_max_level) << " ";
               }
             }
           // check stopping condition
@@ -6582,7 +6582,7 @@ void FlxBayUp_Update::update(FlxBayUp_Update_List* listV, FlxBayUP_csm_base* csm
           // determin the current Likelihood 'scaling' (its potence)
             q_now = TMCMC_new_q(q_prev,target_cov,L_vec_prev,W_vec);
             if (q_now!=q_now) throw FlxException_Crude("FlxBayUp_Update::update_t10a");
-            scout << boost::format("q=%9.2e  ") % q_now;
+            scout << std::format("q={:9.2e}  ", q_now);
             const tuint Nct = (fabs(q_now-ONE)<=GlobalVar.TOL())?(list->get_Ns_final()):Nc;
           // check if this is the last level
             if (fabs(q_now-ONE)<=GlobalVar.TOL()) {
@@ -6593,7 +6593,7 @@ void FlxBayUp_Update::update(FlxBayUp_Update_List* listV, FlxBayUP_csm_base* csm
           // compute mean of Likelihoods
             const tdouble W_mean = W_vec.get_Mean();
             p_mod += log(W_mean);
-            scout << boost::format("Sk=%9.2e  ") % W_mean;
+            scout << std::format("Sk={:9.2e}  ", W_mean);
           // Estimate Covariance matrix
             TMCMC_assemble_smplCOV(y_covV,W_vec,y_list_prev,Nc,NRV,y_meanP,y_mean,y_prop);
           // prepare the intermediate weight estimation
@@ -6641,7 +6641,7 @@ void FlxBayUp_Update::update(FlxBayUp_Update_List* listV, FlxBayUP_csm_base* csm
               csm_TMCMC->write_adaptive_info(scout,list->get_adpt_ctrl().is_adaptive());
             }
             scout << std::endl;
-            scout << "  " << boost::format("iter %2.0f:  ") % N_runs;
+            scout << "  " << std::format("iter {:2d}:  ", N_runs);
             // visibility of progress-bar
               op.flush();
           // ... the actual generation of new samples
@@ -6820,7 +6820,7 @@ void FlxBayUp_Update::update(FlxBayUp_Update_List* listV, FlxBayUP_csm_base* csm
           // output acceptance rate
             {
               const tdouble acr_val = ONE-tdouble(nac)/tdouble(Nct+Nb);
-              scout << boost::format("acr=%4.2f  ") % acr_val;
+              scout << std::format("acr={:4.2f}  ", acr_val);
             }
           // swap variables
             tdouble* ptrswap;

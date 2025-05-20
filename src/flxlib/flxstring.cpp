@@ -305,7 +305,7 @@ void FlxString_Fun::eval(ostream& os)
     {
       const tdouble res = fun->calc();
       try {
-      os << boost::format(boost_str) % res;
+        os << std::vformat(boost_str, std::make_format_args(res) );
       } catch (...) {
         std::ostringstream ssV;
         ssV << "The output-format string '" << boost_str << "' caused an error.";

@@ -22,7 +22,7 @@
 #include "flxexception.h"
 #include "flxMemoryManager.h"
 
-#include <boost/format.hpp>
+#include <format>
 
 #include <valarray>
 typedef std::valarray<tdouble> tVec;
@@ -200,7 +200,7 @@ class FLXLIB_EXPORT strGlobalVar {
     const int D2S_get_fixW(const int prec, const int fixW) const;
     const std::string Double2String_sci(tdouble dv, const int prec=-1, int fixW=-1);
     
-    const boost::basic_format<char> D2S_totalPrec(const tdouble dv);
+    const std::string D2S_totalPrec(const tdouble dv);
     /**
     * @brief set the strong loglevel
     */

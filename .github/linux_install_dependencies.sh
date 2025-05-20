@@ -11,3 +11,4 @@ cd vcpkg
 #./vcpkg install nlopt
 find ./ -name libgsl*
 pwd
+cd ..

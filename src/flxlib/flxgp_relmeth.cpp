@@ -269,7 +269,7 @@ const tdouble flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int&
     tulong id_worst_point = 0;
     tulong id_worst_mcspi = 0;
     const tdouble pi_TOL = 1e-8;
-    tdouble Uval_worst_point = ONE/ZERO;
+    tdouble Uval_worst_point = std::numeric_limits<tdouble>::infinity();
     // ensure that 'mcs_pi' is large engough
         mcs_pi.clear();
     // conduct Monte Carlo simulation

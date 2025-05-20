@@ -743,7 +743,7 @@ void flxGPProj::assemble_observations(const bool initialize_pVec, const bool opt
       tdouble lnvt = log(noise_val);
       noise_best_guess_val = noise_val;
       noise_best_guess_sdZ = use_LSE?(gp_kernel->eval_kernel_sd()):ONE;
-      noise_best_guess_logl = -std::numeric_limits<double>::infinity();
+      noise_best_guess_logl = -std::numeric_limits<tdouble>::infinity();
       try {
         flx_optim(log(noise_val/10), log(noise_val*10), lnvt, gp_likeli_f_nv, this, true, true, 100, 20, 1e-4, 1e-4, &noise_opt_stream );
       } catch (FlxException& e) {
@@ -818,7 +818,7 @@ double gp_likeli_f(const gsl_vector *v, void *params)
       #endif
       // make sure that correlation length is finite
         if (!std::isfinite(pv)) {
-          return ONE/ZERO;
+          return std::numeric_limits<tdouble>::infinity();
         }
       if (fabs(pkp->operator[](i)-pv)>GlobalVar.TOL()) bchange = true;
       pkp->operator[](i) = pv;

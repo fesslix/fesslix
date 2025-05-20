@@ -17,17 +17,13 @@
 
 #include "flxmath_rnd.h"
 
-#include <boost/random/normal_distribution.hpp>
-#include <boost/random/uniform_real.hpp>
-#include <boost/random/lognormal_distribution.hpp>
 #include <boost/math/distributions.hpp>
 #include <boost/math/special_functions.hpp>
 
 rng_type randgen;
 
-boost::random::normal_distribution<tdouble> pd_normal;
-boost::random::uniform_01<tdouble> pd_uniform;
-boost::random::uniform_int_distribution<int> pd_uniform_int;
+std::normal_distribution<tdouble> pd_normal(ZERO, ONE);
+std::uniform_real_distribution<tdouble> pd_uniform(ZERO, ONE);
 
 boost::math::normal ndist(ZERO,ONE);
 

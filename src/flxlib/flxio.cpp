@@ -21,7 +21,6 @@
 #include <fstream>
 #include <cstring>
 #include <cctype>
-#include <boost/concept_check.hpp>
 
 
 using namespace std;

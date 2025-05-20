@@ -24,9 +24,6 @@
     #include <mutex>
 #endif
 
-#include <boost/random.hpp>
-#include <boost/random/normal_distribution.hpp>
-
 rng_type randgen_local;
 
 const tuint N_MCS_tqi = 1000;

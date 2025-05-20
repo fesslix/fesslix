@@ -31,11 +31,6 @@
 #include <iostream>
 
 
-#if FLX_BOOST_PO
-  #include <boost/program_options.hpp>
-  namespace po = boost::program_options;
-#endif
-  
 using namespace std;
 
 int FesslixMain::Cinst = 0;      // true, cout is std::cout (otherwise cout is redirected to the log-file)

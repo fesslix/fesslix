@@ -18,7 +18,6 @@
 #include "flxrbrv_rvs_read.h"
 #include "flxobjrbrv.h"
 #include "flxBayDA.h"
-#include <boost/concept_check.hpp>
 
 FlxObjRBRV_set_creator_box* RBRV_entry_read_base::rbrv_set_creator = NULL;
 

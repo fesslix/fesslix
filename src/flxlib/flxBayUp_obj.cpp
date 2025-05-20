@@ -22,8 +22,6 @@
 #include "flxBayDA.h"
 #include "flxobjmtx.h"
 
-#include <boost/random.hpp>
-
 void FlxCreateObjReaders_BU::createObjReaders(FlxObjectReadBox* objReadBox) {
   objReadBox->insert("bayup_new", new FlxObjReadBayUp_new());
   objReadBox->insert("bayup_likelihood", new FlxObjReadBayUp_likelihood());

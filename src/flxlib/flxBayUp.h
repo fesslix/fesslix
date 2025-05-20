@@ -22,7 +22,6 @@
 #include "flxrbrv_rvs.h"
 #include "flxStatBox.h"
 #include "flxBayDA.h"
-#include <boost/concept_check.hpp>
 
 class FlxBayUP_csm_base;
 class flxBayUp;

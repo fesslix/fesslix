@@ -26,7 +26,6 @@
 
 #include <algorithm>
 #include <fstream>
-#include <boost/iterator/iterator_concepts.hpp>
 #include <limits>
 
 #if FLX_DEBUG

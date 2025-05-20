@@ -18,7 +18,6 @@
 
 #include "flxmath.h"
 #include <string.h>
-#include <boost/iterator/iterator_concepts.hpp>
 
 
 const tdouble flx_interpolate_linear(const tdouble x_val, const tdouble* x_ptr, const tdouble* f_ptr, const size_t N)

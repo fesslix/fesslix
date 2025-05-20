@@ -20,6 +20,8 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 message(STATUS "=======================")
 message(STATUS "Fesslix » Configuration")
 message(STATUS "=======================")
+message(STATUS "Current source directory: ${CMAKE_CURRENT_SOURCE_DIR}")
+message(STATUS "Current binary directory: ${CMAKE_CURRENT_BINARY_DIR}")
 
 if(NOT DEFINED SKBUILD_PROJECT_VERSION)
   set(SKBUILD_PROJECT_VERSION "0.0.0")
@@ -31,6 +33,7 @@ project(
   LANGUAGES CXX)
 
 set( FLX_VERSIONb ${PROJECT_VERSION} )
+message(STATUS "Fesslix » version:        ${PROJECT_VERSION}")
 
 set(CMAKE_CXX_STANDARD 20)  ## does not compile with manylinux2014
 #set(CMAKE_CXX_STANDARD 17)

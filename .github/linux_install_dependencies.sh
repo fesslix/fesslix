@@ -8,6 +8,6 @@ cd vcpkg
 ./bootstrap-vcpkg.sh
 ./vcpkg install gsl
 ./vcpkg install boost-format boost-math boost-concept-check boost-random boost-algorithm
-./vcpkg install nlopt
+#./vcpkg install nlopt
 find ./ -name libgsl*
 pwd

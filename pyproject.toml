@@ -48,6 +48,7 @@ before-all = [ #"yum install -y gsl-devel",
                #"yum install python3-devel",
                "yum install -y ninja-build",
                "source ./.github/linux_install_dependencies.sh",
+               "source ./.github/linux_build_nlopt.sh",
                ]
 #before-build = [ "ls -la",
                #"[ ! -d vcpkg ] && git clone https://github.com/microsoft/vcpkg.git",
@@ -71,6 +72,7 @@ before-all = [ #"yum install -y gsl-devel",
 before-build = "python --version"
 test-command = "echo 'installed gsl-devel boost-devel'"
 environment = "Boost_skip_search=1 VCPKG_ROOT=/project/vcpkg/"
+#environment = "NLOPT_INCLUDE_DIR=../nlopt/install/include/ NLOPT_LIBRARY=../nlopt/install/lib/libnlopt.a"
 
 [[tool.cibuildwheel.overrides]]
 select ="*-manylinux_x86_64"
@@ -104,7 +106,9 @@ environment = "TRIPLET=arm64-linux"
 
 [[tool.cibuildwheel.overrides]]
 select = "*-musllinux*"
-before-all = "apk add --no-cache gsl gsl-dev boost-dev nlopt-dev"   #  python3-dev
+before-all = [ "apk add --no-cache gsl gsl-dev boost-dev",
+               "source ./.github/linux_build_nlopt.sh",
+               ]
 ## NOTE: do not run "source ./.github/linux_install_dependencies.sh"
 ##       musllinux does not officially support 'vcpkg'.
 

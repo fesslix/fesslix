@@ -27,7 +27,7 @@
 // ------------------------------------------------------------------------------------------------
 class flxGP_data_ptr;
 
-class flxGP_MCI {
+class FLXLIB_EXPORT flxGP_MCI {
   protected:
     flxGPProj_base& gp;
     const tuint Ndim;             // number of basic random variables of the problem
@@ -81,7 +81,7 @@ class flxGP_MCI {
 
 // ------------------------------------------------------------------------------------------------
 
-class flxGP_data_ptr : public flxGP_data_base {
+class FLXLIB_EXPORT flxGP_data_ptr : public flxGP_data_base {
   private:
     flxGP_MCI *akmcs;
   public:

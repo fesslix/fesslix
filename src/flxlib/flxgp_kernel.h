@@ -26,7 +26,7 @@
 
 // ------------------------------------------------------------------------------------------------
 
-class flxGP_mean_base {
+class FLXLIB_EXPORT flxGP_mean_base {
   protected:
     const tuint Ndim;
     flxVec pVec;
@@ -45,7 +45,7 @@ class flxGP_mean_base {
     virtual py::dict info() = 0;
 };
 
-class flxGP_mean_0 : public flxGP_mean_base {
+class FLXLIB_EXPORT flxGP_mean_0 : public flxGP_mean_base {
   public:
     flxGP_mean_0(const tuint Ndim);
 
@@ -56,7 +56,7 @@ class flxGP_mean_0 : public flxGP_mean_base {
     virtual py::dict info();
 };
 
-class flxGP_mean_const : public flxGP_mean_base {
+class FLXLIB_EXPORT flxGP_mean_const : public flxGP_mean_base {
   private:
     const tdouble val;
   public:
@@ -69,7 +69,7 @@ class flxGP_mean_const : public flxGP_mean_base {
     virtual py::dict info();
 };
 
-class flxGP_mean_ordinary : public flxGP_mean_base {
+class FLXLIB_EXPORT flxGP_mean_ordinary : public flxGP_mean_base {
   protected:
     FlxFunction* mean_f;    // just a pointer, memory is not managed by class
   public:
@@ -83,7 +83,7 @@ class flxGP_mean_ordinary : public flxGP_mean_base {
     virtual py::dict info();
 };
 
-class flxGP_mean_universal : public flxGP_mean_base {
+class FLXLIB_EXPORT flxGP_mean_universal : public flxGP_mean_base {
   protected:
     const tuint type;
     tdouble normalizef;
@@ -100,7 +100,7 @@ class flxGP_mean_universal : public flxGP_mean_base {
 
 // ------------------------------------------------------------------------------------------------
 
-class flxGP_kernel_base {
+class FLXLIB_EXPORT flxGP_kernel_base {
   protected:
     const tuint Ndim;
   public:
@@ -119,7 +119,7 @@ class flxGP_kernel_base {
     virtual py::dict info() = 0;
 };
 
-class flxGP_kernel_user : public flxGP_kernel_base {
+class FLXLIB_EXPORT flxGP_kernel_user : public flxGP_kernel_base {
   protected:
     FlxFunction* kernel_f;    // just a pointer, memory is not managed by class
   public:
@@ -134,7 +134,7 @@ class flxGP_kernel_user : public flxGP_kernel_base {
     virtual py::dict info();
 };
 
-class flxGP_kernel_auto : public flxGP_kernel_base {
+class FLXLIB_EXPORT flxGP_kernel_auto : public flxGP_kernel_base {
   protected:
     flxVec pVec;    // parameter vector
     flxVec nVec;    // scaling vector
@@ -157,7 +157,7 @@ class flxGP_kernel_auto : public flxGP_kernel_base {
 
 // ------------------------------------------------------------------------------------------------
 
-class flxGP_data_base {
+class FLXLIB_EXPORT flxGP_data_base {
   public:
     flxGP_data_base() {}
     virtual ~flxGP_data_base() {}
@@ -174,7 +174,7 @@ class flxGP_data_base {
   double gp_likeli_f (const gsl_vector *v, void *params);
 #endif
 
-class flxGPProj_base {
+class FLXLIB_EXPORT flxGPProj_base {
   protected:
     const std::string name;   // name of this project
     const tuint Ndim;
@@ -198,7 +198,7 @@ class flxGPProj_base {
 
 };
 
-class flxGPProj : public flxGPProj_base {
+class FLXLIB_EXPORT flxGPProj : public flxGPProj_base {
   private:
     flxGP_mean_base* gp_mean;    // just a pointer, memory is not managed by class
     flxGP_kernel_base* gp_kernel;  // just a pointer, memory is not managed by class
@@ -300,7 +300,7 @@ class flxGPProj : public flxGPProj_base {
 };
 
 
-class flxGP_avgModel : public flxGPProj_base {
+class FLXLIB_EXPORT flxGP_avgModel : public flxGPProj_base {
   private:
     const tuint max_poM;              // maximum polynomial order of mean function
     const tuint max_NKernel;          // maximum number of kernels to investigate
@@ -331,7 +331,7 @@ class flxGP_avgModel : public flxGPProj_base {
 
 // ------------------------------------------------------------------------------------------------
 
-class flxGPBox {
+class FLXLIB_EXPORT flxGPBox {
   private:
     #if FLX_DEBUG
       /**

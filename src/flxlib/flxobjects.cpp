@@ -491,7 +491,7 @@ void FlxObjOutputBase::write(const tdouble val, std::ostream& sout_)
     sout_ << GlobalVar.Double2String(val,checkTOL,prec,fixW);
   } else {
     try {
-      sout_ << format(boost_str) % val;
+      sout_ << boost::format(boost_str) % val;
     } catch (...) {
       std::ostringstream ssV;
       ssV << "The output-format string '" << boost_str << "' caused an error.";

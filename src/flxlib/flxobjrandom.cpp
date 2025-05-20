@@ -1019,13 +1019,13 @@ void FlxObjMCI::output_Bayesian_credible_reliablity(std::ostream& sout, const td
             const tdouble bay_up = betad.Inv_cdf_x(kc);
             crp[crp_id++] = bay_low;
             crp[crp_id++] = bay_up;
-            sout << "[" << format("%10.3e") % bay_low << ";" << format("%10.3e") % bay_up << "]";
+            sout << "[" << boost::format("%10.3e") % bay_low << ";" << boost::format("%10.3e") % bay_up << "]";
             kc = rv_InvPhi(kc);
             tdouble lb = theResult - kc * sqrt(theResult*(ONE-theResult)/Npd);
             if (lb<ZERO) lb=ZERO;
             tdouble ub = theResult + kc * sqrt(theResult*(ONE-theResult)/Npd);
             if (ub>ONE) ub=ONE;
-            sout << "    [" << format("%10.3e") % lb << ";" << format("%10.3e") % ub << "]" << std::endl;
+            sout << "    [" << boost::format("%10.3e") % lb << ";" << boost::format("%10.3e") % ub << "]" << std::endl;
         }
       }
       // where to store the credible intervals (upper bound) to?:
@@ -1042,11 +1042,11 @@ void FlxObjMCI::output_Bayesian_credible_reliablity(std::ostream& sout, const td
             crp[crp_id++] = pcT;
             const tdouble bay_ub = betad.Inv_cdf_x(pcT);
             crp[crp_id++] = bay_ub;
-            sout << "       " << format("%10.3e") % bay_ub;
+            sout << "       " << boost::format("%10.3e") % bay_ub;
             const tdouble kc = rv_InvPhi(pcT);
             tdouble ub = theResult + kc * sqrt(theResult*(ONE-theResult)/Npd);
             if (ub>ONE) ub=ONE;
-            sout << "                " << format("%10.3e") % ub << std::endl;
+            sout << "                " << boost::format("%10.3e") % ub << std::endl;
         }
       }
     } // end if: output credible intervals
@@ -2376,7 +2376,7 @@ flxVec FlxObjFORM_base::do_FORM(flxVec& x, flxVec& y, tdouble& beta_new, tuint& 
     RndBox->set_smp(d);
     z_0 = LSF->calc(); ++LSFcalls;
     const bool isNeg_z_0 = (z_0<ZERO);
-    GlobalVar.slogcout(4) << "  lsf(y=0)=" << format("%9.2e") % z_0 << std::endl;
+    GlobalVar.slogcout(4) << "  lsf(y=0)=" << boost::format("%9.2e") % z_0 << std::endl;
     // compute start-point
       RndBox->get_x_Vec(xhelp.get_tmp_vptr());
       xhelp -= x;
@@ -2402,7 +2402,7 @@ flxVec FlxObjFORM_base::do_FORM(flxVec& x, flxVec& y, tdouble& beta_new, tuint& 
   beta_new = y.get_Norm2();
   
   if (!only_partial) {
-    GlobalVar.slogcout(4) << "  Iter  0: lsf_err=" << format("%9.2e") % z_old << std::endl;
+    GlobalVar.slogcout(4) << "  Iter  0: lsf_err=" << boost::format("%9.2e") % z_old << std::endl;
   }
   flxVec dzdy(DIM);
   tdouble beta_old, zo, zu,fd,fd_max,dx,lambda=-9999.;
@@ -2635,10 +2635,10 @@ flxVec FlxObjFORM_base::do_FORM(flxVec& x, flxVec& y, tdouble& beta_new, tuint& 
     // compute err_orth
 //         err_orth = Norm2(dzdy/Norm2(dzdy)+y/beta_new);
     
-    GlobalVar.slogcout(4) << format("  Iter %2i: lsf_err=%9.2e  beta=%6.3f") % loopc % z_old % beta_new;
-    GlobalVar.slogcout(4)  << format("  beta_err=%9.2e") %((beta_new-beta_old)/beta_new);
+    GlobalVar.slogcout(4) << boost::format("  Iter %2i: lsf_err=%9.2e  beta=%6.3f") % loopc % z_old % beta_new;
+    GlobalVar.slogcout(4)  << boost::format("  beta_err=%9.2e") %((beta_new-beta_old)/beta_new);
     if (opt_method==2)  {
-      GlobalVar.slogcout(4)  << format("  lambda=%8.2e") %lambda;
+      GlobalVar.slogcout(4)  << boost::format("  lambda=%8.2e") %lambda;
     }
     GlobalVar.slogcout(4) << std::endl; 
     if (verboseLog) {
@@ -2731,7 +2731,7 @@ void FlxObjFORM::sensitivities(const flxVec& y, RBRV_constructor& RndBox, std::o
  
   slog << "  Sensitivities: \t  gamma\t\t gamma^2\t  %" << std::endl;
   for (tuint i=0;i<N;++i) {
-    slog << format("  %-15s\t%9.2e\t%9.2e\t%3.1f") % RndBox.get_rv_name(i) % sensi[i] % pow2(sensi[i]) % (pow2(sensi[i])*100) << "%"  << std::endl;
+    slog << boost::format("  %-15s\t%9.2e\t%9.2e\t%3.1f") % RndBox.get_rv_name(i) % sensi[i] % pow2(sensi[i]) % (pow2(sensi[i])*100) << "%"  << std::endl;
   }
 }
 

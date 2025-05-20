@@ -315,7 +315,7 @@ void strGlobalVar::Double2String_log()
 
 const boost::basic_format<char> strGlobalVar::D2S_totalPrec(const tdouble dv)
 {
-  return (format("%19.12e") % dv);
+  return (boost::format("%19.12e") % dv);
 }
 
 std::ostream& strGlobalVar::slog(const int logLevel_)

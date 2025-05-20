@@ -22,8 +22,7 @@
 #include "flxexception.h"
 #include "flxMemoryManager.h"
 
-#include "boost/format.hpp"
-using boost::format;
+#include <boost/format.hpp>
 
 #include <valarray>
 typedef std::valarray<tdouble> tVec;

@@ -138,10 +138,11 @@ environment = "TRIPLET=arm64-windows-static Boost_DIR=D:/a/fesslix/fesslix/vcpkg
 #################################################################################
 
 [tool.cibuildwheel.macos]
-before-all= [ "brew install gsl boost nlopt",
+before-all= [ "brew install gsl boost",
               "brew --prefix boost",
-              "ls -l $(brew --prefix gsl)/lib",
-              "ls -l $(brew --prefix nlopt)/lib"]
+              "ls -l $(brew --prefix gsl)/lib",  # list installed libgsl.*
+              "source ./.github/macOS_install_dependencies.sh",
+            ]
 #archs = ["x86_64", "arm64"]
 
 [[tool.cibuildwheel.overrides]]

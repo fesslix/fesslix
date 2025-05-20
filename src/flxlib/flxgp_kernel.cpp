@@ -1198,8 +1198,8 @@ void flxGPProj::predict_mean_var(const flxVec& x_vec, const bool predict_noise, 
   x_vec.check_size(Ndim);
   // in case there is a problem
     if (obsv_changed) {
-      res_mean = ONE/ZERO;
-      res_var = ONE/ZERO;
+      res_mean = std::numeric_limits<tdouble>::infinity();
+      res_var = std::numeric_limits<tdouble>::infinity();
       return;
     }
   // compute covariance between x_vec and input-data

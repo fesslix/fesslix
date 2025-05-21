@@ -84,7 +84,7 @@ const tuint parse_py_para_as_tuintNo0(const std::string& para_name, py::dict con
   return val;
 }
 
-const tuint parse_py_para_as_tulong(const std::string& para_name, py::dict config, const bool required, const tuint def_val)
+const tulong parse_py_para_as_tulong(const std::string& para_name, py::dict config, const bool required, const tulong def_val)
 {
   if (config.contains(para_name.c_str())) {
     try {

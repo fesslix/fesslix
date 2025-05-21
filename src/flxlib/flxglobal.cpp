@@ -561,6 +561,13 @@ void fesslix_logInfo(std::ostream& lout)
       lout << "OFF";
     #endif
     lout << std::endl;
+  // FLX_PARALLEL
+    lout << "     FLX_PARALLEL                ";
+    #if FLX_PARALLEL
+      lout << "ON";
+    #else
+      lout << "OFF";
+    #endif
   // FLX_USE_ARPACK
     lout << "     FLX_USE_ARPACK                ";
     #if FLX_USE_ARPACK

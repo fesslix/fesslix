@@ -396,6 +396,7 @@ MARK_AS_ADVANCED(
 #==========================================================
 
 option ( FLX_PARALLEL "use multithreading" ON )
+message(STATUS "FLX_PARALLEL » ${FLX_PARALLEL}")
 
 if("${FLX_PARALLEL}" STREQUAL "ON")
 set ( FLX_PARALLELb 1 )

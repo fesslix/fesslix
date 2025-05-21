@@ -1,13 +1,23 @@
 name: Python package CI
 
-# Trigger the workflow on push and pull request events to the main branch
+
 on:
+  ## =======================
+  ## Execute after each push
+  ## =======================
+  # Trigger the workflow on push and pull request events to the main branch
+  #push:
+  #  branches:
+  #    - main
+  #pull_request:
+  #  branches:
+  #    - main
+  ## =======================
+  ## Execute commiting a tag
+  ## =======================  
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    tags:
+      - 'v*'  # Trigger only on version tags
 
 jobs:
   build:

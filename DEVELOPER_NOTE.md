@@ -64,7 +64,14 @@ To transfer all tags to the server:
 ```
 git push origin --tags
 ```
-
+To list all tags:
+```
+git tag
+```
+To list tags that match a pattern:
+```
+git tag -l "v*"
+```
 
 
 # CMake

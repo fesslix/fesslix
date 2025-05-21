@@ -298,6 +298,14 @@ void FlxDataBase::set_data(FlxData* dataV)
   data = dataV;
 }
 
+FlxData& FlxDataBase::get_data()
+{
+  if (data==nullptr) {
+    throw FlxException("FlxDataBase::get_data", "Fesslix engine is not up and running.");
+  }
+  return *data;
+}
+
 
 const bool FlxOstreamBox::delete_stream(ostreamp& strm)
 {

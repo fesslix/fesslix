@@ -29,9 +29,9 @@ rng_type randgen_local;
 const tuint N_MCS_tqi = 1000;
 
 
-flxGP_MCI::flxGP_MCI(flxGPProj_base& gp, const tuint N_init, const tuint Nreserve, const tuint user_seed_int, const tuint user_init_calls, std::ostream& logStream)
-: gp(gp), Ndim(gp.get_Ndim()), user_seed_int(user_seed_int), user_init_calls(user_init_calls), tqi_vec(N_MCS_tqi), tqi_vec_rv_u(N_MCS_tqi), id_next_point(0), logStream(logStream),
-  static_sum(ZERO),last_m(ZERO), last_n(ZERO), N_init(N_init), lh_samples(N_init*Ndim)
+flxGP_MCI::flxGP_MCI(flxGPProj_base& gp, const tuint Nreserve, const tuint user_seed_int, const tuint user_init_calls)
+: gp(gp), Ndim(gp.get_Ndim()), user_seed_int(user_seed_int), user_init_calls(user_init_calls), tqi_vec(N_MCS_tqi), tqi_vec_rv_u(N_MCS_tqi), id_next_point(0),
+  static_sum(ZERO),last_m(ZERO), last_n(ZERO)
 {
     dmV.reserve(Ndim*Nreserve);
     doV.reserve(Nreserve);
@@ -42,12 +42,6 @@ flxGP_MCI::flxGP_MCI(flxGPProj_base& gp, const tuint N_init, const tuint Nreserv
     for (tuint i=0;i<N_MCS_tqi;++i) {
         tqi_vec_rv_u[i] = rv_uniform(randgen_local);
     }
-
-    init_RNG();
-    FlxRndCreator rndc(&randgen_local);
-    rndc.latin_hypercube(lh_samples.get_tmp_vptr(),N_init,Ndim);
-    lh_samples *= 6.;
-    lh_samples -= 3.;
 }
 
 void flxGP_MCI::init_RNG()
@@ -75,37 +69,44 @@ void flxGP_MCI::generate_sample(flxVec &uvec_)
     rv_normal(uvec_,randgen_local);
 }
 
+void flxGP_MCI::assemble_lh_samples(flxVec& lh_samples)
+{
+    init_RNG();
+    FlxRndCreator rndc(&randgen_local);
+    const tuint N_init = lh_samples.get_N()/Ndim;
+    if (N_init*Ndim != lh_samples.get_N()) {
+        throw FlxException_Crude("flxGP_MCI::assemble_lh_samples");
+    }
+    rndc.latin_hypercube(lh_samples.get_tmp_vptr(),N_init,Ndim);
+    lh_samples *= 6.;
+    lh_samples -= 3.;
+}
+
 void flxGP_MCI::get_next_point(flxVec& uvec_)
 {
-    if (N_init>0) {
-        --N_init;
-        flxVec tv(lh_samples.get_tmp_vptr()+N_init*Ndim,Ndim,false,false);
-        uvec_ = tv;
-        if ( !is_point_unique(uvec_) ) {
-            get_next_point(uvec_);
-        }
-        return;
-    }
     init_RNG();
     for (tulong i=0;i<=id_next_point;++i) {
         generate_sample(uvec_);
     }
     ++id_next_point;
     while ( !is_point_unique(uvec_) ) {
+        logStream << "WARNING [flxGP_MCI::get_next_point]: selected point is not unique" << std::endl;
         generate_sample(uvec_);
         ++id_next_point;
     };
 }
 
-void flxGP_MCI::register_sample(const tdouble lsfval, const flxVec& uvec_, const bool condition_GP, const bool register_pvec, const bool learn_noise)
+void flxGP_MCI::register_sample(const tdouble lsfval, const flxVec& uvec_)
 {
     doV.push_back(lsfval);
     for (tuint i=0;i<Ndim;++i) {
         dmV.push_back(uvec_[i]);
     }
-    if (condition_GP) {
-        gp.register_observation(flxGP_data_ptr(this),register_pvec,learn_noise);
-    }
+}
+
+void flxGP_MCI::condition_on_data(const bool register_pvec, const bool learn_noise)
+{
+    gp.register_observation(flxGP_data_ptr(this),register_pvec,learn_noise);
 }
 
 void flxGP_MCI::optimize_gp_para(const tuint iterMax)
@@ -259,8 +260,9 @@ const tdouble flxGP_MCI::tqi_eval_pr(const tdouble p) const
     return s.cast2double();
 }
 
-const tdouble flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& proposed_action_id)
+py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& proposed_action_id)
 {
+    py::dict res;
     proposed_action_id = 0;
     init_RNG();
     tulong id_worst_point = 0;
@@ -354,7 +356,6 @@ const tdouble flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int&
         #endif
     // set id_next_point
         id_next_point = id_worst_point;
-        N_init = 0;  // no more latin-hypercube samples are used
     // quantify uncertainty about estimate
         last_m = sum;
         last_n = Nsmpls;
@@ -377,15 +378,14 @@ const tdouble flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int&
         const tdouble af = (tqi_2N-tqi_1LSF)/tqi;
         err = tqi-ONE;
     // output
-        logStream << "  MCS on surrogate: E[pf]=" << GlobalVar.Double2String(mean_pf_bayesian,false,2,8)
-            << "  Pr[pf<" << GlobalVar.Double2String(tqi*mean_pf_bayesian,false,1,6) << "]≈99%"
-            << "  err=" << GlobalVar.Double2String(err,false,2,4)
-            << "  minU=" << GlobalVar.Double2String(Uval_worst_point,false,2,5);
-        GlobalVar.Double2String_setType(3);
-        logStream << "  af=" << GlobalVar.Double2String(af,false,2,5);
-        GlobalVar.Double2String_setType(DEFAULT_FPC_TYPE);
-        logStream << "  N=" << GlobalVar.Double2String(Nsmpls) << std::endl;
-    return pf_mle;
+        res["pf_mle"] = pf_mle;
+        res["mean_pf_bayesian"] = mean_pf_bayesian;
+        res["err"] = err;
+        res["af"] = af;
+        res["N"] = Nsmpls;
+        res["Uval_worst_point"] = Uval_worst_point;
+        res["Pr_q_99"] = tqi*mean_pf_bayesian;  // Pr[pf<p]≈99%
+    return res;
 }
 
 void flxGP_MCI::output_summary()

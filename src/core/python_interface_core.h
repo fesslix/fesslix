@@ -189,25 +189,6 @@ flxPyRVset rbrv_set_multinomial(py::dict config);
 flxPyRV get_rv_from_set(const std::string& rv_name);
 
 
-class flxDataBox;
-class flxPySampler {
-  private:
-    RBRV_constructor* RndBox;
-  public:
-    flxPySampler(py::list rvsets);
-    flxPySampler() = delete;
-    flxPySampler(flxPySampler& rhs) = delete;
-    ~flxPySampler();
-
-    flxPySampler& operator=(const flxPySampler& rhs) = delete;
-
-    void sample();
-
-    const tuint get_NRV() const;
-    const tuint get_NOX() const;
-
-    void perform_MCS(const tulong N, py::object vfun, flxDataBox& dbox);
-};
 
 
 // #################################################################################

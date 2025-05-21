@@ -269,7 +269,7 @@ class FLXLIB_EXPORT FlxDataBase {
     * @param dataV a pointer to the DataBox to use
     */
     static void set_data ( FlxData *dataV );;
-    static FlxData& get_data() { return *data; }
+    static FlxData& get_data();
 };
 
 

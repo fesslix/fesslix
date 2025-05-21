@@ -949,6 +949,55 @@ post_proc_base& flxDataBox::register_post_processor(py::dict config)
   return *pp_ptr;
 }
 
+// #################################################################################
+// flxPySampler
+// #################################################################################
+
+flxPySampler::flxPySampler(py::list rvsets)
+: RndBox(nullptr)
+{
+    std::vector<std::string> set_str_vec;
+    set_str_vec.reserve(rvsets.size());
+    for (pybind11::ssize_t i = 0; i < rvsets.size(); ++i) {
+        py::object obj = rvsets[i];
+        const std::string entry = parse_str_as_word(parse_py_obj_as_string(obj, "list entry"), true);
+        set_str_vec.push_back(entry);
+    }
+    RndBox = new RBRV_constructor(set_str_vec,FlxDataBase::get_data().rbrv_box);
+}
+
+flxPySampler::~flxPySampler()
+{
+    if (RndBox) delete RndBox;
+}
+
+void flxPySampler::sample()
+{
+    RndBox->gen_smp();
+}
+
+const tuint flxPySampler::get_NRV() const
+{
+    return RndBox->get_NRV();
+}
+
+const tuint flxPySampler::get_NOX() const
+{
+    return RndBox->get_NOX();
+}
+
+void flxPySampler::perform_MCS(const tulong N, py::object vfun, flxDataBox& dbox)
+{
+    const tuint M_out = dbox.get_M_out();
+    FlxMtxFun_base* model = parse_FlxMtxFun(M_out, vfun, "parameter 'model' in flx.sampler.perform_MCS");
+    try {
+        flx_perform_MCS(N, *model, *RndBox, dbox);
+    } catch (FlxException& e) {
+        delete model;
+        throw;
+    }
+}
+
 
 
 //======================== Monte Carlo Integration ===========================

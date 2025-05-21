@@ -27,7 +27,7 @@
 // ------------------------------------------------------------------------------------------------
 class flxGP_data_ptr;
 
-class FLXLIB_EXPORT flxGP_MCI {
+class PYBIND11_EXPORT flxGP_MCI {
   protected:
     flxGPProj_base& gp;
     const tuint Ndim;             // number of basic random variables of the problem
@@ -39,14 +39,11 @@ class FLXLIB_EXPORT flxGP_MCI {
     flxVec tqi_vec;                // vector needed to evaluate the variance of the tqi
     flxVec tqi_vec_rv_u;           // vector to store pseudo-random uniform samples
     tulong id_next_point;          // id of the next sample for model evaluation
-    std::ostream& logStream;
+    std::stringstream logStream;
 
     tdouble static_sum;
     tdouble last_m;
     tdouble last_n;
-
-    tuint N_init;                 // number of initial latin-hypercube samples
-    flxVec lh_samples;             // vector of latin-hypercube samples
 
     void init_RNG();
 
@@ -55,7 +52,6 @@ class FLXLIB_EXPORT flxGP_MCI {
     const tdouble tqi_eval_pr(const tdouble p) const;
     const tdouble get_mean_tqi(const tdouble ref_m, const tulong n, const tulong* skip_id=NULL, const tuint nrep=1);
 
-    const bool is_point_unique(const flxVec& uvec_) const;
     void generate_sample(flxVec &uvec_);
   public:
     /**
@@ -63,17 +59,20 @@ class FLXLIB_EXPORT flxGP_MCI {
     * @param Ndim number of uncertain model parameters
     * @param Nreserve intented (maximum) number of runs of the 'actual' model
     */
-    flxGP_MCI(flxGPProj_base& gp, const tuint N_init, const tuint Nreserve, const tuint user_seed_int, const tuint user_init_calls, std::ostream& logStream);
+    flxGP_MCI(flxGPProj_base& gp, const tuint Nreserve, const tuint user_seed_int, const tuint user_init_calls);
     virtual ~flxGP_MCI() {}
 
+    void assemble_lh_samples(flxVec& lh_samples);
+    const bool is_point_unique(const flxVec& uvec_) const;
     void get_next_point(flxVec& uvec_);
-    void register_sample(const tdouble lsfval, const flxVec& uvec_, const bool condition_GP, const bool register_pvec, const bool learn_noise);
+    void register_sample(const tdouble lsfval, const flxVec& uvec_);
+    void condition_on_data(const bool register_pvec, const bool learn_noise);
     void optimize_gp_para(const tuint iterMax);
 
     const tuint get_N_model_calls() const { return doV.size(); }
     const tuint get_Ndim() const { return Ndim; }
 
-    const tdouble simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& proposed_action_id);
+    py::dict simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& proposed_action_id);
     void output_summary();
 
     friend class flxGP_data_ptr;

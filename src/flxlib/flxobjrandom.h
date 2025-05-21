@@ -252,6 +252,32 @@ class PYBIND11_EXPORT flxDataBox {
 };
 
 
+// #################################################################################
+// flxPySampler
+// #################################################################################
+
+class PYBIND11_EXPORT flxPySampler {
+  private:
+    RBRV_constructor* RndBox;
+  public:
+    flxPySampler(py::list rvsets);
+    flxPySampler() = delete;
+    flxPySampler(flxPySampler& rhs) = delete;
+    ~flxPySampler();
+
+    flxPySampler& operator=(const flxPySampler& rhs) = delete;
+    RBRV_constructor* get_ptr_RndBox() { return RndBox; }
+
+    void sample();
+
+    const tuint get_NRV() const;
+    const tuint get_NOX() const;
+
+    void perform_MCS(const tulong N, py::object vfun, flxDataBox& dbox);
+};
+
+
+
 
 
 //======================== Monte Carlo Integration ===========================

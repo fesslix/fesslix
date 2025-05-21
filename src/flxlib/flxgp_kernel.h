@@ -188,6 +188,11 @@ class FLXLIB_EXPORT flxGPProj_base {
     virtual const tdouble optimize(const tuint iterMax, const bool opt_noise) = 0;
 
     virtual const tdouble get_log_likeli_obsv() = 0;
+    /**
+    * @brief evaluate posterior mean and variance at x_vec
+    *
+    * @note can be called in parallel !!!
+    */
     virtual void predict_mean_var(const flxVec& x_vec, const bool predict_noise, tdouble& res_mean, tdouble& res_var) = 0;
     virtual const tdouble eval_trend(const flxVec& x_vec, const bool predict_noise) = 0;
     virtual const tdouble eval_kernel(const flxVec& x_vec, const bool predict_noise) = 0;

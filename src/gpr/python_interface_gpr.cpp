@@ -20,6 +20,7 @@
 #include "flxgp_kernel.h"
 
 #include "flxparse.h"
+#include "flxobjrandom.h"
 
 
 // #################################################################################
@@ -72,7 +73,7 @@ const tdouble* flxGP_data_from_Py::get_data_ptr_vec(const tuint N_obsv)
 
 
 flxPyGP::flxPyGP(py::dict config)
-: gp_ptr(nullptr), mem_managed(false)
+: gp_ptr(nullptr), mem_managed(true)
 {
     flxGP_mean_base* gp_mean = nullptr;
         flxGP_kernel_base* gp_kernel = nullptr;
@@ -241,13 +242,198 @@ py::dict flxPyGP::info()
 
 
 // #################################################################################
-// only for debugging purposes
+// AK-MCS
 // #################################################################################
 
-double add(double a, double b) {
-    return a + b;
+flxGP_AKMCS::flxGP_AKMCS(py::dict config)
+: RndBox(nullptr), lsf(nullptr), gp_ptr(nullptr), gp_mci(nullptr),
+    iterMax(500), NmaxSur(10000000), Nsmpls(1000000), last_state(akmcs_status::undefined), err_thresh(0.3)
+{
+    try {
+        // ====================================================
+        // initialize the sampler
+        // ====================================================
+        if (config.contains("sampler")) {
+            py::object py_sampler_class = py::module_::import("fesslix.core").attr("sampler");  // Get the actual class from the original module
+            py::object tmp_obj = config["sampler"];
+            if (py::isinstance(tmp_obj, py_sampler_class)) {
+                gp_obj = tmp_obj;
+                flxPySampler &sampler_obj_ref = gp_obj.cast<flxPySampler &>();
+                RndBox = sampler_obj_ref.get_ptr_RndBox();
+            } else {
+                throw FlxException_NeglectInInteractive("flxGP_AKMCS::flxGP_AKMCS_s01", "'gp' in 'config' is not of type <flx.gpr.gp>.");
+            }
+        } else {
+            throw FlxException_NeglectInInteractive("flxGP_AKMCS::flxGP_AKMCS_s02", "'sampler' not found in 'config'.");
+        }
+        const tuint M = RndBox->get_NRV();
+        // ====================================================
+        // limit-state function
+        // ====================================================
+        lsf = parse_py_para("lsf",config,true);
+        // ====================================================
+        // initialize the Gaussian process
+        // ====================================================
+        if (config.contains("gp")) {
+            py::object tmp_obj = config["gp"];
+            if (py::isinstance<flxPyGP>(tmp_obj)) {
+                gp_obj = tmp_obj;
+                flxPyGP &gp_obj_ref = gp_obj.cast<flxPyGP &>();
+                gp_ptr = gp_obj_ref.get_gp_ptr();
+            } else {
+                throw FlxException_NeglectInInteractive("flxGP_AKMCS::flxGP_AKMCS_g01", "'gp' in 'config' is not of type <flx.gpr.gp>.");
+            }
+        } else {
+            // mean function
+                flxGP_mean_base* gp_mean = new flxGP_mean_0(M);
+            // kernel
+                iVec tVec(M);
+                tVec = 0;
+                flxGP_kernel_base* gp_kernel = new flxGP_kernel_auto(tVec);
+            gp_ptr = new flxGPProj("gp4akmcs",M,gp_mean,gp_kernel,true);
+        }
+        if (gp_ptr->get_Ndim() != M) {
+            throw FlxException("flxGP_AKMCS::flxGP_AKMCS_g02", "Specified Gaussian process has wrong dimension.");
+        }
+        // ====================================================
+        // initialize AK-MCS
+        // ====================================================
+        const tuint seed_id = parse_py_para_as_tuint("seed",config,false,0);
+        const tuint N_RNG_init = parse_py_para_as_tuint("N_RNG_init",config,false,0);
+        const tuint N_reserve = parse_py_para_as_tuintNo0("N_reserve",config,false,10000);
+        gp_mci = new flxGP_MCI(*gp_ptr,N_reserve,seed_id,N_RNG_init);
+        iterMax = parse_py_para_as_tuintNo0("itermax",config,false,500);
+        NmaxSur = parse_py_para_as_tulong("NmaxSur",config,false,10000000);
+        Nsmpls = parse_py_para_as_tulong("Nsmpls",config,false,1000000);
+        if (Nsmpls<1000) Nsmpls = 1000;
+        const tdouble err_thresh_ = parse_py_para_as_float("err_thresh",config,false,0.3);
+        if (err_thresh_>ZERO) {
+            err_thresh = err_thresh_;
+        }
+
+    } catch (...) {
+        free_mem();
+        throw;
+    }
+
 }
 
+flxGP_AKMCS::~flxGP_AKMCS()
+{
+    free_mem();
+}
+
+void flxGP_AKMCS::free_mem()
+{
+    if (gp_obj.is_none()) {     // delete pointer only if GP-process is not handled by Python
+        if (gp_ptr) {
+            delete gp_ptr;
+            gp_ptr = nullptr;
+        }
+    }
+    if (lsf) {
+        delete lsf;
+        lsf = nullptr;
+    }
+}
+
+const bool flxGP_AKMCS::eval_model(flxVec& y_vec)
+{
+    // make sure point has not been considered before
+        if (gp_mci->is_point_unique(y_vec)==false) {
+            return false;
+        }
+    // evaluate the model
+        RndBox->set_smp(y_vec);
+        const tdouble lsf_val = lsf->calc();
+    // register the call
+        gp_mci->register_sample(lsf_val,y_vec);
+    return true;
+}
+
+void flxGP_AKMCS::initialize_with_LHS(tuint N)
+{
+    // generate the set of samples
+        const tuint M = RndBox->get_NRV();
+        if (N==0) N = 2*M;
+        flxVec lh_samples(N*M);
+        gp_mci->assemble_lh_samples(lh_samples);
+    // run the actual model for each sample
+        for (tuint i=0;i<N;++i) {
+            flxVec tv(lh_samples.get_tmp_vptr()+i*M,M,false,false);
+            eval_model(tv);
+        }
+    last_state = akmcs_status::undefined;
+}
+
+akmcs_status flxGP_AKMCS::simulate()
+{
+    // perform action based on recommendation form last call of simulate()
+        switch (last_state) {
+            case akmcs_status::undefined:
+            {
+                // condition GP on data and set initial parameter values
+                    gp_mci->condition_on_data(true,false);
+                    gp_mci->optimize_gp_para(iterMax);
+                last_state = akmcs_status::defined;
+                break;
+            }
+            case akmcs_status::defined:
+                break;
+            case akmcs_status::evalLSF:
+            {
+                const tuint M = RndBox->get_NRV();
+                flxVec uvec(M);
+                gp_mci->get_next_point(uvec);
+                if (!eval_model(uvec)) {
+                    throw FlxException_Crude("flxGP_AKMCS::simulate_01");
+                }
+                gp_mci->condition_on_data(false,false);
+                gp_mci->optimize_gp_para(iterMax);
+                last_state = akmcs_status::defined;
+                break;
+            }
+            case akmcs_status::increase_N_surrogate:
+            {
+                Nsmpls *= 2;
+                if (NmaxSur>0 && Nsmpls>NmaxSur) Nsmpls = NmaxSur;
+                last_state = akmcs_status::defined;
+                break;
+            }
+            case akmcs_status::stop_success:
+            case akmcs_status::stop_iterLimit:
+                return last_state;
+            default:
+                throw FlxException_Crude("flxGP_AKMCS::simulate_02");
+        }
+        if (last_state!=akmcs_status::defined) {
+            throw FlxException_Crude("flxGP_AKMCS::simulate_03");
+        }
+    // perform the sampling
+        tdouble err;
+        int proposed_action_id;
+        res = gp_mci->simulate_GP_mci(Nsmpls,err,proposed_action_id);
+    // decide on what to do
+        if (err<=err_thresh) {
+            last_state = akmcs_status::stop_success;
+            return last_state;
+        }
+        if (NmaxSur>0 && Nsmpls>=NmaxSur) {
+            last_state = akmcs_status::stop_iterLimit;
+            return last_state;
+        }
+        if (proposed_action_id==1) {
+            last_state = akmcs_status::increase_N_surrogate;
+            return last_state;
+        }
+        last_state = akmcs_status::increase_N_surrogate;
+        return last_state;
+}
+
+flxPyGP flxGP_AKMCS::get_GP()
+{
+    return flxPyGP(gp_ptr);
+}
 
 // #################################################################################
 // Expose interface to Python
@@ -269,10 +455,23 @@ PYBIND11_MODULE(gpr, m) {
             .def("info", &flxPyGP::info, "return a dict with properties of the gp-model")
             ;
     // ====================================================
-    // only for debugging purposes (TODO remove at some point)
+    // AK-MCS
     // ====================================================
-        m.def("add", &add, "A function that adds two numbers");
-        m.attr("the_answer") = 42;
+        py::enum_<akmcs_status>(m, "akmcs_status")
+            .value("undefined", akmcs_status::undefined)
+            .value("defined", akmcs_status::defined)
+            .value("evalLSF", akmcs_status::evalLSF)
+            .value("increase_N_surrogate", akmcs_status::increase_N_surrogate)
+            .value("stop_success", akmcs_status::stop_success)
+            .value("stop_iterLimit", akmcs_status::stop_iterLimit)
+            .export_values();
+        py::class_<flxGP_AKMCS>(m, "akmcs")
+            .def(py::init<py::dict>())
+            .def("initialize_with_LHS", &flxGP_AKMCS::initialize_with_LHS, pybind11::arg("N")=0, "Initialize AK-MCS using N Latin-hypercube samples.")
+            .def("simulate", &flxGP_AKMCS::simulate, "Perform a single simulation step using the surrogate model.")
+            .def("get_GP", &flxGP_AKMCS::get_GP, "Retrieve a reference to the internal Gaussian process.")
+            .def_readwrite("res", &flxGP_AKMCS::res, "The result dictionary of 'simulate()'.");
+            ;
 }
 
 

@@ -426,7 +426,7 @@ akmcs_status flxGP_AKMCS::simulate()
             last_state = akmcs_status::increase_N_surrogate;
             return last_state;
         }
-        last_state = akmcs_status::increase_N_surrogate;
+        last_state = akmcs_status::evalLSF;
         return last_state;
 }
 

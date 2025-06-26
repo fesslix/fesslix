@@ -129,6 +129,9 @@ struct tqi_struct {
     tdouble q;
 };
 
+/**
+* @brief root-search-function for getting a specified quantile of the expected posterior probability of failure
+*/
 double tqi_rsfun(const tdouble x, void *params)
 {
     tqi_struct *p = (tqi_struct *)params;
@@ -367,9 +370,9 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
         // estimated E[tqi] if one more LSF call is invested
             const tdouble tqi_1LSF = get_mean_tqi(mean_m,Nsmpls,&id_worst_mcspi)/mean_pf_bayesian;
         // estimated E[tqi] if twice as much surrogate samples are unsed
-            const tdouble tqi_2N = get_mean_tqi(mean_m,Nsmpls,NULL,2)/mean_pf_bayesian;
+            const tdouble tqi_2N = get_mean_tqi(mean_m,Nsmpls,nullptr,2)/mean_pf_bayesian;
     // recommend an action
-        // 0: continue
+        // 0: call actual LSF/model
         // 1: increase surrogate samples
         // 2: stop
         if (tqi_2N<=tqi_1LSF) {
@@ -382,6 +385,10 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
         res["mean_pf_bayesian"] = mean_pf_bayesian;
         res["err"] = err;
         res["af"] = af;
+        res["r"] = tqi;
+        res["r_increase_N_surrogate"] = tqi_2N;
+        res["r_no_Kriging_uncertainty"] = tqi_eval(mean_m,Nsmpls)/mean_pf_bayesian;
+        res["propose_to_increase_N_smpls_surrogate"] = proposed_action_id;
         res["N"] = Nsmpls;
         res["Uval_worst_point"] = Uval_worst_point;
         res["Pr_q_99"] = tqi*mean_pf_bayesian;  // Pr[pf<p]≈99%
@@ -436,7 +443,7 @@ void flxGP_MCI::output_summary()
             tqis.n = last_n;
             tqis.pf_ref = pf_bayes;
             tqis.q = parr[i];
-            const tdouble x_rs_res = flx_RootSearch_RegulaFalsi(tqi_rsfun,&tqis,log(0.5),log(std::min(100.,(ONE-1e-7)/tqis.pf_ref)),1e-4,1e-4*tqis.pf_ref,NULL);  // &GlobalVar.slogcout(1)
+            const tdouble x_rs_res = flx_RootSearch_RegulaFalsi(tqi_rsfun,&tqis,log(0.5),log(std::min(100.,(ONE-1e-7)/tqis.pf_ref)),1e-4,1e-4*tqis.pf_ref,nullptr);  // &GlobalVar.slogcout(1)
             t = exp(x_rs_res)*tqis.pf_ref;
         logStream << "          Pr[ P_f < " << GlobalVar.Double2String(t,false,2,8) << " ] = ";
         GlobalVar.Double2String_setType(3);

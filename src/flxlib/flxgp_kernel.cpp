@@ -662,6 +662,8 @@ void flxGPProj::assemble_observations(const bool initialize_pVec, const bool opt
         // noise_val
           if (optimize_noise_val) {
             noise_val = 0.1*sample_sd_out;
+          } else {
+            noise_val = 1e-4*sample_sd_out;
           }
       }
   // allocate memory
@@ -857,6 +859,10 @@ double gp_likeli_f(const gsl_vector *v, void *params)
         p->noise_val = noise_sd_ini;
       }
 
+  #if FLX_USE_NLOPT
+      p->para_opt_stream << "    flxGPProj::likeli_f_89 " << res << "   " << flxVec(v,n) << "   " << (bchange?"yes":"no") << std::endl;
+  #endif
+
   // error checking
     if (std::isnan(res)) {
         throw FlxException_math("flxGPProj::likeli_f_01");
@@ -864,9 +870,6 @@ double gp_likeli_f(const gsl_vector *v, void *params)
     if (std::isinf(res)) {
         throw FlxException_math("flxGPProj::likeli_f_02");
     }
-    #if FLX_USE_NLOPT
-        p->para_opt_stream << "    flxGPProj::likeli_f_89 " << res << "   " << flxVec(v,n) << "   " << (bchange?"yes":"no") << std::endl;
-    #endif
   return -res;
 }
 

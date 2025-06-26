@@ -37,7 +37,7 @@ class PYBIND11_EXPORT flxGP_MCI {
     std::vector<tdouble> doV;     // training set: Y
     std::vector<tdouble> mcs_pi;  // vector of 0-1 probabilities in the Monte Carlo simulation
     flxVec tqi_vec;                // vector needed to evaluate the variance of the tqi
-    flxVec tqi_vec_rv_u;           // vector to store pseudo-random uniform samples
+    flxVec tqi_vec_rv_u;           // vector to store pseudo-random uniform samples -> NOT modified after initialization in flxGP_MCI::flxGP_MCI
     tulong id_next_point;          // id of the next sample for model evaluation
     std::stringstream logStream;
 
@@ -47,6 +47,11 @@ class PYBIND11_EXPORT flxGP_MCI {
 
     void init_RNG();
 
+    /**
+    * @brief 99%-quantile of posterior beta distribution for 'm' hits in 'n' samples (with uniform prior)
+    *
+    * i.e., this function returns the expected sampling uncertainty WITHOUT Kirging
+    */
     const tdouble tqi_eval(const tdouble m, const tdouble n) const;
     const tdouble tqi_eval_covar() const;
     const tdouble tqi_eval_pr(const tdouble p) const;

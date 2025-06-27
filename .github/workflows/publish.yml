@@ -15,9 +15,9 @@ on:
   ## =======================
   ## Execute commiting a tag
   ## =======================  
-  push:
-    tags:
-      - 'v*'  # Trigger only on version tags
+  #push:
+  #  tags:
+  #    - 'v*'  # Trigger only on version tags
 
 jobs:
   build:

@@ -99,7 +99,7 @@ const bool FlxObjRBRV_set_creator::get_Nataf_evalOnce() const
   return (is_Nataf && is_Nataf_evalOnce );
 }
 
-void FlxObjRBRV_set_creator::add_entry(RBRV_set_box& box, RBRV_entry_RV_base* ep, FlxFunction* csVal, const std::string csNam, const bool csFix)
+void FlxObjRBRV_set_creator::add_entry(RBRV_set_box& box, RBRV_entry* ep, FlxFunction* csVal, const std::string csNam, const bool csFix)
 {
   try {
     for (tuint i=0;i<set_entries.size();++i) {
@@ -107,18 +107,23 @@ void FlxObjRBRV_set_creator::add_entry(RBRV_set_box& box, RBRV_entry_RV_base* ep
         throw FlxException("FlxObjRBRV_set_creator::add_entry_a01", "An entry with name '" + set_entries[i]->name + "' does already exist.");
       }
     }
-    if (ep->get_iID()!=rID) {
-      throw FlxException_Crude("FlxObjRBRV_set_creator::add_entry_a02");
+    RBRV_entry_RV_base* rv_2 = dynamic_cast<RBRV_entry_RV_base*>(ep);
+    if (rv_2) {
+      if (rv_2->get_iID()!=rID) {
+        throw FlxException_Crude("FlxObjRBRV_set_creator::add_entry_a02");
+      }
+      ++rID;  // manually increase the running ID
+    } else {
+      // TODO: currently, we assume that, otherwise, the 'random variable' represents a deterministic mapping
+      // TODO: if more general random variables are defined, this assumption does no longer hold
     }
-    ++rID;  // manually increase the running ID
     // register correlation (only for Rosenblatt transformation)
       if (csVal) {
         // consistency checks
             if (is_Nataf) {
                 throw FlxException_NeglectInInteractive("FlxObjRBRV_set_creator::add_entry_a03", "Setting a correlation pair is not allowed for sets of random variables based on the Nataf transformation.");
             }
-            // make sure that the current entry is a true random variable
-                RBRV_entry_RV_base* rv_2 = dynamic_cast<RBRV_entry_RV_base*>(ep);
+            // make sure that the current entry is a true univariate random variable
                 if (rv_2==nullptr) {
                     throw FlxException("FlxObjRBRV_set_creator::add_entry_a04", "A correlation cannot be specified for'" + ep->name + "'." );
                 }

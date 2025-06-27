@@ -67,7 +67,29 @@ void FlxCreateObjReaders_RND::createFunReaders(FlxData* dataBox)
 // random variables
 // #################################################################################
 
-RBRV_entry_RV_base * parse_py_obj_as_rv(py::dict config, const bool name_required, const tuint iID, const std::string family, std::string descr)
+RBRV_entry* parse_py_obj_as_grv(py::dict config, tuint& iID, const std::string family, std::string err_descr)
+{
+    RBRV_entry* rv_ptr = nullptr;
+    // retrieve type
+        const std::string rv_type = parse_str_as_word(parse_py_para_as_string("type",config,true),true);
+    // retrieve name
+        std::string rv_name = family + parse_str_as_word(parse_py_para_as_string("name",config,true),true);
+    // retrieve description
+        std::string rv_descr = parse_py_para_as_string("descr",config,false);
+    // select rbrv-class based on type
+        if (rv_type=="fun") {
+          rv_ptr = new RBRV_entry_fun(rv_name,config);
+          rv_ptr->descr = rv_descr;
+          return rv_ptr;
+        } else {
+          rv_ptr = parse_py_obj_as_rv(config, true, iID, family, err_descr);
+          ++iID;
+          return rv_ptr;
+        }
+}
+
+
+RBRV_entry_RV_base* parse_py_obj_as_rv(py::dict config, const bool name_required, const tuint iID, const std::string family, std::string err_descr)
 {
     RBRV_entry_RV_base* rv_ptr = nullptr;
     // retrieve type

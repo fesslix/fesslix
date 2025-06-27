@@ -120,7 +120,7 @@ class FLXLIB_EXPORT FlxObjRBRV_set_creator {
     * @brief adds entry to the set
     * @note the memory of 'ep' and 'csVal' is managed!!! (also in case of an error)
     */
-    void add_entry(RBRV_set_box& box, RBRV_entry_RV_base* ep, FlxFunction* csVal=nullptr, const std::string csNam="", const bool csFix=false);
+    void add_entry(RBRV_set_box& box, RBRV_entry* ep, FlxFunction* csVal=nullptr, const std::string csNam="", const bool csFix=false);
     void add_corr(const std::string& rv1, const std::string& rv2, const tdouble rho, const bool corr_approx, const bool rhogauss, const bool dolog);
     RBRV_set_base* register_set(RBRV_set_box& box, const bool doreg);
     RBRV_set* register_set_rbrv(RBRV_set_box& box, const bool doreg);

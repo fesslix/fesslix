@@ -667,12 +667,13 @@ flxPyRVset rbrv_set(py::dict config, py::list rv_list)
         }
     // create the random variables
         const tuint Nrv = rv_list.size();
-        RBRV_entry_RV_base* entry = nullptr;
+        RBRV_entry* entry = nullptr;
         FlxFunction* csVal = nullptr;
         std::string csNam;
         bool csFix = false;
         const std::string family = set_name + "::";
         try {
+            tuint iID = 0;
             for (tuint i=0;i<Nrv;++i) {
                 // cast config of RV into a dict
                     std::ostringstream ssV;
@@ -682,7 +683,7 @@ flxPyRVset rbrv_set(py::dict config, py::list rv_list)
                     if (crtr->get_Nataf_evalOnce()) {
                         rv_config["eval_once"] = true;
                     }
-                    entry = parse_py_obj_as_rv(rv_config, true, i, family, ssV.str());
+                    entry = parse_py_obj_as_grv(rv_config, iID, family, ssV.str());
                 // correlation (for Rosenblatt)
                     if (rv_config.contains("corr")) {
                         py::dict corr_config = parse_py_obj_as_dict(rv_config["corr"], "'corr' in " + ssV.str());

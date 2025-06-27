@@ -30,7 +30,20 @@ class FLXLIB_EXPORT FlxCreateObjReaders_RND : public FlxCreateObjReaders {
 // random variables
 // #################################################################################
 
-PYBIND11_EXPORT RBRV_entry_RV_base* parse_py_obj_as_rv(py::dict config, const bool name_required, const tuint iID, const std::string family, std::string descr);
+/**
+* @brief create a univariate random variable (with underlying standard Normal random variable) from a Python dict
+*
+* err_descr: description of origin of definition in case of an error
+*/
+PYBIND11_EXPORT RBRV_entry_RV_base* parse_py_obj_as_rv(py::dict config, const bool name_required, const tuint iID, const std::string family, std::string err_descr);
+
+/**
+* @brief create a generalized random variable from a Python dict
+*
+* iID is automatically increased, based on the number of underlying standard Normal random variables
+*/
+PYBIND11_EXPORT RBRV_entry* parse_py_obj_as_grv(py::dict config, tuint& iID, const std::string family, std::string err_descr);
+
 
 class PYBIND11_EXPORT flxPyRV {
   private:
@@ -38,6 +51,9 @@ class PYBIND11_EXPORT flxPyRV {
     RBRV_entry_RV_base* rv_ptr_;
     bool mem_managed;
 
+    /**
+    * @brief ensure that we are dealing with a univariate random variable that is based on a single underlying standard normal random variable
+    */
     void ensure_is_a_basic_rv();
 
     py::array_t<tdouble> array_help(py::array_t<tdouble> arr, const bool safeCalc, const tuint mode);

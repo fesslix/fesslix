@@ -158,6 +158,14 @@ RBRV_entry_fun::RBRV_entry_fun(const std::string& name, FlxFunction* fun)
     eval_para();
 }
 
+RBRV_entry_fun::RBRV_entry_fun(const std::string& name, py::dict config)
+ : RBRV_entry(name), fun(nullptr), fun_val(ZERO)
+{
+  fun = parse_py_para("fun", config);
+  eval_para();
+}
+
+
 void RBRV_entry_fun::eval_para()
 {
   fun_val = fun->calc();

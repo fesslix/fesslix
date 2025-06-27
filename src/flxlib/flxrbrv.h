@@ -87,6 +87,7 @@ class PYBIND11_EXPORT RBRV_entry_fun : public RBRV_entry {
     tdouble fun_val;
   public:
     RBRV_entry_fun(const std::string& name, FlxFunction* fun);
+    RBRV_entry_fun(const std::string& name, py::dict config);
     virtual ~RBRV_entry_fun() { delete fun; }
         
     const std::string get_type() const { return "fun"; }
@@ -101,6 +102,7 @@ class PYBIND11_EXPORT RBRV_entry_fun : public RBRV_entry {
     virtual const bool search_circref(FlxFunction* fcr) { return fun->search_circref(fcr); }
 };
 
+// univariate random variable
 class PYBIND11_EXPORT RBRV_entry_RV_base : public RBRV_entry {
   protected:
     const tuint iID;        // the ID of the RV in the set

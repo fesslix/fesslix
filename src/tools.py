@@ -77,7 +77,8 @@ def replace_in_template(fn_in,fn_out,dmap,var_indi_start="@{",var_indi_end="}"):
         ## identify property to insert
         ## ---------------------------
         if vname[0]=='!':  ## value of a random variable
-            rvval = flx.get_rv_from_set(vname[1:]).get_value()
+            rv_name = vname[1:]
+            rvval = flx.get_rv_from_set(rv_name.lower()).get_value()
             vval = flx.Double2String(rvval)
         else:             ## key in dmap
             vval  = dmap[vname]

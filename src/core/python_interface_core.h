@@ -169,6 +169,7 @@ class flxPyRVset {
     py::array_t<tdouble> get_values(const std::string mode="x");
     void set_x_vec(py::array_t<tdouble> arr);
     const tdouble pdf_log(py::array_t<tdouble> arr);
+    py::list get_rvs();
 
     /**
     * @brief evaluates the realization of a random process at time t with given power spectral density function
@@ -187,7 +188,6 @@ flxPyRVset rbrv_set_dirichlet(py::dict config);
 flxPyRVset rbrv_set_multinomial(py::dict config);
 
 flxPyRV get_rv_from_set(const std::string& rv_name);
-
 
 
 

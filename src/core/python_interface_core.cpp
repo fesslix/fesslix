@@ -606,6 +606,18 @@ py::array_t<tdouble> flxPyRVset::get_values(const std::string mode)
     return res_buf;
 }
 
+py::list flxPyRVset::get_rvs()
+{
+    check_engine_state();
+    py::list res;
+    const tuint N = rvset_ptr->get_NOX_only_this();
+    for (tuint i=0;i<N;++i) {
+        const std::string rv_name = rvset_ptr->get_rv_name(i);
+        res.append( get_rv_from_set(rv_name) );
+    }
+    return res;
+}
+
 py::array_t<tdouble> flxPyRVset::eval_rp_psd(py::array_t<tdouble> arr)
 {
     // ensure that process is based on "power spectral density"
@@ -1020,7 +1032,6 @@ flxPyRV get_rv_from_set(const std::string& rv_name)
 }
 
 
-
 // #################################################################################
 // advanced features
 // #################################################################################
@@ -1167,6 +1178,7 @@ PYBIND11_MODULE(core, m) {
             .def("get_NRV", &flxPyRVset::get_NRV, "return number of random variables (in standard Normal space) in the set of random variables")
             .def("get_NOX", &flxPyRVset::get_NOX, "return number of random variables (in original space) in the set of random variables")
             .def("get_values", &flxPyRVset::get_values, pybind11::arg("mode")="x", "returns a vector of quantities of all entries contained in the set of random variables")
+            .def("get_rvs", &flxPyRVset::get_rvs, "retrieve a list of all random variables in the set")
             .def("eval_rp_psd", &flxPyRVset::eval_rp_psd, "evaluates the realization of a random process at time t with given power spectral density function");
 
         m.def("rv_set", &rbrv_set, "creates a set of general random variables");

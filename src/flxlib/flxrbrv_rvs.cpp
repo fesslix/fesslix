@@ -815,7 +815,7 @@ RBRV_entry_RV_Gumbel::RBRV_entry_RV_Gumbel(const std::string& name, const tuint 
     if (config.contains("u")) {          // 0:u,alpha
       methID = 0;
       p1 = parse_py_para("u", config);
-      p2 = parse_py_para("zeta", config);
+      p2 = parse_py_para("alpha", config);
     } else if (config.contains("mu")) {   // 1:mean,sd;
       methID = 1;
       p1 = parse_py_para("mu", config);

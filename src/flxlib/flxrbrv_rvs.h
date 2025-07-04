@@ -274,6 +274,7 @@ class PYBIND11_EXPORT RBRV_entry_RV_exponential : public RBRV_entry_RV_base {
 
   public:
     RBRV_entry_RV_exponential(const std::string& name, const tuint iID, FlxFunction* lambda, FlxFunction* epsilon);
+    RBRV_entry_RV_exponential(const std::string& name, const tuint iID, py::dict config);
     ~RBRV_entry_RV_exponential();
 
     const std::string get_type() const { return "exponential"; }

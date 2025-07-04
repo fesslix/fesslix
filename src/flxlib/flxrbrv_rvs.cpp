@@ -1453,6 +1453,21 @@ RBRV_entry_RV_exponential::RBRV_entry_RV_exponential(const std::string& name, co
   }
 }
 
+RBRV_entry_RV_exponential::RBRV_entry_RV_exponential(const std::string& name, const tuint iID, py::dict config)
+: RBRV_entry_RV_base(name,iID), lambda(nullptr), epsilon(nullptr), lambdaV(ZERO), eps(ZERO)
+{
+  try {
+    lambda = parse_py_para("lambda", config);
+    epsilon = parse_py_para("epsilon", config, false);
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_exponential::RBRV_entry_RV_exponential_99",1);
+    if (lambda) delete lambda;
+    if (epsilon) delete epsilon;
+    throw;
+  }
+}
+
 RBRV_entry_RV_exponential::~RBRV_entry_RV_exponential()
 {
   if (lambda) delete lambda;

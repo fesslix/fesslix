@@ -113,8 +113,8 @@ RBRV_entry_RV_base* parse_py_obj_as_rv(py::dict config, const bool name_required
         //     rv_ptr = new RBRV_entry_read_normal_trunc(rv_name,iID,config);
         } else if (rv_type=="beta") {
             rv_ptr = new RBRV_entry_RV_beta(rv_name,iID,config);
-        // } else if (rv_type=="exponential") {
-        //     rv_ptr = new RBRV_entry_read_exponential(rv_name,iID,config);
+        } else if (rv_type=="exponential") {
+            rv_ptr = new RBRV_entry_RV_exponential(rv_name,iID,config);
         // } else if (rv_type=="gamma") {
         //     rv_ptr = new RBRV_entry_read_gamma(rv_name,iID,config);
         // } else if (rv_type=="poisson") {

@@ -1263,9 +1263,9 @@ void RBRV_entry_RV_beta::eval_para()
         ssV << "'mu' (" << GlobalVar.Double2String(mu) << ") must be within the bounds of 'a' (" << GlobalVar.Double2String(av) << ") and 'b' (" << GlobalVar.Double2String(bv) << ").";
         throw FlxException("RBRV_entry_RV_beta::get_pars_2", ssV.str() );
       }
-      if (pow2(sigma)>=(ONE-mu)*mu) {
+      if (pow2(sigma)>=(mu-av)*(bv-mu)) {
         std::ostringstream ssV;
-        ssV << this->name << ": 'sigma^2' (" << GlobalVar.Double2String(sigma) << "²=" << GlobalVar.Double2String(pow2(sigma)) << ") must be smaller than 'mu*(1.-mu)' (" << GlobalVar.Double2String((ONE-mu)*mu) << ") (mu=" << GlobalVar.Double2String(mu) << ").";
+        ssV << this->name << ": 'sigma^2' (" << GlobalVar.Double2String(sigma) << "²=" << GlobalVar.Double2String(pow2(sigma)) << ") must be smaller than '(mu-a)*(b-mu)' (" << GlobalVar.Double2String((bv-mu)*(mu-av)) << ") (mu=" << GlobalVar.Double2String(mu) << ").";
         throw FlxException("RBRV_entry_RV_beta::get_pars_3", ssV.str() );
       }
       alpha = (mu-av)/(bv-av)*((mu-av)*(bv-mu)/pow2(sigma)-ONE);

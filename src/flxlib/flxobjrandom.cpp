@@ -107,8 +107,8 @@ RBRV_entry_RV_base* parse_py_obj_as_rv(py::dict config, const bool name_required
             rv_ptr = new RBRV_entry_RV_lognormal(rv_name,iID,config);
         } else if (rv_type=="uniform") {
             rv_ptr = new RBRV_entry_RV_uniform(rv_name,iID,config);
-        // } else if (rv_type=="gumbel") {
-        //     rv_ptr = new RBRV_entry_read_Gumbel(rv_name,iID,config);
+        } else if (rv_type=="gumbel") {
+            rv_ptr = new RBRV_entry_RV_Gumbel(rv_name,iID,config);
         // } else if (rv_type=="normal_trunc") {
         //     rv_ptr = new RBRV_entry_read_normal_trunc(rv_name,iID,config);
         } else if (rv_type=="beta") {

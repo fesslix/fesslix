@@ -162,17 +162,18 @@ class PYBIND11_EXPORT RBRV_entry_RV_uniform : public RBRV_entry_RV_base {
 
 class PYBIND11_EXPORT RBRV_entry_RV_Gumbel : public RBRV_entry_RV_base {
   protected:
-    const int methID;                // 0: p1=location, p2=scale; 1: p1=mean and p2=sd; 2: P(p1)=p2, P(p3)=p4
+    int methID;                // 0: p1=location, p2=scale; 1: p1=mean and p2=sd; 2: P(p1)=p2, P(p3)=p4
     FlxFunction* p1;
     FlxFunction* p2;
     FlxFunction* p3;
     FlxFunction* p4;
-    const bool eval_once;
+    bool eval_once;
     tdouble u;
     tdouble alpha;
     
   public:
     RBRV_entry_RV_Gumbel(const std::string& name, const tuint iID, const int methID, FlxFunction* p1, FlxFunction* p2, FlxFunction* p3, FlxFunction* p4, const bool eval_once);
+    RBRV_entry_RV_Gumbel(const std::string& name, const tuint iID, py::dict config);
     ~RBRV_entry_RV_Gumbel();
 
     const std::string get_type() const { return "gumbel"; }

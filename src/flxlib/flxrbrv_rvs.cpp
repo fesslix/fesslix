@@ -807,6 +807,42 @@ RBRV_entry_RV_Gumbel::RBRV_entry_RV_Gumbel(const std::string& name, const tuint 
   }
 }
 
+RBRV_entry_RV_Gumbel::RBRV_entry_RV_Gumbel(const std::string& name, const tuint iID, py::dict config)
+: RBRV_entry_RV_base(name,iID), methID(0), p1(nullptr), p2(nullptr), p3(nullptr), p4(nullptr), eval_once(false), u(ZERO), alpha(ZERO)
+{
+
+  try {
+    if (config.contains("u")) {          // 0:u,alpha
+      methID = 0;
+      p1 = parse_py_para("u", config);
+      p2 = parse_py_para("zeta", config);
+    } else if (config.contains("mu")) {   // 1:mean,sd;
+      methID = 1;
+      p1 = parse_py_para("mu", config);
+      p2 = parse_py_para("sd", config);
+    } else if (config.contains("pr_2")) {   // 2:val_1,pr_1,val_2,pr_2
+      methID = 2;
+      p1 = parse_py_para("val_1", config);
+      p2 = parse_py_para("pr_1", config);
+      p3 = parse_py_para("val_2", config);
+      p4 = parse_py_para("pr_2", config);
+    } else {
+      throw FlxException_NeglectInInteractive("RBRV_entry_RV_lognormal::RBRV_entry_RV_lognormal_70", "Required parameters to define distribution not found in Python <dict>.");
+    }
+
+    eval_once = parse_py_para_as_bool("eval_once", config, false, false);
+
+    this->init();
+  } catch (FlxException& e) {
+    FLXMSG("RBRV_entry_RV_Gumbel::RBRV_entry_RV_Gumbel_99",1);
+    if (p1) delete p1;
+    if (p2) delete p2;
+    if (p3) delete p3;
+    if (p4) delete p4;
+    throw;
+  }
+}
+
 RBRV_entry_RV_Gumbel::~RBRV_entry_RV_Gumbel()
 {
   if (p1) delete p1;

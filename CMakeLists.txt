@@ -575,6 +575,7 @@ install(TARGETS flxlib
 )
 install(FILES src/plot.py
               src/tools.py
+              src/ra_form.py
               src/model_templates.py
               config/gausspoints.dat
               DESTINATION fesslix)

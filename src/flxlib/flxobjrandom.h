@@ -289,7 +289,7 @@ class PYBIND11_EXPORT flxPySampler {
     const tuint get_NRV() const;
     const tuint get_NOX() const;
 
-    void assign_y(py::array_t<tdouble> arr);
+    void assign_u(py::array_t<tdouble> arr);
 
     void perform_MCS(const tulong N, py::object vfun, flxDataBox& dbox);
     py::dict perform_FORM(py::object vfun, py::dict config);

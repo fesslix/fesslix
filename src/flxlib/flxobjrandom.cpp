@@ -1008,7 +1008,7 @@ const tuint flxPySampler::get_NOX() const
     return RndBox->get_NOX();
 }
 
-void flxPySampler::assign_y(py::array_t<tdouble> arr)
+void flxPySampler::assign_u(py::array_t<tdouble> arr)
 {
     const tuint NRV = get_NRV();
     // prepare input array
@@ -1020,7 +1020,7 @@ void flxPySampler::assign_y(py::array_t<tdouble> arr)
         if (size!=NRV) {
             std::ostringstream ssV;
             ssV << "Input array has size " << size << ", whereas an input array of size " << NRV << " is expected.";
-            throw FlxException_NeglectInInteractive("flxPyRVset::set_y_vec", ssV.str() );
+            throw FlxException_NeglectInInteractive("flxPySampler::assign_u", ssV.str() );
         }
     flxVec y_vec(input_ptr,NRV);
     RndBox->set_smp(y_vec);

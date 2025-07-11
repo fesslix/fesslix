@@ -1242,7 +1242,7 @@ PYBIND11_MODULE(core, m) {
             .def("sample", &flxPySampler::sample, "generate a random sample for a collection of sets of random variables")
             .def("get_NRV", &flxPySampler::get_NRV, "return number of random variables (in standard Normal space) in the collection of random variables")
             .def("get_NOX", &flxPySampler::get_NOX, "return number of random variables (in original space) in the collection of random variables")
-            .def("assign_y", &flxPySampler::assign_y, "assign y_vec as standard Normal values of the random variables in the sampler and perform the transformation to original space")
+            .def("assign_u", &flxPySampler::assign_u, "assign y_vec as standard Normal values of the random variables in the sampler and perform the transformation to original space")
             .def("perform_MCS", &flxPySampler::perform_MCS, "perform a Monte Carlo simulation")
             ;
 

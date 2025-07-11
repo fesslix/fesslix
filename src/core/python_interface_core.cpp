@@ -560,12 +560,12 @@ const tuint flxPyRVset::get_NOX() const
 py::array_t<tdouble> flxPyRVset::get_values(const std::string mode)
 {
     // process mode
-        enum RBRVvecGetType { x, y, mean, sd };
+        enum RBRVvecGetType { x, u, mean, sd };
         RBRVvecGetType gType;
         if (mode=="x") {
             gType = RBRVvecGetType::x;
-        } else if (mode=="y") {
-            gType = RBRVvecGetType::y;
+        } else if (mode=="u") {
+            gType = RBRVvecGetType::u;
         } else if (mode=="mean") {
             gType = RBRVvecGetType::mean;
         } else if (mode=="sd") {
@@ -576,12 +576,12 @@ py::array_t<tdouble> flxPyRVset::get_values(const std::string mode)
     // prepare result array
         const tuint NOX = rvset_ptr->get_NOX_only_this();
         const tuint NRV = rvset_ptr->get_NRV_only_this();
-        if ( (gType==y&&NRV==0) || NOX==0 ) {
+        if ( (gType==u&&NRV==0) || NOX==0 ) {
           std::ostringstream ssV;
           ssV << "The set '" << name_of_set << "' does not contain any random variables.";
           throw FlxException("FlxObjRBRV_vec_get::task_2", ssV.str() );
         }
-        const tuint N = (gType==y)?NRV:NOX;
+        const tuint N = (gType==u)?NRV:NOX;
         // Allocate memory for the return array
         auto res_buf = py::array_t<tdouble>(N);
         // Get the buffer info to access the underlying return data
@@ -592,7 +592,7 @@ py::array_t<tdouble> flxPyRVset::get_values(const std::string mode)
         case x:
           rvset_ptr->get_x_only_this(res_ptr);
           break;
-        case y:
+        case u:
           rvset_ptr->get_y_only_this(res_ptr);
           break;
         case mean:

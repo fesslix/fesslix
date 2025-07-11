@@ -126,8 +126,7 @@ const tdouble& RBRV_entry::get_value() const
 {
   if (valid) {
     return value;
-  }
-  {
+  } else {
     std::ostringstream ssV;
     ssV << "The RBRV '" << name << "' does not have a valid realization.";
     throw FlxException("RBRV_entry::get_value", ssV.str() );
@@ -162,7 +161,12 @@ RBRV_entry_fun::RBRV_entry_fun(const std::string& name, py::dict config)
  : RBRV_entry(name), fun(nullptr), fun_val(ZERO)
 {
   fun = parse_py_para("fun", config);
-  eval_para();
+  // init()
+    eval_para();
+    value = fun_val;
+    #if FLX_DEBUG
+      valid = true;
+    #endif
 }
 
 

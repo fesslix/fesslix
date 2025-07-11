@@ -167,9 +167,10 @@ class flxPyRVset {
     const tuint get_NOX() const;
 
     py::array_t<tdouble> get_values(const std::string mode="x");
+    py::list get_rvs();
+    void set_y_vec(py::array_t<tdouble> arr);
     void set_x_vec(py::array_t<tdouble> arr);
     const tdouble pdf_log(py::array_t<tdouble> arr);
-    py::list get_rvs();
 
     /**
     * @brief evaluates the realization of a random process at time t with given power spectral density function

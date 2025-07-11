@@ -107,7 +107,7 @@ void process_config(py::dict config) {
         if (py::isinstance<py::float_>(config["TOL"])) {
             GlobalVar.set_TOL( config["TOL"].cast<tdouble>() );
         } else {
-            GlobalVar.slogcout(2) << "ERROR [process_config::TOL]: expected an entry of type <float>, got <" << py::str(config["TOL"].get_type()) << ">" << std::endl;
+            GlobalVar.slogcout(2) << "ERROR [process_config::TOL]: expected an entry of type <float>, got <" << py::str(py::type::of(config["TOL"])) << ">" << std::endl;
         }
     }
     // ======================================================
@@ -616,6 +616,48 @@ py::list flxPyRVset::get_rvs()
         res.append( get_rv_from_set(rv_name) );
     }
     return res;
+}
+
+void flxPyRVset::set_y_vec(py::array_t<tdouble> arr) {
+    const tuint NRV = rvset_ptr->get_NRV_only_this();
+    // prepare input array
+        // Access the input data as a raw pointer
+        py::buffer_info buf_info = arr.request();
+        tdouble* input_ptr = static_cast<tdouble*>(buf_info.ptr);
+        // Get the size of the input array
+        size_t size = buf_info.size;
+        if (size!=NRV) {
+            std::ostringstream ssV;
+            ssV << "Input array has size " << size << ", whereas an input array of size " << NRV << " is expected.";
+            throw FlxException_NeglectInInteractive("flxPyRVset::set_y_vec", ssV.str() );
+        }
+    rvset_ptr->set_is_valid(false);
+    rvset_ptr->set_y_only_this(input_ptr);
+    rvset_ptr->transform_y2x();
+}
+
+void flxPyRVset::set_x_vec(py::array_t<tdouble> arr) {
+    const tuint NOX = rvset_ptr->get_NOX_only_this();
+    // prepare input array
+        // Access the input data as a raw pointer
+        py::buffer_info buf_info = arr.request();
+        tdouble* input_ptr = static_cast<tdouble*>(buf_info.ptr);
+        // Get the size of the input array
+        size_t size = buf_info.size;
+        if (size!=NOX) {
+            std::ostringstream ssV;
+            ssV << "Input array has size " << size << ", whereas an input array of size " << NOX << " is expected.";
+            throw FlxException_NeglectInInteractive("flxPyRVset::set_x_vec", ssV.str() );
+        }
+    rvset_ptr->set_is_valid(false);
+    rvset_ptr->set_x_only_this(input_ptr);
+    rvset_ptr->transform_x2y();
+}
+
+const tdouble flxPyRVset::pdf_log(py::array_t<tdouble> arr)
+{
+    this->set_x_vec(arr);
+    return rvset_ptr->get_pdf_x_eval_log();
 }
 
 py::array_t<tdouble> flxPyRVset::eval_rp_psd(py::array_t<tdouble> arr)
@@ -1179,6 +1221,9 @@ PYBIND11_MODULE(core, m) {
             .def("get_NOX", &flxPyRVset::get_NOX, "return number of random variables (in original space) in the set of random variables")
             .def("get_values", &flxPyRVset::get_values, pybind11::arg("mode")="x", "returns a vector of quantities of all entries contained in the set of random variables")
             .def("get_rvs", &flxPyRVset::get_rvs, "retrieve a list of all random variables in the set")
+            .def("set_y_vec", &flxPyRVset::set_y_vec, "assign y_vec as standard Normal values of the random variables in the set")
+            .def("set_x_vec", &flxPyRVset::set_x_vec, "assign x_vec as values of the random variables in the set")
+            .def("pdf_log", &flxPyRVset::pdf_log, "evaluates the log-pdf of the set of random variable at x_vec")
             .def("eval_rp_psd", &flxPyRVset::eval_rp_psd, "evaluates the realization of a random process at time t with given power spectral density function");
 
         m.def("rv_set", &rbrv_set, "creates a set of general random variables");

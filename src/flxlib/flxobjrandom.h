@@ -285,6 +285,7 @@ class PYBIND11_EXPORT flxPySampler {
     RBRV_constructor* get_ptr_RndBox() { return RndBox; }
 
     void sample();
+    void assign_y();
 
     const tuint get_NRV() const;
     const tuint get_NOX() const;

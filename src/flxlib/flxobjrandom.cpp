@@ -1008,6 +1008,55 @@ const tuint flxPySampler::get_NOX() const
     return RndBox->get_NOX();
 }
 
+py::array_t<tdouble> flxPySampler::get_values(const std::string mode)
+{
+    // process mode
+        enum RBRVvecGetType { x, u, mean, sd };
+        RBRVvecGetType gType;
+        if (mode=="x") {
+            gType = RBRVvecGetType::x;
+        } else if (mode=="u") {
+            gType = RBRVvecGetType::u;
+        } else if (mode=="mean") {
+            gType = RBRVvecGetType::mean;
+        } else if (mode=="sd") {
+            gType = RBRVvecGetType::sd;
+        } else {
+            throw FlxException_NeglectInInteractive("flxPySampler::get_values_01","Unkown mode '" + mode + "' for mode.");
+        }
+    // prepare result array
+        const tuint NOX = RndBox->get_NOX();
+        const tuint NRV = RndBox->get_NRV();
+        if ( (gType==u&&NRV==0) || NOX==0 ) {
+          std::ostringstream ssV;
+          ssV << "The sampler does not contain any random variables.";
+          throw FlxException("flxPySampler::get_values_02", ssV.str() );
+        }
+        const tuint N = (gType==u)?NRV:NOX;
+        // Allocate memory for the return array
+        auto res_buf = py::array_t<tdouble>(N);
+        // Get the buffer info to access the underlying return data
+        py::buffer_info res_buf_info = res_buf.request();
+        tdouble* res_ptr = static_cast<tdouble*>(res_buf_info.ptr);
+    // assign to the array
+      switch(gType) {
+        case x:
+          RndBox->get_x_Vec(res_ptr);
+          break;
+        case u:
+          RndBox->get_y_Vec(res_ptr);
+          break;
+        case mean:
+          RndBox->get_mean_Vec(res_ptr);
+          break;
+        case sd:
+          RndBox->get_sd_Vec(res_ptr);
+          break;
+      }
+    // Return the array
+    return res_buf;
+}
+
 void flxPySampler::assign_u(py::array_t<tdouble> arr)
 {
     const tuint NRV = get_NRV();

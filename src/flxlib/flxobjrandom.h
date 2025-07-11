@@ -288,6 +288,7 @@ class PYBIND11_EXPORT flxPySampler {
 
     const tuint get_NRV() const;
     const tuint get_NOX() const;
+    py::array_t<tdouble> get_values(const std::string mode="x");
 
     void assign_u(py::array_t<tdouble> arr);
 

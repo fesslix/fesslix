@@ -25,13 +25,6 @@ import scipy.optimize
 
 
 
-def eval_lsf_of_u(lsf, u, sampler):
-    sampler.assign_u(u)
-    res = lsf()
-    print(res, u)
-    return res
-
-
 ##################################################
 # FORM analysis                                  #
 ##################################################
@@ -54,7 +47,18 @@ def perform_FORM(lsf, sampler, config):
         u0 = config['u0']
     else:
         u0 = np.zeros(M)
+    if 'print_lsf' in config:
+        print_lsf = config['print_lsf']
+    else:
+        print_lsf = True
     ## Constraint for optimization
+    def eval_lsf_of_u(lsf, u, sampler):
+        sampler.assign_u(u)
+        res = lsf()
+        x_vec = sampler.get_values('x')
+        if print_lsf:
+            print(res, u, x_vec)
+        return res
     constr = {'type': 'ineq', 'fun': lambda u: -eval_lsf_of_u(lsf, u, sampler) }
     ## objective function for optimization
     def objective(u):

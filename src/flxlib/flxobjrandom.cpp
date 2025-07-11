@@ -1008,6 +1008,24 @@ const tuint flxPySampler::get_NOX() const
     return RndBox->get_NOX();
 }
 
+void flxPySampler::assign_y(py::array_t<tdouble> arr)
+{
+    const tuint NRV = get_NRV();
+    // prepare input array
+        // Access the input data as a raw pointer
+        py::buffer_info buf_info = arr.request();
+        tdouble* input_ptr = static_cast<tdouble*>(buf_info.ptr);
+        // Get the size of the input array
+        size_t size = buf_info.size;
+        if (size!=NRV) {
+            std::ostringstream ssV;
+            ssV << "Input array has size " << size << ", whereas an input array of size " << NRV << " is expected.";
+            throw FlxException_NeglectInInteractive("flxPyRVset::set_y_vec", ssV.str() );
+        }
+    flxVec y_vec(input_ptr,NRV);
+    RndBox->set_smp(y_vec);
+}
+
 void flxPySampler::perform_MCS(const tulong N, py::object vfun, flxDataBox& dbox)
 {
     const tuint M_out = dbox.get_M_out();

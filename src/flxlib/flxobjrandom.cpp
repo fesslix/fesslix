@@ -1020,6 +1020,17 @@ void flxPySampler::perform_MCS(const tulong N, py::object vfun, flxDataBox& dbox
     }
 }
 
+py::dict flxPySampler::perform_FORM(py::object vfun, py::dict config)
+{
+  // process configuration
+
+  // TODO stopped implementing FORM for now: at the moment, I need FORM without x2y-transform :: which is not supported by the current implementation
+
+
+    py::dict res;
+
+    return res;
+}
 
 
 //======================== Monte Carlo Integration ===========================

@@ -191,8 +191,15 @@ const tdouble rv_pdf_Studentst(const tdouble& v, const tdouble& x)
 
 const tdouble rv_InvCDF_Studentst(const tdouble& v, const tdouble& p)
 {
-  boost::math::students_t dist(v);
-  return boost::math::quantile(dist,p);
+  try {
+    boost::math::students_t dist(v);
+    return boost::math::quantile(dist,p);
+  } catch ( std::exception const& e ) {
+    FLXMSG("rv_InvCDF_Studentst_01",1);
+    GlobalVar.alert.alert("rv_InvCDF_Studentst_02", "  for p="+GlobalVar.Double2String(p)+"\n"+e.what() );
+    if (p < ONE/2) { return -Y_INFTY_1; }
+    else { return Y_INFTY_1; }
+  }
 }
 
 

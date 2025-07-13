@@ -1244,6 +1244,7 @@ PYBIND11_MODULE(core, m) {
             .def("get_NOX", &flxPySampler::get_NOX, "return number of random variables (in original space) in the collection of random variables")
             .def("get_values", &flxPySampler::get_values, pybind11::arg("mode")="x", "returns a vector of quantities of all entries contained in the sampler")
             .def("assign_u", &flxPySampler::assign_u, "assign y_vec as standard Normal values of the random variables in the sampler and perform the transformation to original space")
+            .def("assign_x", &flxPySampler::assign_x, pybind11::arg("x_vec"), pybind11::arg("transform") = true, "assign x_vec as values of the random variables in the sampler")
             .def("perform_MCS", &flxPySampler::perform_MCS, "perform a Monte Carlo simulation")
             ;
 

@@ -291,6 +291,7 @@ class PYBIND11_EXPORT flxPySampler {
     py::array_t<tdouble> get_values(const std::string mode="x");
 
     void assign_u(py::array_t<tdouble> arr);
+    void assign_x(py::array_t<tdouble> arr, const bool transform);
 
     void perform_MCS(const tulong N, py::object vfun, flxDataBox& dbox);
     py::dict perform_FORM(py::object vfun, py::dict config);

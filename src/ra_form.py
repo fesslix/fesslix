@@ -32,14 +32,23 @@ import scipy.optimize
 def perform_FORM(lsf, sampler, config):
     ## config
     ##   method » 'COBYLA' or 'SLSQP'
+    ##   disp » controls output in scipy.optimize.minimize
+    ##   fd_eps » SLSQP: finite difference step size
+    ##   rhobeg » COBYLA: initial trust region radius
+    ##   u0 » start point of optimization
+    ##   print_lsf » output current sample at each iteration step (lsf-call)
     ## process configuration
     if 'method' in config:
         opt_meth = config['method']
     else:
         opt_meth = 'COBYLA'
     opt_options = {'disp': True, 'maxiter': 1000}
-    if 'fd_eps' in config:
-        opt_options['eps'] = config['fd_eps']
+    if opt_meth == 'SLSQP':
+        if 'fd_eps' in config:
+            opt_options['eps'] = config['fd_eps']
+    if opt_meth == 'COBYLA':
+        if 'rhobeg' in config:
+            opt_options['rhobeg'] = config['rhobeg']
     ## number of random variables
     M = sampler.get_NRV()
     ## start point of optimization

@@ -66,4 +66,5 @@ PYBIND11_EXPORT FlxObjBase* parse_code(py::object pyobj, std::string descr="");
 template <typename T>
 PYBIND11_EXPORT py::array_t<T> py_wrap_array_no_ownership(T* ptr, size_t N);
 
+py::array_t<tdouble> convert_flxVec_to_pyArray(flxVec& vec);
 

@@ -320,5 +320,18 @@ template py::array_t<tfloat> py_wrap_array_no_ownership<tfloat>(tfloat*, size_t)
 template py::array_t<tdouble> py_wrap_array_no_ownership<tdouble>(tdouble*, size_t);
 template py::array_t<const tdouble> py_wrap_array_no_ownership<const tdouble>(const tdouble*, size_t);
 
-
+py::array_t<tdouble> convert_flxVec_to_pyArray(flxVec& vec)
+{
+    const tuint N = vec.get_N();
+    // Allocate memory for the return array
+      auto res_buf = py::array_t<tdouble>(N);
+    // Get the buffer info to access the underlying return data
+      py::buffer_info res_buf_info = res_buf.request();
+      tdouble* res_ptr = static_cast<tdouble*>(res_buf_info.ptr);
+      flxVec tmp(res_ptr,N);
+    // copy values
+      tmp = vec;
+    // Return the array
+    return res_buf;
+}
 

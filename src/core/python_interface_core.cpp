@@ -1269,6 +1269,7 @@ PYBIND11_MODULE(core, m) {
     // Structural reliability analysis
     // ====================================================
             m.def("perform_Line_Sampling", &perform_Line_Sampling, "Perform Line Sampling (structural reliability analysis)");
+            m.def("perform_FORM", &perform_FORM, "Perform FORM (First Order Reliability Method)");
 
     // ====================================================
     // Advanced features

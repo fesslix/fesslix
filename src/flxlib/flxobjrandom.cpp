@@ -1124,18 +1124,6 @@ void flxPySampler::perform_MCS(const tulong N, py::object vfun, flxDataBox& dbox
     }
 }
 
-py::dict flxPySampler::perform_FORM(py::object vfun, py::dict config)
-{
-  // process configuration
-
-  // TODO stopped implementing FORM for now: at the moment, I need FORM without x2y-transform :: which is not supported by the current implementation
-
-
-    py::dict res;
-
-    return res;
-}
-
 
 //======================== Monte Carlo Integration ===========================
 
@@ -2726,6 +2714,524 @@ FlxObjBase* FlxObjReadSus_level_info::read()
     throw;
   }
 }
+
+// ############################################################################################################################################################################
+// FORM
+// ############################################################################################################################################################################
+
+
+py::dict perform_FORM(py::object lsf, flxPySampler& sampler, py::dict config)
+{
+  py::dict res;
+  // =============================================================
+  // process configuration
+  // =============================================================
+  // ------------------------------------------------
+  // sampler
+  // ------------------------------------------------
+    RBRV_constructor& RndBox = *(sampler.get_ptr_RndBox());
+    const tuint DIM = RndBox.get_NRV();
+  // ------------------------------------------------
+  // limit-state function
+  // ------------------------------------------------
+  FlxFunction* LSF = parse_function(lsf,"limit-state function 'lsf' of 'perform_Line_Sampling'");
+  try {
+  // ------------------------------------------------
+  // allocate memory (and check for consistency)
+  // ------------------------------------------------
+    if (RndBox.get_NRV()!=RndBox.get_NOX()) {
+      std::ostringstream ssV;
+      ssV << "Number of random variables in original space does not equal number of random variables in standard normal space.";
+      throw FlxException("FORM_help_update_Start_01", ssV.str() );
+    }
+    if (DIM==0) {
+      std::ostringstream ssV;
+      ssV << "FORM cannot be executed because no random variables exist.";
+      throw FlxException("FORM_help_update_Start_02", ssV.str() );
+    }
+    flxVec x(DIM);
+    flxVec y(DIM);
+  // ------------------------------------------------
+  // config-dict
+  // ------------------------------------------------
+    const tdouble eps1 = parse_py_para_as_floatPosNo0("eps1",config,false,1e-5);
+    const tdouble eps2 = parse_py_para_as_floatPosNo0("eps2",config,false,1e-5);
+    const tdouble epsdyf = parse_py_para_as_floatPosNo0("epsdyf",config,false,2*ONE);
+    const tdouble fdstep = parse_py_para_as_floatPosNo0("fdstep",config,false,1e-6);
+    const tdouble iHLRF_epsilon = parse_py_para_as_floatPosNo0("iHLRF_epsilon",config,false,0.4);
+    const tdouble iHLRF_lambda_start = parse_py_para_as_floatPosNo0("iHLRF_lambda_start",config,false,ONE);
+    const tdouble iHLRF_reduce = parse_py_para_as_floatPosNo0("iHLRF_reduce",config,false,ONE/2);
+    const bool only_partial = parse_py_para_as_bool("only_partial", config, false, false);
+    const bool dxdyAnalytical = parse_py_para_as_bool("dxdyAnalytical", config, false, true);
+    const bool verboseLog = parse_py_para_as_bool("verboseLog", config, false, false);
+    const tuint maxIter = parse_py_para_as_tuintNo0("max_iter", config, false, 100);
+    // // dataBox for storing/post-processing samples
+    // flxDataBox* dbox = nullptr;
+    // if (config.contains("data_box")) {
+    //   dbox = &(parse_py_obj_as_flxDataBox(config["data_box"],"'data_box' in 'config'"));
+    //   dbox->ensure_M_in(DIM);
+    //   dbox->ensure_M_out(1);
+    // }
+    // finite difference method
+      tuint fd_method = 1;
+      {
+        const std::string fd_str = parse_py_para_as_string("fd_method",config,false,"fwd_diff");
+        if (fd_str=="fwd_diff") {
+          fd_method = 1;
+        } else if (fd_str=="cent_diff") {
+          fd_method = 2;
+        } else if (fd_str=="bwd_diff") {
+          fd_method = 3;
+        } else {
+          std::ostringstream ssV;
+          ssV << "Unknown finite difference method '" << fd_str << "'.";
+          throw FlxException("FORM_help_update_Start_00a", ssV.str() );
+
+        }
+      }
+    // optimization method
+      tuint opt_method = 1;
+      {
+        const std::string opt_str = parse_py_para_as_string("opt_method",config,false,"iHLRF");
+        if (opt_str=="HLRF") {
+          opt_method = 1;
+        } else if (opt_str=="iHLRF") {
+          opt_method = 2;
+        } else {
+          std::ostringstream ssV;
+          ssV << "Unknown optimization method '" << opt_str << "'.";
+          throw FlxException("FORM_help_update_Start_00b", ssV.str() );
+
+        }
+      }
+  // ------------------------------------------------
+  // evaluate dxmin
+  // ------------------------------------------------
+      flxVec dxmin(DIM);
+      if (config.contains("dxmin")) {
+        dxmin.assign_save( parse_py_para_as_flxVec("dxmin",config,true) );
+      } else {
+          RndBox.get_sd_Vec(dxmin.get_tmp_vptr());
+          dxmin *= tdouble(1e-6);
+      }
+    const tdouble sqrtEps = GlobalVar.sqrtEps;        // square root of machine precision
+  // ------------------------------------------------
+  // calculate the start vector :: u0
+  // ------------------------------------------------
+    if (config.contains("u0")) {
+      y.assign_save( parse_py_para_as_flxVec("u0",config,true) );
+    } else if (config.contains("x0")) {
+      x.assign_save( parse_py_para_as_flxVec("x0",config,true) );
+      RndBox.set_smp_x_transform(x);
+      RndBox.get_y_Vec(y.get_tmp_vptr());
+    }
+  // ------------------------------------------------
+  // some initial output
+  // ------------------------------------------------
+    if (only_partial) {
+      GlobalVar.slogcout(4) << "partial_derivative: " << std::endl;
+    } else {
+      GlobalVar.slogcout(4) << "form: performing FORM analysis. " << std::endl;
+    }
+    GlobalVar.slogcout(4) << "  fd_method:          " << fd_method << " - ";
+    switch (fd_method) {
+      case 1:
+        GlobalVar.slogcout(4) << "forward difference";
+        break;
+      case 2:
+        GlobalVar.slogcout(4) << "central difference";
+        break;
+      case 3:
+        GlobalVar.slogcout(4) << "backward difference";
+        break;
+      default:
+        std::ostringstream ssV;
+        ssV << "Finite difference method with ID '" << fd_method << "' not known.";
+        throw FlxException("FORM_help_do_FORM_01", ssV.str() );
+    }
+    if (!only_partial) {
+      GlobalVar.slogcout(4) << std::endl << "  opt_method:         " << opt_method << " - ";
+      switch (opt_method) {
+        case 1:
+          GlobalVar.slogcout(4) << "HLRF-method";
+          break;
+        case 2:
+          GlobalVar.slogcout(4) << "iHLRF-method";
+          break;
+        case 3:
+          throw FlxException_NotImplemented("FORM_help_do_FORM_02");
+          break;
+        default:
+          std::ostringstream ssV;
+          ssV << "Optimization algorithm with ID '" << fd_method << "' not known.";
+          throw FlxException("FORM_help_do_FORM_03", ssV.str() );
+      }
+    }
+    if (epsdyf<ONE) {
+      GlobalVar.alert.alert("FORM_help_do_FORM_04","'epsdyf' should not be smaller than 1.0.");
+    }
+    GlobalVar.slogcout(4) << std::endl;
+    GlobalVar.slogcout(4) <<   "  fdstep:             " << GlobalVar.Double2String(fdstep)  << "\t(" << GlobalVar.Double2String(sqrtEps) << ")" << std::endl;
+    GlobalVar.slogcout(4) <<   "  epsdyf:             " << GlobalVar.Double2String(epsdyf) << std::endl;
+    GlobalVar.slogcout(4) <<   "  dxmin:              " << dxmin << std::endl;
+    if (!only_partial) {
+      GlobalVar.slogcout(4) <<   "  eps1:               " << GlobalVar.Double2String(eps1) << std::endl;
+      GlobalVar.slogcout(4) <<   "  eps2:               " << GlobalVar.Double2String(eps2) << std::endl;
+      GlobalVar.slogcout(4) <<   "  maxiter:            " << maxIter << std::endl;
+      if (opt_method==2) {
+        GlobalVar.slogcout(4) << "  iHLRF_epsilon:      " << GlobalVar.Double2String(iHLRF_epsilon) << std::endl;
+        GlobalVar.slogcout(4) << "  iHLRF_lambda_start: " << GlobalVar.Double2String(iHLRF_lambda_start) << std::endl;
+        GlobalVar.slogcout(4) << "  iHLRF_reduce:       " << GlobalVar.Double2String(iHLRF_reduce) << std::endl;
+      }
+    }
+  // calculate z_0  (value of LSF at y=0)
+    tdouble z_0, z_old;
+    flxVec d(y.get_N());                // iHLRF direction vector
+    flxVec y_new(y.get_N());        // iHLRF new position vector
+    flxVec xhelp(DIM);
+    d.set_zero();
+    tuint LSFcalls=0;
+    RndBox.set_smp(d);
+    z_0 = LSF->calc(); ++LSFcalls;
+    const bool isNeg_z_0 = (z_0<ZERO);
+    GlobalVar.slogcout(4) << "  lsf(y=0)=" << std::format("{:9.2e}", z_0) << std::endl;
+    // compute start-point
+      xhelp = d;
+      xhelp -= y;
+      if (xhelp.get_NormMax()<=GlobalVar.TOL()) {
+        z_old = z_0;
+      } else {
+        RndBox.set_smp(y);
+        z_old = LSF->calc(); ++LSFcalls;
+      }
+    // make sure z_0 is large enough
+      if (isNeg_z_0) z_0 = fabs(z_0);
+      if (z_0 < epsdyf*sqrtEps) {
+        z_0 = epsdyf*sqrtEps;
+      }
+    z_old /= z_0;
+    RndBox.get_x_Vec(x.get_tmp_vptr());
+  // Write log-message
+    if (verboseLog) {
+      GlobalVar.slogcout(4) << " Start point: x=" << x << "; y=" << y << ";" << std::endl;
+    }
+    tuint loopc = 0;
+  tdouble beta_new = y.get_Norm2();
+
+  if (!only_partial) {
+    GlobalVar.slogcout(4) << "  Iter  0: lsf_err=" << std::format("{:9.2e}", z_old) << std::endl;
+  }
+  flxVec dzdy(DIM);
+  tdouble beta_old, zo, zu,fd,fd_max,dx,lambda=-9999.;
+  FlxMtxLTri dxdy(DIM);
+  do {
+    beta_old = beta_new;
+    fd = fdstep;
+    if (fd<sqrtEps) {
+      fd = sqrtEps;
+      GlobalVar.alert.alert("FORM_help_do_FORM_05","Set finite differenc step to machine precision.");
+    }
+    fd_max = fd;
+
+    if (dxdyAnalytical) {
+      // calc dx/dy
+        RndBox.calc_Jinv(dxdy);
+      // calculate dz/dx
+      for (tuint i = 0; i < DIM; ++i) {
+        xhelp = x;
+        // choose an appropriate step-size for finite-difference
+          // check y-value (machine precision)
+            if (fabs((fd*x[i])) < fabs(epsdyf*sqrtEps*z_old)) {        // z determines step-size
+              if (fd_method!=3) {        // forward (central)
+                xhelp[i] += fabs(epsdyf*sqrtEps*z_old);
+                dx = xhelp[i]-x[i];
+              } else {                        // backwards
+                xhelp[i] -= fabs(epsdyf*sqrtEps*z_old);
+                dx = x[i]-xhelp[i];
+              }
+              const tdouble tr = dx/x[i];
+              if (tr>fd_max) fd_max = tr;
+            } else {                                                        // x determines step-size
+              if (fd_method!=3) {        // forward (central)
+                xhelp[i] = (x[i]>=ZERO)?((ONE+fd)*x[i]):((ONE-fd)*x[i]);
+                dx = xhelp[i]-x[i];
+              } else {                        // backwards
+                xhelp[i] = (x[i]>=ZERO)?((ONE-fd)*x[i]):((ONE+fd)*x[i]);
+                dx = x[i]-xhelp[i];
+              }
+            }
+          // ensure dx>dxmin
+            if (dx<dxmin[i]) {
+              if (fd_method!=3) {        // forward (central)
+                xhelp[i] = x[i] + dxmin[i];
+                dx = xhelp[i]-x[i];
+              } else {                        // backwards
+                xhelp[i] = x[i] - dxmin[i];
+                dx = x[i]-xhelp[i];
+              }
+              const tdouble tr = dx/x[i];
+              if (tr>fd_max) fd_max = tr;
+            }
+          #if FLX_DEBUG
+            if (dx<=ZERO) throw FlxException_Crude("FORM_help_do_FORM_06");
+          #endif
+        if ( RndBox.check_xVec(xhelp) ) {        // check if xhelp is in domain
+          RndBox.set_smp_x(xhelp);
+          // calc LSF
+            zo = LSF->calc()/z_0; ++LSFcalls;
+          if (fd_method!=2) {
+            if (fd_method==1) {
+              dzdy[i] = (zo-z_old)/dx;
+            } else {
+              dzdy[i] = (z_old-zo)/dx;
+            }
+          } else {                // central difference
+            xhelp *= -ONE;
+            xhelp.add(x,2);
+            if ( RndBox.check_xVec(xhelp) ) {
+              RndBox.set_smp_x(xhelp);
+              // calc LSF
+                zu = LSF->calc()/z_0; ++LSFcalls;
+              // calc dz/dx(i)
+                dzdy[i] = (zo-zu)/(2*dx);
+            } else {
+              dzdy[i] = (zo-z_old)/dx;
+            }
+          }
+        } else {
+          if (fd_method!=3) {                // forward (central) -> use backwards
+            xhelp[i] = x[i] - dx;
+          } else {                        // backwards -> use forwards
+            xhelp[i] = x[i] + dx;
+          }
+          #if FLX_DEBUG
+            if ( RndBox.check_xVec(xhelp) == false ) {
+              GlobalVar.slogcout(1) << "FORM_help_do_FORM_07a: " << xhelp << std::endl;
+              throw FlxException_Crude("FORM_help_do_FORM_07");
+            }
+          #endif
+          RndBox.set_smp_x(xhelp);
+          zu = LSF->calc()/z_0; ++LSFcalls;
+          if (fd_method!=3) {
+            dzdy[i] = (z_old-zu)/dx;
+          } else {
+            dzdy[i] = (zu-z_old)/dx;
+          }
+        }
+      }
+      // calculate dz/dy
+        dxdy.TransMultVec(dzdy);
+    } else {
+      throw FlxException_NotImplemented("FORM_help_do_FORM_08");
+//         // calculate dz/dy
+//         for (tuint i = 0; i < DIM; ++i) {
+//           xhelp = y;
+//           if (std::fabs(y[i]) < fd ) xhelp[i] = y[i] + fd;   // make sure its different from zero
+//           else xhelp[i] = (1.0+fd)*y[i];
+//           dx = xhelp[i]-y[i];
+//           if ( RndBox->check_xVec(xhelp) ) {
+//             data->RndBox.set_y_Vec(xhelp);
+//             // calc LSF
+//               zo = LSF->calc();
+//             xhelp = y+y-xhelp;
+//             if ( RndBox->check_xVec(xhelp) ) {
+//               data->RndBox.set_y_Vec(xhelp);
+//               // calc LSF
+//                 zu = LSF->calc();
+//               // calc dz/dx(i)
+//                 dzdy[i] = (zo-zu)/(2.0*dx);
+//             } else {
+//               dzdy[i] = (zo-z_old)/dx;
+//             }
+//           } else {
+//             xhelp[i] = y[i] - dx;
+//             data->RndBox.set_y_Vec(xhelp);
+//             zu = LSF->calc();
+//             dzdy[i] = (z_old-zu)/dx;
+//           }
+//         }
+    }
+    if (only_partial) {
+      res["dzdy"] = convert_flxVec_to_pyArray(dzdy);
+      // Total number of LSF-calls
+      res["N_lsf_calls"] = LSFcalls;
+      return res;
+    }
+
+    if (dzdy.get_NormMax() <= GlobalVar.TOL() ) {
+      get_RndCreator().gen_smp(y);
+      if (verboseLog) {
+        GlobalVar.alert.alert("FORM_help_do_FORM_09", "Warning: zero_Gradient -> Initialize random seed." );
+      }
+    } else {
+      dx=((dzdy*y)-z_old)/dzdy.get_Norm2_NOroot();  // this is just a factor
+      if (opt_method==1) {
+        y = dzdy;
+        y *= dx;
+      } else {
+        d = dzdy;
+        d *= dx;
+        d -= y;
+        // determine c^k
+          tdouble c = y.get_Norm2()/dzdy.get_Norm2();
+          if (fabs(z_old)>=0.001) {
+            xhelp = y; xhelp+=d;
+            const tdouble c2 = xhelp.get_Norm2_NOroot()/(2*fabs(z_old));
+            if (c2>c) c = c2;
+          }
+          c *= 2;
+        lambda = iHLRF_lambda_start;        // start value for the step-size
+        const tdouble epsilon = iHLRF_epsilon;                // parameter of Armijo-rule
+        const tdouble reduce = iHLRF_reduce;
+        const tdouble m_0 = reduce*y.get_Norm2_NOroot()+c*fabs(z_old);        // current value of merit function
+          if (epsilon>=ONE) {
+            std::ostringstream ssV;
+            ssV << "'iHLRF_epsilon' has to be a value within the interval ]0;1[, and not (" << GlobalVar.Double2String(epsilon) << ")";
+            throw FlxException_NeglectInInteractive("FORM_help_do_FORM_10", ssV.str() );
+          }
+        tdouble m_n, m_ne, z_next;                // next value (estimate) of merit-function
+        const tuint maxIter_LS = 20;
+        tuint i;
+        std::stringstream ssV2;
+        ssV2 << "epsilon = " << GlobalVar.Double2String(epsilon) << std::endl;
+        ssV2 << "m0      = " << GlobalVar.Double2String(m_0) << std::endl;
+        ssV2 << "z       = " << GlobalVar.Double2String(z_old) << std::endl;
+        for (i=0;i<maxIter_LS;++i) {                // maximum number of iterations
+          ssV2 << "iteration: " << i+1 << std::endl;
+          ssV2 << "  lambda  = " << GlobalVar.Double2String(lambda) << std::endl;
+          // compute estimator
+            xhelp = y;
+            xhelp.add(dzdy,c*sign(z_old));
+            m_ne = m_0 + epsilon*lambda*(xhelp*d);
+          // compute LSF-value
+            y_new = y;
+            y_new.add(d,lambda);
+            RndBox.set_smp(y_new);
+            z_next = LSF->calc()/z_0; ++LSFcalls;
+            ssV2 << "  z     = " << GlobalVar.Double2String(z_next) << std::endl;
+            m_n = (y_new.get_Norm2_NOroot())/2+c*fabs(z_next);
+            ssV2 << "m_ne    = " << GlobalVar.Double2String(m_ne) << std::endl;
+          if (m_ne > m_n) break;        // get me out of here
+          lambda *= reduce;
+        }
+        if (i==maxIter_LS && m_ne <= m_n) {        // no-convergence
+          std::ostringstream ssV;
+          ssV << "Maximum number of line-search iterations reached (" << maxIter_LS << ").";
+          throw FlxException_NeglectInInteractive("FORM_help_do_FORM_11", ssV.str(), ssV2.str() );
+        }
+        z_old = z_next;
+        y = y_new;
+      }
+    }
+
+    beta_new = y.get_Norm2();
+
+    // check if we are within reasonable intervals
+      bool ok = true;                // false, if y has been reassigned
+      dx = rv_Phi(-beta_new);
+      if (dx == ZERO) {
+        dx = fabs(rv_InvPhi(1e-6));        // this is our new beta
+        if (verboseLog) {
+          GlobalVar.alert.alert("FORM_help_do_FORM_12", "Warning: Interval correction (beta=" + GlobalVar.Double2String(beta_new) + ")" );
+        }
+        y*=dx/beta_new;
+        beta_new = y.get_Norm2();  // equal to: beta_new = dx;
+        ok = false;
+      }
+
+    if (opt_method!=2 || !ok) {
+      RndBox.set_smp(y);
+    }
+    RndBox.get_x_Vec(x.get_tmp_vptr());
+    // calc LSF
+      if (opt_method!=2 || !ok) {
+        z_old = LSF->calc()/z_0;        ++LSFcalls;        // actually this is z_new
+      }
+
+    // check for maximum number of iterations
+      loopc++;
+      if (loopc > maxIter) {
+        std::ostringstream ssV;
+        ssV << "Maximum number of iterations reached (" << maxIter << ").";
+        throw FlxException_NeglectInInteractive("FORM_help_do_FORM_13", ssV.str() );
+      }
+    // compute err_orth
+//         err_orth = Norm2(dzdy/Norm2(dzdy)+y/beta_new);
+
+    GlobalVar.slogcout(4) << std::format("  Iter {:2d}: lsf_err={:9.2e}  beta={:6.3f}", loopc, z_old, beta_new);
+    GlobalVar.slogcout(4)  << std::format("  beta_err={:9.2e}",((beta_new-beta_old)/beta_new));
+    if (opt_method==2)  {
+      GlobalVar.slogcout(4)  << std::format("  lambda={:8.2e}", lambda);
+    }
+    GlobalVar.slogcout(4) << std::endl;
+    if (verboseLog) {
+      GlobalVar.slog(4) << "    y="; flxVec_simple_plot(GlobalVar.slog(4),y,true,-1,0,true); GlobalVar.slog(4) << std::endl;
+      GlobalVar.slog(4) << "    x="; flxVec_simple_plot(GlobalVar.slog(4),x,true,-1,0,true); GlobalVar.slog(4) << std::endl;
+    }
+  } while ( std::fabs((beta_new-beta_old)/beta_new) > eps1 || fabs(z_old) > eps2 );
+
+  if ( dzdy*y > ZERO ) {
+    beta_new *= -ONE;
+  }
+  // =============================================================
+  // Sensitivities
+  // =============================================================
+  try {
+    std::ostream& slog = GlobalVar.slog(3);
+    // the original alphas
+      if (y.get_N()!=RndBox.get_NRV()) {
+        throw FlxException("FlxObjFORM::sensitivities", "Specified vector has wrong dimension.");
+      }
+      const tdouble beta = y.get_Norm2();
+      flxVec sensi = y; sensi/=beta;
+    // transformation to correlated space
+      flxVec w = sensi;
+      RndBox.transform_y2w(sensi.get_tmp_vptr_const(),w.get_tmp_vptr());
+      w.normalize();
+    // the gamma-approach
+      FlxMtxLTri Jinv(y.get_N());
+      RndBox.calc_Jinv(Jinv);
+    // obtain covariance /hat{x} = hS
+        FlxMtx hM(Jinv);
+        FlxMtxSym hS(hM.nrows());
+        hM.TransposeMmultM(hS);
+      // get Jacobian
+        Jinv.Invert();
+      // multiply with sensitivities
+        Jinv.TransMultVec(sensi);
+      const tuint N = y.get_N();
+      for (tuint i=0;i<N;++i) {
+        sensi[i] *= sqrt(hS(i,i));
+      }
+      sensi.normalize();
+      res["FORM_alpha"] = convert_flxVec_to_pyArray(sensi);
+    slog << "  Sensitivities: \t  gamma\t\t gamma^2\t  %" << std::endl;
+    for (tuint i=0;i<N;++i) {
+      slog << std::format("  {}\t{:9.2e}\t{:9.2e}\t{:3.1f}", RndBox.get_rv_name(i), sensi[i], pow2(sensi[i]), (pow2(sensi[i])*100)) << "%"  << std::endl;
+    }
+  } catch (FlxException& e) {
+
+  }
+  // =============================================================
+  // collect and return results
+  // =============================================================
+  // store FORM_beta
+  res["FORM_beta"] = beta_new;
+  res["FORM_pf"] = rv_Phi(-beta_new);   // Estimated probability of failure
+  res["pf_upper_bound"] = GlobalVar.Double2String(ONE-rv_cdf_ChiSquare(DIM,pow2(beta_new)));  // Probability of failure 'for sure' within
+  // store value of 'dxdy'
+  res["dzdy"] = convert_flxVec_to_pyArray(dzdy);
+  res["FORM_x"] = convert_flxVec_to_pyArray(x);
+  res["FORM_u"] = convert_flxVec_to_pyArray(y);
+  // Total number of LSF-calls
+  res["N_lsf_calls"] = LSFcalls;
+  } catch (FlxException& e) {
+    delete LSF;
+    throw;
+  }
+  return res;
+}
+
 
 void FlxObjFORM_betaSensitivities::task()
 {

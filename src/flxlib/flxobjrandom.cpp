@@ -1462,6 +1462,441 @@ FlxObjBase* FlxObjReadIpS::read()
   }
 }
 
+// ############################################################################################################################################################################
+// Line Sampling
+// ############################################################################################################################################################################
+
+struct LS_data_struct {
+  tulong Nlsf_calls;
+  flxVec& betaVec;
+  const flxVec &rv_base;
+  flxVec &rv_prop;
+  const bool extended_ls;
+  FlxFunction* lsf_fun;
+  RBRV_constructor& RndBox;
+  std::vector< std::pair<tdouble,tdouble> > line_hist;
+  const tdouble LS_tol;
+  const tuint LS_max_iter;
+  const bool use_bisec;
+  const bool verboseLog;
+};
+
+
+void LS_help_hist_push(const tdouble c, const tdouble g, LS_data_struct& LS_data)
+{
+  // search the relevant index
+    size_t target_i = LS_data.line_hist.size()+10;
+    for (size_t i=0;i<LS_data.line_hist.size();++i) {
+      if (c<LS_data.line_hist[i].first) {
+        target_i = i;
+        break;
+      } else if (c==LS_data.line_hist[i].first) {
+        LS_data.line_hist[i].second = g;
+        return;
+      }
+    }
+  // insert pair
+    std::pair<tdouble,tdouble> tp(c,g);
+    if (target_i>=LS_data.line_hist.size()) {
+      LS_data.line_hist.push_back(tp);
+    } else {
+      LS_data.line_hist.insert(LS_data.line_hist.begin()+target_i,tp);
+    }
+}
+
+const tdouble LS_help_hist_eval(const tdouble betaNorm, LS_data_struct& LS_data)
+{
+  if (LS_data.line_hist.empty()) return ZERO;
+  pdouble res;
+  bool is_very_first = true;
+  bool is_first = true;
+  bool is_failure = false;  // dummy-initialization (to prevent compiler warning)
+  tdouble last_c = -tdouble(100);
+  for (size_t i=0;i<LS_data.line_hist.size();++i) {
+    tdouble tg = LS_data.line_hist[i].second;
+    if (is_first) {
+      is_failure = (tg<=ZERO);
+      is_first = false;
+    }
+    if ( (tg<=ZERO)!=is_failure || tg==ZERO ) {
+      const tdouble this_c = (tg==ZERO)?(LS_data.line_hist[i].first):((LS_data.line_hist[i].first+LS_data.line_hist[i-1].first)/2);
+      if (is_very_first) {
+        if (is_failure) {
+          res += rv_Phi(this_c*betaNorm);
+        }
+        is_very_first = false;
+      } else {
+        if (is_failure) {
+          if (this_c>ZERO && last_c>ZERO) {
+            res += rv_Phi(-last_c*betaNorm)-rv_Phi(-this_c*betaNorm);
+          } else {
+            res += rv_Phi(this_c*betaNorm)-rv_Phi(last_c*betaNorm);
+          }
+        }
+      }
+      last_c = this_c;
+      if (tg==ZERO) {
+        is_first = true;
+      } else {
+        is_failure = (tg<=ZERO);
+        is_first = false;
+      }
+    }
+  };
+  // handle ending
+    if (is_first) {
+      is_failure = (LS_data.line_hist[LS_data.line_hist.size()-1].second<=ZERO);
+    }
+    if (is_failure) {
+      if (is_very_first) res += ONE;
+      else res += rv_Phi(-last_c*betaNorm);
+    }
+  return res.cast2double();
+}
+
+const tdouble LS_help_LSF_call(const tdouble c, LS_data_struct& LS_data)
+{
+  LS_data.rv_prop = LS_data.rv_base;
+  LS_data.rv_prop.add(LS_data.betaVec,c);
+  LS_data.RndBox.set_smp(LS_data.rv_prop);
+  ++(LS_data.Nlsf_calls);
+  const tdouble res = LS_data.lsf_fun->calc();
+  if (LS_data.extended_ls) {
+    LS_help_hist_push(c,res,LS_data);
+  }
+  return res;
+}
+
+const tdouble LS_help_perform_line_search_rgfsi(bool& fdright, bool& found, const tdouble startV, const tdouble endV, LS_data_struct& LS_data)
+{
+  found = false;
+  // evaluate the initial value
+    tdouble c_end = endV;
+    tdouble g_2 = LS_help_LSF_call(c_end,LS_data);
+  // evaluate the 2nd starting value
+    tdouble c_start = startV;
+    tdouble g_1 = LS_help_LSF_call(c_start,LS_data);
+  // start the iteration
+    tuint c = 0;
+    tdouble c_res=ZERO, g_3=ZERO;
+    while (c<LS_data.LS_max_iter) {
+      if (g_1*g_2<=ZERO) {        // Pegasus-algorithm
+        // evaluate a new point
+          c_res = (c_start*g_2-c_end*g_1)/(g_2-g_1);
+          g_3 = LS_help_LSF_call(c_res,LS_data);
+        if ( g_2*g_3<ZERO ) {
+          c_start = c_end;
+          g_1 = g_2;
+          c_end = c_res;
+          g_2 = g_3;
+        } else {
+          const tdouble m = g_2/(g_2+g_3);
+          g_1 = m*g_1;
+          c_end = c_res;
+          g_2 = g_3;
+        }
+      } else {                        // Sekantenverfahren
+        c_res = c_end - ((c_end-c_start)/(g_2-g_1))*g_2;
+        if (fabs(c_res)>tdouble(50)) {
+          found = false;
+          return c_res;
+        }
+        g_3 = LS_help_LSF_call(c_res,LS_data);
+        g_1 = g_2;
+        c_start = c_end;
+        g_2 = g_3;
+        c_end = c_res;
+      }
+      // check for convergence
+        if (fabs(g_3)<=LS_data.LS_tol) {
+          found = true;
+          break;
+        }
+        if (fabs(c_end-c_start)<=LS_data.LS_tol) break;
+      ++c;
+    }
+  // try to deduce information about the topology
+    fdright = ( g_1>g_2 );
+    if (c_start>c_end) { fdright = !fdright; }
+  // maximum number of line-search iterations reached?
+    if (c>=LS_data.LS_max_iter) {
+      if (LS_data.verboseLog) {
+        GlobalVar.alert.alert("FlxObjLineSmpl::perform_line_search_rgfsi","Maximum number of line-search iterations reached.");
+      }
+    }
+  if (fabs(g_3)<=LS_data.LS_tol) return c_res;
+  if (g_1*g_2<=ZERO && c<LS_data.LS_max_iter) found=true;
+  return (c_start+c_end)/2;
+}
+
+const tdouble LS_help_perform_line_search_bisec(bool& fdright, bool& found, const tdouble startV, const tdouble endV, LS_data_struct& LS_data)
+{
+  found = false;
+  // evaluate the initial value
+    tdouble c_end = endV;
+    tdouble g_2 = LS_help_LSF_call(c_end,LS_data);
+  // evaluate the 2nd starting value
+    tdouble c_start = startV;
+    tdouble g_1 = LS_help_LSF_call(c_start,LS_data);
+  // make sure that root is in selected interval
+    tuint c = 0;
+    tdouble delta = c_end-c_start;
+    bool go_first = true;
+    bool go_right = true;
+    while ((g_1*g_2>ZERO) && c<LS_data.LS_max_iter/2) {
+      // try to prevent oscillations
+        if (go_first) {
+          go_right = (g_2<g_1);
+          go_first = false;
+        } else {
+          if (go_right!=(g_2<g_1)) {
+            go_first = true;
+            delta /= 2;
+            const tdouble c_mid = (g_2<g_1)?c_end:c_start;
+            c_start = c_mid - delta/2;
+            c_end = c_start + delta;
+            g_1 = LS_help_LSF_call(c_start,LS_data);
+            g_2 = LS_help_LSF_call(c_end,LS_data);
+            ++c;
+            continue;
+          }
+        }
+      if (g_2<g_1) {
+        c_start = c_end;
+        c_end += delta;
+        g_1 = g_2;
+        g_2 = LS_help_LSF_call(c_end,LS_data);
+      } else {
+        c_end = c_start;
+        c_start -= delta;
+        g_2 = g_1;
+        g_1 = LS_help_LSF_call(c_start,LS_data);
+      }
+      ++c;
+    }
+    if (g_1*g_2>ZERO) return (c_end+c_start)/2;
+  // start the actual iteration
+    tdouble c_res=ZERO, g_3=ZERO;
+    while (c<LS_data.LS_max_iter) {
+      c_res = (c_start+c_end)/2;
+      g_3 = LS_help_LSF_call(c_res,LS_data);
+      if ( g_1*g_3>ZERO ) {
+        c_start = c_res;
+        g_1 = g_3;
+      } else {
+        c_end = c_res;
+        g_2 = g_3;
+      }
+      if (fabs(g_3)<=LS_data.LS_tol) {
+        found = true;
+        break;
+      }
+      if (fabs(c_end-c_start)<=LS_data.LS_tol) break;
+      ++c;
+    }
+  // try to deduce information about the topology
+    fdright = ( g_1>g_2 );
+    if (c_start>c_end) { fdright = !fdright; }  // this should not happend in case of the bisection method
+  // maximum number of line-search iterations reached?
+    if (c>=LS_data.LS_max_iter) {
+      if (LS_data.verboseLog) {
+        GlobalVar.alert.alert("FlxObjLineSmpl::perform_line_search_bisec","Maximum number of line-search iterations reached.");
+      }
+    }
+  if (fabs(g_3)<=LS_data.LS_tol) return c_res;
+  if (g_1*g_2<=ZERO && c<LS_data.LS_max_iter) found=true;
+  return (c_start+c_end)/2;
+}
+
+/**
+* @brief performs the actual line-serach
+* @returns 'c' of the root-serach & fdright
+* @param fdright true: failure domain right of 'c'; false: failure domain left of 'c'
+*/
+const tdouble LS_help_perform_line_search(bool& fdright, bool& found, const tdouble startV, const tdouble endV, LS_data_struct& LS_data)
+{
+  if (LS_data.use_bisec) {
+    return LS_help_perform_line_search_bisec(fdright,found,startV,endV,LS_data);
+  } else {
+    return LS_help_perform_line_search_rgfsi(fdright,found,startV,endV,LS_data);
+  }
+}
+
+
+py::dict perform_Line_Sampling(py::object lsf, py::array_t<tdouble> u_star, flxPySampler& sampler, py::dict config)
+{
+  py::dict res;
+  // =============================================================
+  // process configuration
+  // =============================================================
+  // ------------------------------------------------
+  // sampler
+  // ------------------------------------------------
+    RBRV_constructor& RndBox = *(sampler.get_ptr_RndBox());
+    const tuint NRV = RndBox.get_NRV();
+  // ------------------------------------------------
+  // limit-state function
+  // ------------------------------------------------
+  FlxFunction* lsf_fun = parse_function(lsf,"limit-state function 'lsf' of 'perform_Line_Sampling'");
+  try {
+  // ------------------------------------------------
+  // u_star
+  // ------------------------------------------------
+    // Access the input data as a raw pointer
+      py::buffer_info buf_info = u_star.request();
+      tdouble* input_ptr = static_cast<tdouble*>(buf_info.ptr);
+      // Get the size of the input array
+      size_t size = buf_info.size;
+      if (size!=NRV) {
+          std::ostringstream ssV;
+          ssV << "Input array has size " << size << ", whereas an input array of size " << NRV << " is expected.";
+          throw FlxException_NeglectInInteractive("perform_Line_Sampling_01", ssV.str() );
+      }
+    flxVec betaVec(input_ptr,NRV);
+  // ------------------------------------------------
+  // config-dict
+  // ------------------------------------------------
+    const tdouble LS_tol = parse_py_para_as_floatPosNo0("ls_tol",config,false,1e-3);
+    const bool use_bisec = parse_py_para_as_bool("use_bisec", config, false, false);
+    const bool extended_ls = parse_py_para_as_bool("extended_ls", config, false, false);
+    // total number of line searches to perform
+    const tuint NLS = parse_py_para_as_tuintNo0("n_ls", config, false, 10);
+    const tuint LS_max_iter = parse_py_para_as_tuintNo0("ls_max_iter", config, false, 10);
+    const bool verboseLog = parse_py_para_as_bool("verboseLog", config, false, false);
+    const bool show_progress = parse_py_para_as_bool("show_progress",config,false,true);
+  // ------------------------------------------------
+  // initial output
+  // ------------------------------------------------
+    std::ostream& scout(GlobalVar.slogcout(3));
+    scout << "Line sampling: " << std::endl;
+    scout << "  number of line-searches:      " << NLS << std::endl;
+    scout << "  tolerance of line-search:     " << LS_tol << std::endl;
+    scout << "  max. line-search iterations:  " << LS_max_iter << std::endl;
+    if (use_bisec) {
+    scout << "  line-search algorithm:        " << "bisection method" << std::endl;
+    } else {
+    scout << "  line-search algorithm:        " << "regula falsi / secant method" << std::endl;
+    }
+    scout << "  extended line-search:         " << (extended_ls?"yes":"no") << std::endl;
+    scout << "  --------------------------------------------------------------------" << std::endl;
+  // ------------------------------------------------
+  // initialize data-struct & allocate memory
+  // ------------------------------------------------
+    flxVec rvy(NRV);
+    flxVec rvy_dummy(NRV);
+    LS_data_struct LS_data = { .Nlsf_calls=0, .betaVec=betaVec, .rv_base=rvy, .rv_prop=rvy_dummy, .extended_ls=extended_ls, .lsf_fun=lsf_fun, .RndBox=RndBox, .LS_tol=LS_tol, .LS_max_iter=LS_max_iter, .use_bisec=use_bisec, .verboseLog=verboseLog };
+    const tdouble eq_tol = 1e-2;
+    bool fdright,found;
+  // ------------------------------------------------
+  // perform an initial line search (to adapt the actual tolerance parameter)
+  // ------------------------------------------------
+    {
+      const tdouble c0 = LS_help_perform_line_search(fdright,found,tdouble(0.8),tdouble(1.2),LS_data);
+      scout << "  c0 = " << GlobalVar.Double2String(c0) << std::endl;
+      if (found) {
+        if (c0>ONE) betaVec *= c0;
+      }
+    }
+    const tdouble betaNorm2 = betaVec.get_Norm2_NOroot();
+    const tdouble betaNorm = sqrt(betaNorm2);
+  // ------------------------------------------------
+  // start with the iteration (line searches)
+  // ------------------------------------------------
+    // register the progress-bar
+      scout << "  preform line searches ...      ";
+      FlxProgress prg(scout,show_progress);
+      prg.start(NLS);
+    const tuint N_LSF_calls_1 = LS_data.Nlsf_calls;
+    pdouble PrEst;
+    for (tuint i=0;i<NLS;++i) {
+      LS_data.line_hist.clear();
+      pdouble PrEsti;
+      // propose a random vector from the prior (standard Normal)
+        get_RndCreator().gen_smp(rvy);
+      // create in-plane vector
+        const tdouble c = -(rvy.operator*(betaVec)/betaNorm2);
+        rvy.add(betaVec,c);
+      // perform the line search
+        const tdouble ci = LS_help_perform_line_search(fdright,found,tdouble(0.8),tdouble(1.2),LS_data);
+        if (found) {
+          if (extended_ls) {
+            LS_help_hist_push(ci,ZERO,LS_data);
+          } else {
+            if (fdright) {
+              PrEsti += rv_Phi(-ci*betaNorm);
+            } else {
+              PrEsti += rv_Phi(ci*betaNorm);
+            }
+          }
+        }
+        if (extended_ls) {
+          // search right of 'ci'
+            tdouble cinit = ci+2*ONE;
+            if (2*ONE>cinit||found==false) cinit = 2*ONE;
+            bool fdright2;
+            bool found2 = false;
+            tdouble ci2 = LS_help_LSF_call(cinit,LS_data);
+            if ( (fdright && ci2>=ZERO) || (!fdright && ci2<=ZERO) ) {
+              ci2 = LS_help_perform_line_search(fdright2,found2,ci+(cinit-ci)*0.05,cinit,LS_data);
+              if (found2) {
+                LS_help_hist_push(ci2,ZERO,LS_data);
+              }
+            }
+          // search left of 'ci'
+            if (found) {
+              tdouble ci3;
+              bool found3=true;
+              if (found2 && ci2<ci && fabs(ci2-ci)>eq_tol) {
+                ci3 = ci2;
+                ci2 *= 2;                // just to make it different from ci3!
+              } else {
+                cinit = -ONE;
+                if (ci-2*ONE<cinit && found) cinit = ci-2*ONE;
+                found3=false;
+                ci3 = LS_help_LSF_call(cinit,LS_data);
+                if ( (!fdright && ci3>=ZERO) || (fdright && ci3<=ZERO) ) {
+                  ci3 = LS_help_perform_line_search(fdright2,found3,cinit,ci-(ci-cinit)*0.05,LS_data);
+                  if (found3) {
+                    LS_help_hist_push(ci3,ZERO,LS_data);
+                  }
+                }
+              }
+            }
+        }
+      if (extended_ls) {
+        PrEst += LS_help_hist_eval(betaNorm,LS_data);
+      } else {
+        PrEst += PrEsti;
+      }
+      prg.tick(i+1);
+    }
+    LS_data.line_hist.clear();
+    // deactivate the progress-bar
+      prg.stop();
+  // determin probability
+    tdouble theResult = PrEst.cast2double();
+    theResult /= NLS;
+  // =============================================================
+  // collect and return results
+  // =============================================================
+    // probability of failure
+    GlobalVar.slogcout(4) << " Result of the Integration: " << GlobalVar.Double2String(theResult) << std::endl;
+    res["pf"] = theResult;
+    // number of model calls
+    res["N_lsf_calls"] = LS_data.Nlsf_calls;
+    // calls per line-search
+    const tdouble calls_per_line_search = tdouble(LS_data.Nlsf_calls-N_LSF_calls_1)/tdouble(NLS);
+    res["calls_per_line_search"] = calls_per_line_search;
+    scout << "[" << GlobalVar.Double2String(calls_per_line_search,false,2) << " calls per line]" << std::endl;
+  } catch (FlxException& e) {
+    delete lsf_fun;
+    throw;
+  }
+  return res;
+}
+
+
+
 
 const tdouble FlxObjLineSmpl::LSF_call(const tdouble c, const flxVec& rv_base, flxVec& rv_prop, const flxVec& betaVec, tulong& N_LSF_calls)
 {
@@ -1813,7 +2248,7 @@ void FlxObjLineSmpl::task()
     // deactivate the progress-bar
       prg.stop();
       scout << "[" << GlobalVar.Double2String(tdouble(Nlsf_calls-N_LSF_calls_1)/tdouble(NLS),false,2) << " calls per line]" << std::endl;
-  // determin probability
+  // determine probability
     theResult = PrEst.cast2double();
     theResult /= NLS;
   // output ...

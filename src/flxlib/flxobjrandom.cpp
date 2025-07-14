@@ -1785,6 +1785,7 @@ py::dict perform_Line_Sampling(py::object lsf, py::array_t<tdouble> u_star, flxP
     const tuint LS_max_iter = parse_py_para_as_tuintNo0("ls_max_iter", config, false, 10);
     const bool verboseLog = parse_py_para_as_bool("verboseLog", config, false, false);
     const bool show_progress = parse_py_para_as_bool("show_progress",config,false,true);
+    // dataBox for storing/post-processing samples
     flxDataBox* dbox = nullptr;
     if (config.contains("data_box")) {
       dbox = &(parse_py_obj_as_flxDataBox(config["data_box"],"'data_box' in 'config'"));

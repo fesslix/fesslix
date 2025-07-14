@@ -444,10 +444,7 @@ class FlxObjReadIpS : public FlxObjReadMCI {
 
 //======================== Line Sampling ===========================
 
-
-
 PYBIND11_EXPORT py::dict perform_Line_Sampling(py::object lsf, py::array_t<tdouble> u_star, flxPySampler& sampler, py::dict config);
-
 
 
 /**

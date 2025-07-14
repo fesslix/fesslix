@@ -267,6 +267,13 @@ class PYBIND11_EXPORT flxDataBox {
 
 };
 
+/**
+* @brief returns a flxVec from a Python object
+*
+* Internally, a reference to the numpy array is returned.
+*/
+PYBIND11_EXPORT flxDataBox& parse_py_obj_as_flxDataBox(py::object obj, std::string descr);
+
 
 // #################################################################################
 // flxPySampler

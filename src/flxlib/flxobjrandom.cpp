@@ -623,21 +623,27 @@ flxDataBox::~flxDataBox()
 void flxDataBox::ensure_M(const tuint M_) const
 {
   if (M_!=M) {
-    throw FlxException("flxDataBox::ensure_M", "Mismatch in dimension of input vector.");
+    std::ostringstream ssV;
+    ssV << "Mismatch in dimension of vector: {M=" << M << "} vs {M_=" << M_ << "}";
+    throw FlxException("flxDataBox::ensure_M", ssV.str());
   }
 }
 
 void flxDataBox::ensure_M_in(const tuint M_) const
 {
   if (M_!=M_in) {
-    throw FlxException("flxDataBox::ensure_M_in", "Mismatch in dimension of input vector.");
+    std::ostringstream ssV;
+    ssV << "Mismatch in dimension of input vector: {M_in=" << M_in << "} vs {M_=" << M_ << "}";
+    throw FlxException("flxDataBox::ensure_M_in", ssV.str());
   }
 }
 
 void flxDataBox::ensure_M_out(const tuint M_) const
 {
   if (M_!=M_out) {
-    throw FlxException("flxDataBox::ensure_M_out", "Mismatch in dimension of output vector.");
+    std::ostringstream ssV;
+    ssV << "Mismatch in dimension of input vector: {M_out=" << M_out << "} vs {M_=" << M_ << "}";
+    throw FlxException("flxDataBox::ensure_M_out", ssV.str());
   }
 }
 
@@ -969,6 +975,15 @@ post_proc_base& flxDataBox::register_post_processor(py::dict config)
   // append it to pp_vec
     pp_vec.push_back(pp_ptr);
   return *pp_ptr;
+}
+
+flxDataBox& parse_py_obj_as_flxDataBox(py::object obj, std::string descr)
+{
+  if (py::isinstance<flxDataBox>(obj)) {
+    return obj.cast<flxDataBox&>();
+  } else {
+    throw FlxException_NeglectInInteractive("parse_py_obj_as_flxDataBox", descr + " cannot be cast into type '<dict>'.");
+  }
 }
 
 // #################################################################################
@@ -1479,6 +1494,7 @@ struct LS_data_struct {
   const tuint LS_max_iter;
   const bool use_bisec;
   const bool verboseLog;
+  flxDataBox* dbox;
 };
 
 
@@ -1563,6 +1579,11 @@ const tdouble LS_help_LSF_call(const tdouble c, LS_data_struct& LS_data)
   const tdouble res = LS_data.lsf_fun->calc();
   if (LS_data.extended_ls) {
     LS_help_hist_push(c,res,LS_data);
+  }
+  if (LS_data.dbox) {
+    LS_data.dbox->vec_in = LS_data.rv_prop;
+    LS_data.dbox->vec_out[0] = res;
+    LS_data.dbox->append_data();
   }
   return res;
 }
@@ -1764,6 +1785,12 @@ py::dict perform_Line_Sampling(py::object lsf, py::array_t<tdouble> u_star, flxP
     const tuint LS_max_iter = parse_py_para_as_tuintNo0("ls_max_iter", config, false, 10);
     const bool verboseLog = parse_py_para_as_bool("verboseLog", config, false, false);
     const bool show_progress = parse_py_para_as_bool("show_progress",config,false,true);
+    flxDataBox* dbox = nullptr;
+    if (config.contains("data_box")) {
+      dbox = &(parse_py_obj_as_flxDataBox(config["data_box"],"'data_box' in 'config'"));
+      dbox->ensure_M_in(NRV);
+      dbox->ensure_M_out(1);
+    }
   // ------------------------------------------------
   // initial output
   // ------------------------------------------------
@@ -1784,7 +1811,7 @@ py::dict perform_Line_Sampling(py::object lsf, py::array_t<tdouble> u_star, flxP
   // ------------------------------------------------
     flxVec rvy(NRV);
     flxVec rvy_dummy(NRV);
-    LS_data_struct LS_data = { .Nlsf_calls=0, .betaVec=betaVec, .rv_base=rvy, .rv_prop=rvy_dummy, .extended_ls=extended_ls, .lsf_fun=lsf_fun, .RndBox=RndBox, .LS_tol=LS_tol, .LS_max_iter=LS_max_iter, .use_bisec=use_bisec, .verboseLog=verboseLog };
+    LS_data_struct LS_data = { .Nlsf_calls=0, .betaVec=betaVec, .rv_base=rvy, .rv_prop=rvy_dummy, .extended_ls=extended_ls, .lsf_fun=lsf_fun, .RndBox=RndBox, .LS_tol=LS_tol, .LS_max_iter=LS_max_iter, .use_bisec=use_bisec, .verboseLog=verboseLog, .dbox=dbox };
     const tdouble eq_tol = 1e-2;
     bool fdright,found;
   // ------------------------------------------------

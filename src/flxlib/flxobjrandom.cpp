@@ -1904,6 +1904,8 @@ py::dict perform_Line_Sampling(py::object lsf, py::array_t<tdouble> u_star, flxP
     const tdouble calls_per_line_search = tdouble(LS_data.Nlsf_calls-N_LSF_calls_1)/tdouble(NLS);
     res["calls_per_line_search"] = calls_per_line_search;
     scout << "[" << GlobalVar.Double2String(calls_per_line_search,false,2) << " calls per line]" << std::endl;
+    // properties of the algorithm
+    res["n_ls"] = NLS;
   } catch (FlxException& e) {
     delete lsf_fun;
     throw;

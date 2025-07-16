@@ -247,7 +247,7 @@ py::dict flxPyGP::info()
 
 flxGP_AKMCS::flxGP_AKMCS(py::dict config)
 : RndBox(nullptr), lsf(nullptr), gp_ptr(nullptr), gp_mci(nullptr),
-    iterMax(500), NmaxSur(10000000), Nsmpls(1000000), last_state(akmcs_status::undefined), err_thresh(0.3)
+    iterMax(500), NmaxSur(10000000), Nsmpls(1000000), last_state(akmcs_status::undefined), err_thresh(0.3), N_model_calls(0)
 {
     try {
         // ====================================================
@@ -346,6 +346,7 @@ const bool flxGP_AKMCS::eval_model(flxVec& y_vec)
     // evaluate the model
         RndBox->set_smp(y_vec);
         const tdouble lsf_val = lsf->calc();
+        ++N_model_calls;
     // register the call
         gp_mci->register_sample(lsf_val,y_vec);
     return true;
@@ -435,6 +436,15 @@ flxPyGP flxGP_AKMCS::get_GP()
     return flxPyGP(gp_ptr);
 }
 
+const tuint flxGP_AKMCS::get_N_model_calls(const bool only_from_current_run) const
+{
+    if (only_from_current_run) {
+        return N_model_calls;
+    } else {
+        return gp_mci->get_N_model_calls();
+    }
+}
+
 // #################################################################################
 // Expose interface to Python
 // #################################################################################
@@ -470,6 +480,7 @@ PYBIND11_MODULE(gpr, m) {
             .def("initialize_with_LHS", &flxGP_AKMCS::initialize_with_LHS, pybind11::arg("N")=0, "Initialize AK-MCS using N Latin-hypercube samples.")
             .def("simulate", &flxGP_AKMCS::simulate, "Perform a single simulation step using the surrogate model.")
             .def("get_GP", &flxGP_AKMCS::get_GP, "Retrieve a reference to the internal Gaussian process.")
+            .def("get_N_model_calls", &flxGP_AKMCS::get_N_model_calls, pybind11::arg("only_from_current_run") = true, "Retrieve total number of calls of the actual limit-state function.")
             .def_readwrite("res", &flxGP_AKMCS::res, "The result dictionary of 'simulate()'.");
             ;
 }

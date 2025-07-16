@@ -113,6 +113,8 @@ class PYBIND11_EXPORT flxGP_AKMCS {
         akmcs_status last_state;
       // threshold for stopping criterion
         tdouble err_thresh;
+      // number of LSF-calls in the current instance
+        tuint N_model_calls;
 
     void free_mem();
     const bool eval_model(flxVec& y_vec);
@@ -131,6 +133,8 @@ class PYBIND11_EXPORT flxGP_AKMCS {
     void initialize_with_LHS(tuint N);
     akmcs_status simulate();
     flxPyGP get_GP();
+
+    const tuint get_N_model_calls(const bool only_from_current_run) const;
 
 };
 

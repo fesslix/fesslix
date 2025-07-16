@@ -249,6 +249,26 @@ py::dict flxPyGP::info()
 // AK-MCS
 // #################################################################################
 
+const std::string map_akmcs_status_to_string(akmcs_status status)
+{
+    switch (status) {
+        case akmcs_status::undefined:
+            return "undefined";
+        case akmcs_status::defined:
+            return "defined";
+        case akmcs_status::evalLSF:
+            return "evalLSF";
+        case akmcs_status::increase_N_surrogate:
+            return "increase_N_surrogate";
+        case akmcs_status::stop_success:
+            return "stop_success";
+        case akmcs_status::stop_iterLimit:
+            return "stop_iterLimit";
+        default:
+            throw FlxException_Crude("map_akmcs_status_to_string");
+    }
+}
+
 flxGP_AKMCS::flxGP_AKMCS(py::dict config)
 : RndBox(nullptr), dBox_ptr(nullptr), lsf(nullptr), gp_ptr(nullptr), gp_mci(nullptr),
     iterMax(500), NmaxSur(10000000), Nsmpls(1000000), last_state(akmcs_status::undefined), err_thresh(0.3), N_model_calls(0)
@@ -468,6 +488,19 @@ akmcs_status flxGP_AKMCS::simulate()
         return last_state;
 }
 
+akmcs_status flxGP_AKMCS::simulate_(const tuint N) {
+    if (N<=0) return simulate();
+    akmcs_status state;
+    for (tuint i=0;i<N;++i) {
+        state = simulate();
+        GlobalVar.slogcout(3) << i << ": " << map_akmcs_status_to_string(state) << " » " << py::str(res) << std::endl;
+        if (state == akmcs_status::stop_success or state == akmcs_status::stop_iterLimit) {
+            return state;
+        }
+    }
+    return state;
+}
+
 flxPyGP flxGP_AKMCS::get_GP()
 {
     return flxPyGP(gp_ptr);
@@ -550,7 +583,7 @@ PYBIND11_MODULE(gpr, m) {
         py::class_<flxGP_AKMCS>(m, "akmcs")
             .def(py::init<py::dict>())
             .def("initialize_with_LHS", &flxGP_AKMCS::initialize_with_LHS, pybind11::arg("N")=0, "Initialize AK-MCS using N Latin-hypercube samples.")
-            .def("simulate", &flxGP_AKMCS::simulate, "Perform a single simulation step using the surrogate model.")
+            .def("simulate", &flxGP_AKMCS::simulate_, pybind11::arg("N")=0, "Perform a single simulation step using the surrogate model.")
             .def("get_GP", &flxGP_AKMCS::get_GP, "Retrieve a reference to the internal Gaussian process.")
             .def("get_N_model_calls", &flxGP_AKMCS::get_N_model_calls, pybind11::arg("only_from_current_run") = true, "Retrieve total number of calls of the actual limit-state function.")
             .def_readwrite("res", &flxGP_AKMCS::res, "The result dictionary of 'simulate()'.");

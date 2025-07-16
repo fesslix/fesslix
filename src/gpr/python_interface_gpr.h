@@ -91,6 +91,7 @@ enum class akmcs_status {
     stop_success,         // stop is recommended
     stop_iterLimit        // maximum number of surrogate samples is exceeded
 };
+const std::string map_akmcs_status_to_string(akmcs_status status);
 
 class PYBIND11_EXPORT flxGP_AKMCS {
   private:
@@ -137,6 +138,7 @@ class PYBIND11_EXPORT flxGP_AKMCS {
     void initialize_with_LHS(tuint N);
     void initialize_with_sample(const flxVec& y_vec, const tdouble lsf_val);
     akmcs_status simulate();
+    akmcs_status simulate_(const tuint N);
     flxPyGP get_GP();
 
     const tuint get_N_model_calls(const bool only_from_current_run) const;

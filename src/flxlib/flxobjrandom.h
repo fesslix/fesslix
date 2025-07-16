@@ -20,7 +20,7 @@
 #include "flxobjects.h"
 #include "flxBayUp.h"
 
-void register_dataBox_post_processors();
+FLXLIB_EXPORT void register_dataBox_post_processors();
 
 class FLXLIB_EXPORT FlxCreateObjReaders_RND : public FlxCreateObjReaders {
   public:

@@ -31,7 +31,7 @@
 
 namespace py = pybind11;
 
-
+void register_dataBox_post_processors_gpr();
 
 // #################################################################################
 // Gaussian processes
@@ -135,6 +135,7 @@ class PYBIND11_EXPORT flxGP_AKMCS {
     flxGP_AKMCS& operator=(const flxGP_AKMCS& rhs) = delete;
 
     void initialize_with_LHS(tuint N);
+    void initialize_with_sample(const flxVec& y_vec, const tdouble lsf_val);
     akmcs_status simulate();
     flxPyGP get_GP();
 
@@ -142,6 +143,18 @@ class PYBIND11_EXPORT flxGP_AKMCS {
 
 };
 
+
+
+class PYBIND11_EXPORT post_proc_akmcs : public post_proc_base {
+  private:
+    py::object akmcs_obj;
+    flxGP_AKMCS* akmcs_ptr;
+  public:
+    post_proc_akmcs(py::dict config, flxDataBox& dBox);
+
+    virtual void append_data(const flxVec& vec_full);
+    virtual py::dict eval();
+};
 
 
 

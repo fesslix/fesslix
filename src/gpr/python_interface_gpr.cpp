@@ -22,6 +22,10 @@
 #include "flxparse.h"
 #include "flxobjrandom.h"
 
+void register_dataBox_post_processors_gpr()
+{
+  flxDataBox::postProc_map["akmcs"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_akmcs(cfg, dBox); };
+}
 
 // #################################################################################
 // Gaussian processes
@@ -390,6 +394,16 @@ void flxGP_AKMCS::initialize_with_LHS(tuint N)
     last_state = akmcs_status::undefined;
 }
 
+void flxGP_AKMCS::initialize_with_sample(const flxVec& y_vec, const tdouble lsf_val)
+{
+    // make sure point has not been considered before
+        if (gp_mci->is_point_unique(y_vec)==false) {
+            throw FlxException("flxGP_AKMCS::initialize_with_sample_01", "Sample to add is not unique.");
+        }
+    gp_mci->register_sample(lsf_val,y_vec);
+    last_state = akmcs_status::undefined;
+}
+
 akmcs_status flxGP_AKMCS::simulate()
 {
     // perform action based on recommendation form last call of simulate()
@@ -468,11 +482,46 @@ const tuint flxGP_AKMCS::get_N_model_calls(const bool only_from_current_run) con
     }
 }
 
+post_proc_akmcs::post_proc_akmcs(py::dict config, flxDataBox& dBox)
+: akmcs_ptr(nullptr)
+{
+    if (config.contains("akmcs")) {
+        py::object tmp_obj = config["akmcs"];
+        if (py::isinstance<flxGP_AKMCS>(tmp_obj)) {
+            akmcs_obj = tmp_obj;
+            flxGP_AKMCS &akmcs_obj_ref = akmcs_obj.cast<flxGP_AKMCS &>();
+            akmcs_ptr = &akmcs_obj_ref;
+        } else {
+            throw FlxException_NeglectInInteractive("post_proc_akmcs::post_proc_akmcs_01", "'akmcs' in 'config' is not of type <flx.gpr.akmcs>.");
+        }
+    } else {
+        throw FlxException_NeglectInInteractive("post_proc_akmcs::post_proc_akmcs_99", "'akmcs' not found in 'config'.");
+    }
+}
+
+void post_proc_akmcs::append_data(const flxVec& vec_full)
+{
+    if (akmcs_ptr==nullptr) {
+        throw FlxException_Crude("post_proc_akmcs::append_data");
+    }
+    const tdouble lsf_val = vec_full[0];
+    flxVec y_vec(vec_full.get_tmp_vptr_const()+1,vec_full.get_N()-1);
+    akmcs_ptr->initialize_with_sample(y_vec,lsf_val);
+}
+
+py::dict post_proc_akmcs::eval()
+{
+    py::dict res;
+    res["akmcs"] = akmcs_obj;
+    return res;
+}
+
 // #################################################################################
 // Expose interface to Python
 // #################################################################################
 
 PYBIND11_MODULE(gpr, m) {
+    register_dataBox_post_processors_gpr();
     // ====================================================
     // Gaussian processes
     // ====================================================

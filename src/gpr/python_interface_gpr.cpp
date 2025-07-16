@@ -497,7 +497,7 @@ akmcs_status flxGP_AKMCS::simulate_(const tuint N) {
     akmcs_status state;
     for (tuint i=0;i<N;++i) {
         state = simulate();
-        GlobalVar.slogcout(3) << i << ": " << map_akmcs_status_to_string(state) << " » " << py::str(res) << std::endl;
+        GlobalVar.slogcout(3) << i << ": " << map_akmcs_status_to_string(state) << " :: " << py::str(res) << std::endl;
         if (state == akmcs_status::stop_success or state == akmcs_status::stop_iterLimit) {
             return state;
         }

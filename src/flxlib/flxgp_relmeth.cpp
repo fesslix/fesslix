@@ -29,9 +29,9 @@ rng_type randgen_local;
 const tuint N_MCS_tqi = 1000;
 
 
-flxGP_MCI::flxGP_MCI(flxGPProj_base& gp, const tuint Nreserve, const tuint user_seed_int, const tuint user_init_calls, const tdouble tqi_val)
+flxGP_MCI::flxGP_MCI(flxGPProj_base& gp, const tuint Nreserve, const tuint user_seed_int, const tuint user_init_calls, const tdouble tqi_val, const bool allow_decrease_of_N)
 : gp(gp), Ndim(gp.get_Ndim()), user_seed_int(user_seed_int), user_init_calls(user_init_calls), tqi_val(tqi_val), tqi_vec(N_MCS_tqi), tqi_vec_rv_u(N_MCS_tqi), id_next_point(0),
-  static_sum(ZERO),last_m(ZERO), last_n(ZERO)
+  static_sum(ZERO),last_m(ZERO), last_n(ZERO), allow_decrease_of_N(allow_decrease_of_N)
 {
     dmV.reserve(Ndim*Nreserve);
     doV.reserve(Nreserve);
@@ -378,7 +378,7 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
         // 1: increase surrogate samples
         // 2: stop
         // 3: call actual LSF/model AND reduce surrogate samples
-        if (tqi_1LSF_N_half < tqi_2N) {
+        if (allow_decrease_of_N && tqi_1LSF_N_half < tqi_2N) {
             proposed_action_id = 3;
         } else if (tqi_2N<=tqi_1LSF) {
             proposed_action_id = 1;

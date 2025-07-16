@@ -34,6 +34,7 @@ class PYBIND11_EXPORT flxGP_MCI {
     const tuint user_seed_int;    // seed value for the random number generator
     const tuint user_init_calls;  // number of initial calls to the random number generator
     const tdouble tqi_val;        // quantile value for evaluating stopping criterion (0.99 by default)
+    const bool allow_decrease_of_N;
     std::vector<tdouble> dmV;     // training set: X
     std::vector<tdouble> doV;     // training set: Y
     std::vector<tdouble> mcs_pi;  // vector of 0-1 probabilities in the Monte Carlo simulation
@@ -65,7 +66,7 @@ class PYBIND11_EXPORT flxGP_MCI {
     * @param Ndim number of uncertain model parameters
     * @param Nreserve intented (maximum) number of runs of the 'actual' model
     */
-    flxGP_MCI(flxGPProj_base& gp, const tuint Nreserve, const tuint user_seed_int, const tuint user_init_calls, const tdouble tqi_val);
+    flxGP_MCI(flxGPProj_base& gp, const tuint Nreserve, const tuint user_seed_int, const tuint user_init_calls, const tdouble tqi_val, const bool allow_decrease_of_N);
     virtual ~flxGP_MCI() {}
 
     void assemble_lh_samples(flxVec& lh_samples);

@@ -29,8 +29,8 @@ rng_type randgen_local;
 const tuint N_MCS_tqi = 1000;
 
 
-flxGP_MCI::flxGP_MCI(flxGPProj_base& gp, const tuint Nreserve, const tuint user_seed_int, const tuint user_init_calls)
-: gp(gp), Ndim(gp.get_Ndim()), user_seed_int(user_seed_int), user_init_calls(user_init_calls), tqi_vec(N_MCS_tqi), tqi_vec_rv_u(N_MCS_tqi), id_next_point(0),
+flxGP_MCI::flxGP_MCI(flxGPProj_base& gp, const tuint Nreserve, const tuint user_seed_int, const tuint user_init_calls, const tdouble tqi_val)
+: gp(gp), Ndim(gp.get_Ndim()), user_seed_int(user_seed_int), user_init_calls(user_init_calls), tqi_val(tqi_val), tqi_vec(N_MCS_tqi), tqi_vec_rv_u(N_MCS_tqi), id_next_point(0),
   static_sum(ZERO),last_m(ZERO), last_n(ZERO)
 {
     dmV.reserve(Ndim*Nreserve);
@@ -119,7 +119,7 @@ const tdouble flxGP_MCI::tqi_eval(const tdouble m, const tdouble n) const
     //return m/n;
     //return (m+ONE)/(n+2*ONE);
     // return iBeta_reg_inv(m+ONE,n-m+ONE,0.95);
-    return iBeta_reg_inv(m+ONE,n-m+ONE,0.99);
+    return iBeta_reg_inv(m+ONE,n-m+ONE,tqi_val);
 }
 
 struct tqi_struct {
@@ -204,12 +204,12 @@ const tdouble flxGP_MCI::get_mean_tqi(const tdouble ref_m, const tulong n, const
         if (tqvm>GlobalVar.TOL()) {
             tqi_vec *= (ref_m*nrep)/tqvm;
         }
-    // root search of 99%-quantile
+    // root search of tqi_val=99%-quantile
         tqi_struct tqis;
         tqis.tqi_vec = &tqi_vec;
         tqis.n = n*nrep;
         tqis.pf_ref = (ref_m+ONE)/(n*nrep+2*ONE);
-        tqis.q = 0.99;
+        tqis.q = tqi_val;
         const tdouble x_rs_res = flx_RootSearch_RegulaFalsi(tqi_rsfun,&tqis,log(1.),log(std::min(100.,(ONE-1e-7)/tqis.pf_ref)),1e-4,1e-4*tqis.pf_ref,NULL);  // &GlobalVar.slogcout(1)
         return exp(x_rs_res)*tqis.pf_ref;
 
@@ -392,7 +392,7 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
         res["N"] = Nsmpls;
         res["N_model_calls"] = get_N_model_calls();
         res["Uval_worst_point"] = Uval_worst_point;
-        res["Pr_q_99"] = tqi*mean_pf_bayesian;  // Pr[pf<p]≈99%
+        res["Pr_q_tqi"] = tqi*mean_pf_bayesian;  // Pr[pf<p]≈tqi=99%
     return res;
 }
 

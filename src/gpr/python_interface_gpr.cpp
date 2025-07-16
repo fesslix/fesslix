@@ -342,7 +342,11 @@ flxGP_AKMCS::flxGP_AKMCS(py::dict config)
         const tuint seed_id = parse_py_para_as_tuint("seed",config,false,0);
         const tuint N_RNG_init = parse_py_para_as_tuint("N_RNG_init",config,false,0);
         const tuint N_reserve = parse_py_para_as_tuintNo0("N_reserve",config,false,10000);
-        gp_mci = new flxGP_MCI(*gp_ptr,N_reserve,seed_id,N_RNG_init);
+        const tdouble tqi_val = parse_py_para_as_floatPosNo0("tqi_val",config,false,0.99);
+        if (tqi_val<=ONE/2 || tqi_val>=ONE) {
+            throw FlxException("flxGP_AKMCS::flxGP_AKMCS_99", "'tqi_val' is not within the required bounds (0.5,1.0).");
+        }
+        gp_mci = new flxGP_MCI(*gp_ptr,N_reserve,seed_id,N_RNG_init,tqi_val);
         iterMax = parse_py_para_as_tuintNo0("itermax",config,false,500);
         NmaxSur = parse_py_para_as_tulong("NmaxSur",config,false,10000000);
         Nsmpls = parse_py_para_as_tulong("Nsmpls",config,false,1000000);

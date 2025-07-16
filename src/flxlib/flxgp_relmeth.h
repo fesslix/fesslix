@@ -33,6 +33,7 @@ class PYBIND11_EXPORT flxGP_MCI {
     const tuint Ndim;             // number of basic random variables of the problem
     const tuint user_seed_int;    // seed value for the random number generator
     const tuint user_init_calls;  // number of initial calls to the random number generator
+    const tdouble tqi_val;        // quantile value for evaluating stopping criterion (0.99 by default)
     std::vector<tdouble> dmV;     // training set: X
     std::vector<tdouble> doV;     // training set: Y
     std::vector<tdouble> mcs_pi;  // vector of 0-1 probabilities in the Monte Carlo simulation
@@ -48,9 +49,9 @@ class PYBIND11_EXPORT flxGP_MCI {
     void init_RNG();
 
     /**
-    * @brief 99%-quantile of posterior beta distribution for 'm' hits in 'n' samples (with uniform prior)
+    * @brief tqi_val-quantile of posterior beta distribution for 'm' hits in 'n' samples (with uniform prior)
     *
-    * i.e., this function returns the expected sampling uncertainty WITHOUT Kirging
+    * i.e., this function returns the expected sampling uncertainty WITHOUT Kriging
     */
     const tdouble tqi_eval(const tdouble m, const tdouble n) const;
     const tdouble tqi_eval_covar() const;
@@ -64,7 +65,7 @@ class PYBIND11_EXPORT flxGP_MCI {
     * @param Ndim number of uncertain model parameters
     * @param Nreserve intented (maximum) number of runs of the 'actual' model
     */
-    flxGP_MCI(flxGPProj_base& gp, const tuint Nreserve, const tuint user_seed_int, const tuint user_init_calls);
+    flxGP_MCI(flxGPProj_base& gp, const tuint Nreserve, const tuint user_seed_int, const tuint user_init_calls, const tdouble tqi_val);
     virtual ~flxGP_MCI() {}
 
     void assemble_lh_samples(flxVec& lh_samples);

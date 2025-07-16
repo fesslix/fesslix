@@ -88,6 +88,7 @@ enum class akmcs_status {
     defined,              // internal state, nothing to do
     evalLSF,              // requires a model call to worst point
     increase_N_surrogate, // requires an increase of surrogate samples
+    decrease_N_surrogate, // requires an increase of surrogate samples
     stop_success,         // stop is recommended
     stop_iterLimit        // maximum number of surrogate samples is exceeded
 };
@@ -114,6 +115,8 @@ class PYBIND11_EXPORT flxGP_AKMCS {
         tulong NmaxSur;
       // current number of surrogate samples
         tulong Nsmpls;
+      // initial number of surrogate samples
+        tulong Nsmpls_ini;
       // last status after calling simulate()
         akmcs_status last_state;
       // threshold for stopping criterion

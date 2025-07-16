@@ -260,6 +260,8 @@ const std::string map_akmcs_status_to_string(akmcs_status status)
             return "evalLSF";
         case akmcs_status::increase_N_surrogate:
             return "increase_N_surrogate";
+        case akmcs_status::decrease_N_surrogate:
+            return "decrease_N_surrogate";
         case akmcs_status::stop_success:
             return "stop_success";
         case akmcs_status::stop_iterLimit:
@@ -271,7 +273,7 @@ const std::string map_akmcs_status_to_string(akmcs_status status)
 
 flxGP_AKMCS::flxGP_AKMCS(py::dict config)
 : RndBox(nullptr), dBox_ptr(nullptr), lsf(nullptr), gp_ptr(nullptr), gp_mci(nullptr),
-    iterMax(500), NmaxSur(10000000), Nsmpls(1000000), last_state(akmcs_status::undefined), err_thresh(0.3), N_model_calls(0)
+    iterMax(500), NmaxSur(10000000), Nsmpls(1000000), Nsmpls_ini(0), last_state(akmcs_status::undefined), err_thresh(0.3), N_model_calls(0)
 {
     try {
         // ====================================================
@@ -351,6 +353,7 @@ flxGP_AKMCS::flxGP_AKMCS(py::dict config)
         NmaxSur = parse_py_para_as_tulong("NmaxSur",config,false,10000000);
         Nsmpls = parse_py_para_as_tulong("Nsmpls",config,false,1000000);
         if (Nsmpls<1000) Nsmpls = 1000;
+        Nsmpls_ini = Nsmpls;
         const tdouble err_thresh_ = parse_py_para_as_float("err_thresh",config,false,0.3);
         if (err_thresh_>ZERO) {
             err_thresh = err_thresh_;
@@ -430,6 +433,13 @@ void flxGP_AKMCS::initialize_with_sample(const flxVec& y_vec, const tdouble lsf_
 
 akmcs_status flxGP_AKMCS::simulate()
 {
+    // in case the number of surrogate samples are to be decreased
+        if (last_state==akmcs_status::decrease_N_surrogate) {
+            if (Nsmpls/2>Nsmpls_ini) {  // yes, we can decrease the number
+                Nsmpls/=2;
+            }
+            last_state = akmcs_status::evalLSF;  // additionally, we want to call the actual model
+        }
     // perform action based on recommendation form last call of simulate()
         switch (last_state) {
             case akmcs_status::undefined:
@@ -466,10 +476,10 @@ akmcs_status flxGP_AKMCS::simulate()
             case akmcs_status::stop_iterLimit:
                 return last_state;
             default:
-                throw FlxException_Crude("flxGP_AKMCS::simulate_02");
+                throw FlxException_Crude("flxGP_AKMCS::simulate_03");
         }
         if (last_state!=akmcs_status::defined) {
-            throw FlxException_Crude("flxGP_AKMCS::simulate_03");
+            throw FlxException_Crude("flxGP_AKMCS::simulate_04");
         }
     // perform the sampling
         tdouble err;
@@ -487,6 +497,9 @@ akmcs_status flxGP_AKMCS::simulate()
         if (proposed_action_id==1) {
             last_state = akmcs_status::increase_N_surrogate;
             return last_state;
+        } else if (proposed_action_id==3) {
+            last_state = akmcs_status::decrease_N_surrogate;
+            return last_state;
         }
         last_state = akmcs_status::evalLSF;
         return last_state;
@@ -497,7 +510,7 @@ akmcs_status flxGP_AKMCS::simulate_(const tuint N) {
     akmcs_status state;
     for (tuint i=0;i<N;++i) {
         state = simulate();
-        GlobalVar.slogcout(3) << i << ": " << map_akmcs_status_to_string(state) << " :: " << py::str(res) << std::endl;
+        GlobalVar.slogcout(3) << (i+1) << ": " << map_akmcs_status_to_string(state) << " :: " << py::str(res) << std::endl;
         if (state == akmcs_status::stop_success or state == akmcs_status::stop_iterLimit) {
             return state;
         }
@@ -581,6 +594,7 @@ PYBIND11_MODULE(gpr, m) {
             .value("defined", akmcs_status::defined)
             .value("evalLSF", akmcs_status::evalLSF)
             .value("increase_N_surrogate", akmcs_status::increase_N_surrogate)
+            .value("decrease_N_surrogate", akmcs_status::decrease_N_surrogate)
             .value("stop_success", akmcs_status::stop_success)
             .value("stop_iterLimit", akmcs_status::stop_iterLimit)
             .export_values();

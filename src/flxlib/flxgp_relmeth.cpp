@@ -150,7 +150,7 @@ double tqi_rsfun(const tdouble x, void *params)
     return s/N_MCS_tqi-q;
 }
 
-const tdouble flxGP_MCI::get_mean_tqi(const tdouble ref_m, const tulong n, const tulong* skip_id, const tuint nrep)
+const tdouble flxGP_MCI::get_mean_tqi(const tdouble ref_m, const tulong n, const tulong* skip_id, const tdouble nrep)
 {
     // Variant: in case of skip_id, assume we can fully reduce Kiriging-uncertainty
         if (skip_id) {
@@ -370,12 +370,17 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
         // estimated E[tqi] if one more LSF call is invested
             const tdouble tqi_1LSF = get_mean_tqi(mean_m,Nsmpls,&id_worst_mcspi)/mean_pf_bayesian;
         // estimated E[tqi] if twice as much surrogate samples are unsed
-            const tdouble tqi_2N = get_mean_tqi(mean_m,Nsmpls,nullptr,2)/mean_pf_bayesian;
+            const tdouble tqi_2N = get_mean_tqi(mean_m,Nsmpls,nullptr,2*ONE)/mean_pf_bayesian;
+        // estimated E[tqi] if one more LSF call is invested AND the number of surrogate samples is halfed
+            const tdouble tqi_1LSF_N_half = get_mean_tqi(mean_m,Nsmpls,&id_worst_mcspi,ONE/2)/mean_pf_bayesian;
     // recommend an action
         // 0: call actual LSF/model
         // 1: increase surrogate samples
         // 2: stop
-        if (tqi_2N<=tqi_1LSF) {
+        // 3: call actual LSF/model AND reduce surrogate samples
+        if (tqi_1LSF_N_half < tqi_2N) {
+            proposed_action_id = 3;
+        } else if (tqi_2N<=tqi_1LSF) {
             proposed_action_id = 1;
         }
         const tdouble af = (tqi_2N-tqi_1LSF)/tqi;
@@ -388,6 +393,7 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
         res["r"] = tqi;
         res["r_increase_N_surrogate"] = tqi_2N;
         res["r_no_Kriging_uncertainty"] = tqi_eval(mean_m,Nsmpls)/mean_pf_bayesian;
+        res["r_no_Kriging_uncertainty_AND_N_half"] = tqi_1LSF_N_half;
         res["propose_to_increase_N_smpls_surrogate"] = proposed_action_id;
         res["N"] = Nsmpls;
         res["N_model_calls"] = get_N_model_calls();

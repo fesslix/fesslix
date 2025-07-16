@@ -56,7 +56,7 @@ class PYBIND11_EXPORT flxGP_MCI {
     const tdouble tqi_eval(const tdouble m, const tdouble n) const;
     const tdouble tqi_eval_covar() const;
     const tdouble tqi_eval_pr(const tdouble p) const;
-    const tdouble get_mean_tqi(const tdouble ref_m, const tulong n, const tulong* skip_id=NULL, const tuint nrep=1);
+    const tdouble get_mean_tqi(const tdouble ref_m, const tulong n, const tulong* skip_id=NULL, const tdouble nrep=ONE);
 
     void generate_sample(flxVec &uvec_);
   public:

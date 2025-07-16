@@ -390,6 +390,7 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
         res["r_no_Kriging_uncertainty"] = tqi_eval(mean_m,Nsmpls)/mean_pf_bayesian;
         res["propose_to_increase_N_smpls_surrogate"] = proposed_action_id;
         res["N"] = Nsmpls;
+        res["N_model_calls"] = get_N_model_calls();
         res["Uval_worst_point"] = Uval_worst_point;
         res["Pr_q_99"] = tqi*mean_pf_bayesian;  // Pr[pf<p]≈99%
     return res;

@@ -246,7 +246,7 @@ py::dict flxPyGP::info()
 // #################################################################################
 
 flxGP_AKMCS::flxGP_AKMCS(py::dict config)
-: RndBox(nullptr), lsf(nullptr), gp_ptr(nullptr), gp_mci(nullptr),
+: RndBox(nullptr), dBox_ptr(nullptr), lsf(nullptr), gp_ptr(nullptr), gp_mci(nullptr),
     iterMax(500), NmaxSur(10000000), Nsmpls(1000000), last_state(akmcs_status::undefined), err_thresh(0.3), N_model_calls(0)
 {
     try {
@@ -261,12 +261,29 @@ flxGP_AKMCS::flxGP_AKMCS(py::dict config)
                 flxPySampler &sampler_obj_ref = gp_obj.cast<flxPySampler &>();
                 RndBox = sampler_obj_ref.get_ptr_RndBox();
             } else {
-                throw FlxException_NeglectInInteractive("flxGP_AKMCS::flxGP_AKMCS_s01", "'gp' in 'config' is not of type <flx.gpr.gp>.");
+                throw FlxException_NeglectInInteractive("flxGP_AKMCS::flxGP_AKMCS_s01", "'sampler' in 'config' is not of type <flx.sampler>.");
             }
         } else {
             throw FlxException_NeglectInInteractive("flxGP_AKMCS::flxGP_AKMCS_s02", "'sampler' not found in 'config'.");
         }
         const tuint M = RndBox->get_NRV();
+        // ====================================================
+        // initialize the dataBox
+        // ====================================================
+        if (config.contains("data_box")) {
+            py::object py_dataBox_class = py::module_::import("fesslix.core").attr("dataBox");  // Get the actual class from the original module
+            py::object tmp_obj = config["data_box"];
+            if (py::isinstance(tmp_obj, py_dataBox_class)) {
+                dataBox_obj = tmp_obj;
+                flxDataBox &dataBox_obj_ref = dataBox_obj.cast<flxDataBox &>();
+                // consistency checks
+                    dataBox_obj_ref.ensure_M_in(M);
+                    dataBox_obj_ref.ensure_M_out(1);
+                dBox_ptr = &dataBox_obj_ref;
+            } else {
+                throw FlxException_NeglectInInteractive("flxGP_AKMCS::flxGP_AKMCS_d01", "'data_box' in 'config' is not of type <flx.dataBox>.");
+            }
+        }
         // ====================================================
         // limit-state function
         // ====================================================
@@ -349,6 +366,12 @@ const bool flxGP_AKMCS::eval_model(flxVec& y_vec)
         ++N_model_calls;
     // register the call
         gp_mci->register_sample(lsf_val,y_vec);
+    // register call in dataBox
+        if (dBox_ptr) {
+            dBox_ptr->vec_in = y_vec;
+            dBox_ptr->vec_out[0] = lsf_val;
+            dBox_ptr->append_data();
+        }
     return true;
 }
 

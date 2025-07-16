@@ -21,6 +21,7 @@
 #include "flxgp_kernel.h"
 #include "flxgp_relmeth.h"
 #include "flxrbrv.h"
+#include "flxobjrandom.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -96,6 +97,9 @@ class PYBIND11_EXPORT flxGP_AKMCS {
     // sampler
       RBRV_constructor* RndBox;
       py::object Sampler_obj;
+    // dataBox
+      flxDataBox* dBox_ptr;
+      py::object dataBox_obj;
     // model
       FlxFunction* lsf;
     // Gaussian process

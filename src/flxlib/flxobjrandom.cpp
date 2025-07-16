@@ -27,7 +27,7 @@
 
 #include <fstream>
 
-std::unordered_map<std::string, funRegPostProc> flxDataBox::postProc_map;
+FLXLIB_EXPORT std::unordered_map<std::string, funRegPostProc> flxDataBox::postProc_map;
 flxBayUp* FlxObjReadSuS::lastSuS = nullptr;
 FlxVoidBox<flx_sensi_s1o> sensi_s1o_box;
 

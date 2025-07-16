@@ -9,8 +9,9 @@ Install the package 'docker'.
 python -m venv .venv-fesslix
 source .venv-fesslix/bin/activate
 
-pip install build scikit-build-core pybind11
-pip install twine cibuildwheel
+OBSOLETE?!
+#pip install build scikit-build-core pybind11
+#pip install twine cibuildwheel
 
 ## fast install with KDevelop (for development)
 
@@ -93,6 +94,7 @@ versioning: increase patch number
 versioning: increase minor number
 versioning: increase major number
 attempt package build
+change CI-build trigger from 'push' to 'tag'
 
 ## work on features in a separate branch
 

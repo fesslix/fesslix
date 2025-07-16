@@ -20,6 +20,8 @@
 #include "flxobjects.h"
 #include "flxBayUp.h"
 
+void register_dataBox_post_processors();
+
 class FLXLIB_EXPORT FlxCreateObjReaders_RND : public FlxCreateObjReaders {
   public:
     void createObjReaders (FlxObjectReadBox* objReadBox );
@@ -106,6 +108,7 @@ class PYBIND11_EXPORT flxPyRV {
 // #################################################################################
 // post-processors
 // #################################################################################
+class flxDataBox;
 
 class PYBIND11_EXPORT post_proc_base {
   public:
@@ -122,6 +125,7 @@ class PYBIND11_EXPORT post_proc_mean_double : public post_proc_base {
     tulong N;
     const tuint colID;
   public:
+    post_proc_mean_double(py::dict config, flxDataBox& dBox);
     post_proc_mean_double(const tuint colID);
 
     virtual void append_data(const flxVec& vec_full);
@@ -134,6 +138,7 @@ class PYBIND11_EXPORT post_proc_mean_pdouble : public post_proc_base {
     tulong N;
     const tuint colID;
   public:
+    post_proc_mean_pdouble(py::dict config, flxDataBox& dBox);
     post_proc_mean_pdouble(const tuint colID);
 
     virtual void append_data(const flxVec& vec_full);
@@ -145,6 +150,7 @@ class PYBIND11_EXPORT post_proc_mean_qdouble : public post_proc_base {
     qdouble sum;
     const tuint colID;
   public:
+    post_proc_mean_qdouble(py::dict config, flxDataBox& dBox);
     post_proc_mean_qdouble(const tuint colID, const size_t NpV,const bool ppb);
 
     virtual void append_data(const flxVec& vec_full);
@@ -156,6 +162,7 @@ class PYBIND11_EXPORT post_proc_mean_vdouble : public post_proc_base {
     vdouble sum;
     const tuint colID;
   public:
+    post_proc_mean_vdouble(py::dict config, flxDataBox& dBox);
     post_proc_mean_vdouble(const tuint colID);
 
     virtual void append_data(const flxVec& vec_full);
@@ -168,6 +175,7 @@ class PYBIND11_EXPORT post_proc_mean_reliability : public post_proc_base {
     tulong H;  // number of hits (failed samples)
     const tuint colID;
   public:
+    post_proc_mean_reliability(py::dict config, flxDataBox& dBox);
     post_proc_mean_reliability(const tuint colID);
 
     virtual void append_data(const flxVec& vec_full);
@@ -183,11 +191,14 @@ class PYBIND11_EXPORT post_proc_filter : public post_proc_base {
     tulong N_total;
     tfloat* mem_ptr;
   public:
+    post_proc_filter(py::dict config, flxDataBox& dBox);
     post_proc_filter(const tuint colID, const tuint N_reserve, FlxFunction* fun_cond);
 
     virtual void append_data(const flxVec& vec_full);
     virtual py::dict eval();
 };
+
+using funRegPostProc = std::function<post_proc_base*(const py::dict&, flxDataBox&)>;
 
 // #################################################################################
 // dataBox
@@ -218,6 +229,7 @@ class PYBIND11_EXPORT flxDataBox {
       std::vector<post_proc_base*> pp_vec;
 
     tuint* process_col_input(tuint& N_col, py::dict config);
+  public:
     const tuint extract_colID(py::object col);
     const tuint extract_colID_(py::dict config);
   public:
@@ -264,7 +276,7 @@ class PYBIND11_EXPORT flxDataBox {
     */
     void append_data();
 
-
+    static std::unordered_map<std::string, funRegPostProc> postProc_map;
 };
 
 /**

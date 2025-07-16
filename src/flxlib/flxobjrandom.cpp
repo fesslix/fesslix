@@ -27,9 +27,19 @@
 
 #include <fstream>
 
+std::unordered_map<std::string, funRegPostProc> flxDataBox::postProc_map;
 flxBayUp* FlxObjReadSuS::lastSuS = nullptr;
 FlxVoidBox<flx_sensi_s1o> sensi_s1o_box;
 
+void register_dataBox_post_processors()
+{
+  flxDataBox::postProc_map["mean_double"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_mean_double(cfg, dBox); };
+  flxDataBox::postProc_map["mean_pdouble"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_mean_pdouble(cfg, dBox); };
+  flxDataBox::postProc_map["mean_qdouble"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_mean_qdouble(cfg, dBox); };
+  flxDataBox::postProc_map["vdouble"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_mean_vdouble(cfg, dBox); };
+  flxDataBox::postProc_map["reliability"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_mean_reliability(cfg, dBox); };
+  flxDataBox::postProc_map["filter"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_filter(cfg, dBox); };
+}
 
 void FlxCreateObjReaders_RND::createObjReaders(FlxObjectReadBox* objReadBox) {
   objReadBox->insert("mci", new FlxObjReadMCI());
@@ -430,6 +440,12 @@ py::dict flxPyRV::info()
 // post-processors
 // #################################################################################
 
+post_proc_mean_double::post_proc_mean_double(py::dict config, flxDataBox& dBox)
+: sum(ZERO), N(0), colID(dBox.extract_colID_(config))
+{
+
+}
+
 post_proc_mean_double::post_proc_mean_double(const tuint colID)
 : sum(ZERO), N(0), colID(colID)
 {
@@ -449,6 +465,12 @@ py::dict post_proc_mean_double::eval()
     res["mean"] = sum/N;
 
     return res;
+}
+
+post_proc_mean_pdouble::post_proc_mean_pdouble(py::dict config, flxDataBox& dBox)
+: N(0), colID(dBox.extract_colID_(config))
+{
+
 }
 
 post_proc_mean_pdouble::post_proc_mean_pdouble(const tuint colID)
@@ -472,6 +494,12 @@ py::dict post_proc_mean_pdouble::eval()
     return res;
 }
 
+post_proc_mean_qdouble::post_proc_mean_qdouble(py::dict config, flxDataBox& dBox)
+: sum(parse_py_para_as_tuintNo0("NpV",config,false,10000000), parse_py_para_as_bool("bbp",config,false,false)), colID(dBox.extract_colID_(config))
+{
+
+}
+
 post_proc_mean_qdouble::post_proc_mean_qdouble(const tuint colID, const size_t NpV,const bool ppb)
 : sum(NpV,ppb), colID(colID)
 {
@@ -489,6 +517,12 @@ py::dict post_proc_mean_qdouble::eval()
     res["mean"] = sum.get_average();
     res["N"] = sum.get_N();
     return res;
+}
+
+post_proc_mean_vdouble::post_proc_mean_vdouble(py::dict config, flxDataBox& dBox)
+: colID(dBox.extract_colID_(config))
+{
+
 }
 
 post_proc_mean_vdouble::post_proc_mean_vdouble(const tuint colID)
@@ -524,6 +558,12 @@ py::dict post_proc_mean_vdouble::eval()
     return res;
 }
 
+post_proc_mean_reliability::post_proc_mean_reliability(py::dict config, flxDataBox& dBox)
+: N(0), H(0), colID(dBox.extract_colID_(config))
+{
+
+}
+
 post_proc_mean_reliability::post_proc_mean_reliability(const tuint colID)
 : N(0), H(0), colID(colID)
 {
@@ -553,6 +593,15 @@ py::dict post_proc_mean_reliability::eval()
       res["rv_pf"] = flxPyRV(rv_pf,true);
     res["mean_bayes"] = rv_pf->get_mean_current_config();
     return res;
+}
+
+post_proc_filter::post_proc_filter(py::dict config, flxDataBox& dBox)
+: colID(dBox.extract_colID_(config)),
+  N_reserve(parse_py_para_as_tuintNo0("N_reserve",config,false,1000000)),
+  fun_cond(parse_py_para("cond",config,false,dBox.get_M_in()+dBox.get_M_out())),
+  N(0), N_total(0), mem_ptr(new tfloat[N_reserve])
+{
+
 }
 
 post_proc_filter::post_proc_filter(const tuint colID, const tuint N_reserve, FlxFunction* fun_cond)
@@ -943,30 +992,11 @@ post_proc_base& flxDataBox::register_post_processor(py::dict config)
   // define the post-processor
     post_proc_base* pp_ptr = nullptr;
     try {
-      if (pp_type=="mean_double") {
-        const tuint colID = extract_colID_(config);
-        pp_ptr = new post_proc_mean_double(colID);
-      } else if (pp_type=="mean_pdouble") {
-        const tuint colID = extract_colID_(config);
-        pp_ptr = new post_proc_mean_pdouble(colID);
-      } else if (pp_type=="mean_qdouble") {
-        const tuint colID = extract_colID_(config);
-        const tuint NpV = parse_py_para_as_tuintNo0("NpV",config,false,10000000);
-        const bool ppb = parse_py_para_as_bool("bbp",config,false,false);
-        pp_ptr = new post_proc_mean_qdouble(colID,NpV,ppb);
-      } else if (pp_type=="vdouble") {
-        const tuint colID = extract_colID_(config);
-        pp_ptr = new post_proc_mean_vdouble(colID);
-      } else if (pp_type=="reliability") {
-        const tuint colID = extract_colID_(config);
-        pp_ptr = new post_proc_mean_reliability(colID);
-      } else if (pp_type=="filter") {
-        const tuint N_reserve = parse_py_para_as_tuintNo0("N_reserve",config,false,1000000);
-        const tuint colID = extract_colID_(config);
-        FlxFunction* fun_cond = parse_py_para("cond",config,false,M);
-        pp_ptr = new post_proc_filter(colID,N_reserve,fun_cond);
+      auto it = postProc_map.find(pp_type);
+      if (it != postProc_map.end()) {
+          pp_ptr = it->second(config, *this);
       } else {
-        throw FlxException("flxDataBox::register_post_processor_99","Unknown type ('" + pp_type + "' for post-processor.");
+          throw FlxException("flxDataBox::register_post_processor_99","Unknown type ('" + pp_type + "' for post-processor.");
       }
     } catch (FlxException& e) {
       if (pp_ptr) delete pp_ptr;

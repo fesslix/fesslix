@@ -199,10 +199,16 @@ class PYBIND11_EXPORT post_proc_filter : public post_proc_base {
 };
 
 using funRegPostProc = std::function<post_proc_base*(const py::dict&, flxDataBox&)>;
-#ifdef fesslix_flxobjrandom_CPP
-  #define FLXLIB_STORAGE PYBIND11_EXPORT FLXLIB_EXPORT
+
+#if defined(_WIN32)
+  #define FLXLIB_API FLXLIB_EXPORT
 #else
-  #define FLXLIB_STORAGE extern FLXLIB_EXPORT
+  #define FLXLIB_API __attribute__((visibility("default")))
+#endif
+#ifdef fesslix_flxobjrandom_CPP
+  #define FLXLIB_STORAGE FLXLIB_API
+#else
+  #define FLXLIB_STORAGE extern FLXLIB_API
 #endif
 FLXLIB_STORAGE std::unordered_map<std::string, funRegPostProc> postProc_map;
 

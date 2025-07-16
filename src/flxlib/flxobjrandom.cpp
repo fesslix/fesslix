@@ -15,6 +15,10 @@
  * along with Fesslix.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
+#define FLXLIB_CPP
+
+#define fesslix_flxobjrandom_CPP
+
 #include <cmath>
 
 #include "flxobjrandom.h"
@@ -27,18 +31,17 @@
 
 #include <fstream>
 
-FLXLIB_EXPORT std::unordered_map<std::string, funRegPostProc> flxDataBox::postProc_map;
 flxBayUp* FlxObjReadSuS::lastSuS = nullptr;
 FlxVoidBox<flx_sensi_s1o> sensi_s1o_box;
 
 void register_dataBox_post_processors()
 {
-  flxDataBox::postProc_map["mean_double"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_mean_double(cfg, dBox); };
-  flxDataBox::postProc_map["mean_pdouble"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_mean_pdouble(cfg, dBox); };
-  flxDataBox::postProc_map["mean_qdouble"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_mean_qdouble(cfg, dBox); };
-  flxDataBox::postProc_map["vdouble"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_mean_vdouble(cfg, dBox); };
-  flxDataBox::postProc_map["reliability"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_mean_reliability(cfg, dBox); };
-  flxDataBox::postProc_map["filter"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_filter(cfg, dBox); };
+  postProc_map["mean_double"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_mean_double(cfg, dBox); };
+  postProc_map["mean_pdouble"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_mean_pdouble(cfg, dBox); };
+  postProc_map["mean_qdouble"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_mean_qdouble(cfg, dBox); };
+  postProc_map["vdouble"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_mean_vdouble(cfg, dBox); };
+  postProc_map["reliability"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_mean_reliability(cfg, dBox); };
+  postProc_map["filter"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_filter(cfg, dBox); };
 }
 
 void FlxCreateObjReaders_RND::createObjReaders(FlxObjectReadBox* objReadBox) {

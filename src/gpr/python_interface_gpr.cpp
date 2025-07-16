@@ -24,7 +24,7 @@
 
 void register_dataBox_post_processors_gpr()
 {
-  flxDataBox::postProc_map["akmcs"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_akmcs(cfg, dBox); };
+  postProc_map["akmcs"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_akmcs(cfg, dBox); };
 }
 
 // #################################################################################

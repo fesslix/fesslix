@@ -199,6 +199,13 @@ class PYBIND11_EXPORT post_proc_filter : public post_proc_base {
 };
 
 using funRegPostProc = std::function<post_proc_base*(const py::dict&, flxDataBox&)>;
+#ifdef fesslix_flxobjrandom_CPP
+  FLXLIB_EXPORT
+#else
+  FLXLIB_EXPORT extern
+#endif
+std::unordered_map<std::string, funRegPostProc> postProc_map;
+
 
 // #################################################################################
 // dataBox
@@ -275,8 +282,6 @@ class PYBIND11_EXPORT flxDataBox {
     * @note before calling this function, the input/output needs to be assigned to vec_full or (vec_out & vec_in) !!!
     */
     void append_data();
-
-    static std::unordered_map<std::string, funRegPostProc> postProc_map;
 };
 
 /**

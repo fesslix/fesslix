@@ -276,7 +276,7 @@ class PYBIND11_EXPORT flxDataBox {
     */
     void append_data();
 
-    static FLXLIB_EXPORT std::unordered_map<std::string, funRegPostProc> postProc_map;
+    static std::unordered_map<std::string, funRegPostProc> postProc_map;
 };
 
 /**

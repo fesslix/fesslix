@@ -418,7 +418,22 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
                 py::dict kernel_info = gp_info["kernel"];
                 if (kernel_info.contains("kernel_sd")) {
                     const tdouble kernel_sd = parse_py_para_as_float("kernel_sd",kernel_info,true);
-                    res["sd_kernel"] = kernel_sd;
+                    res["kernel_sd"] = kernel_sd;
+                    if (kernel_info.contains("para_vec") && kernel_info.contains("n_vec")) {
+                        flxVec kernel_para_vec = parse_py_obj_as_flxVec(kernel_info["para_vec"],"kernel::para_vec");
+                        flxVec kernel_n_vec = parse_py_obj_as_flxVec(kernel_info["n_vec"],"kernel::n_vec");
+                        const tuint kernel_N = kernel_para_vec.get_N();
+                        // create Python-array
+                            // Allocate memory for the return array
+                            auto corrl_res_buf = py::array_t<tdouble>(kernel_N-1);
+                            // Get the buffer info to access the underlying return data
+                            py::buffer_info res_buf_info = corrl_res_buf.request();
+                            tdouble* corrl_res_ptr = static_cast<tdouble*>(res_buf_info.ptr);
+                        for (tuint i=1;i<kernel_N;++i) {
+                            corrl_res_ptr[i-1] = kernel_para_vec[i]*kernel_n_vec[i];
+                        }
+                        res["kernel_corrl"] = corrl_res_buf;
+                    }
                 }
             }
         }

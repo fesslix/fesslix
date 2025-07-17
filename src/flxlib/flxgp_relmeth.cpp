@@ -280,6 +280,7 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
         pdouble sum;
         static_sum = ZERO;
         tulong sum_no_Krig_unc = 0;
+        pdouble sd_avg;
         tdouble vsum = ZERO;
         #if FLX_PARALLEL
             std::mutex mutex_smpling;
@@ -313,6 +314,7 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
                         if (smpl_mean<=ZERO) {
                             ++sum_no_Krig_unc;
                         }
+                        sd_avg += smpl_sd;
                     // learning function
                         if (fabs(y)<Uval_worst_point) {
                             id_worst_point = j;
@@ -352,6 +354,10 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
                     const tdouble p_i = rv_Phi(-y);
                     sum += p_i;
                     vsum += p_i*(ONE-p_i);
+                    if (smpl_mean<=ZERO) {
+                        ++sum_no_Krig_unc;
+                    }
+                    sd_avg += smpl_sd;
                 // learning function
                     if (fabs(y)<Uval_worst_point) {
                         id_worst_point = i;
@@ -411,6 +417,7 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
         res["N_model_calls"] = get_N_model_calls();
         res["Uval_worst_point"] = Uval_worst_point;
         res["sd_worst_point"] = sd_worst_point;
+        res["sd_avg"] = sd_avg.cast2double()/Nsmpls;
         // try to extract information about the kernel
         {
             py::dict gp_info = gp.info();

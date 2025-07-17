@@ -2800,13 +2800,13 @@ py::dict perform_FORM(py::object lsf, flxPySampler& sampler, py::dict config)
     const bool dxdyAnalytical = parse_py_para_as_bool("dxdyAnalytical", config, false, true);
     const bool verboseLog = parse_py_para_as_bool("verboseLog", config, false, false);
     const tuint maxIter = parse_py_para_as_tuintNo0("max_iter", config, false, 100);
-    // // dataBox for storing/post-processing samples
-    // flxDataBox* dbox = nullptr;
-    // if (config.contains("data_box")) {
-    //   dbox = &(parse_py_obj_as_flxDataBox(config["data_box"],"'data_box' in 'config'"));
-    //   dbox->ensure_M_in(DIM);
-    //   dbox->ensure_M_out(1);
-    // }
+    // dataBox for storing/post-processing samples
+    flxDataBox* dbox = nullptr;
+    if (config.contains("data_box")) {
+      dbox = &(parse_py_obj_as_flxDataBox(config["data_box"],"'data_box' in 'config'"));
+      dbox->ensure_M_in(DIM);
+      dbox->ensure_M_out(1);
+    }
     // finite difference method
       tuint fd_method = 1;
       {
@@ -2919,15 +2919,26 @@ py::dict perform_FORM(py::object lsf, flxPySampler& sampler, py::dict config)
         GlobalVar.slogcout(4) << "  iHLRF_reduce:       " << GlobalVar.Double2String(iHLRF_reduce) << std::endl;
       }
     }
+  // define lambda-function for evaluating limit-state function
+    tuint LSFcalls=0;
+    auto call_LSF = [&LSFcalls,LSF,dbox](flxVec& u_vec) {
+          const tdouble z_val = LSF->calc();
+          ++LSFcalls;
+          if (dbox) {
+            dbox->vec_in = u_vec;
+            dbox->vec_out[0] = z_val;
+            dbox->append_data();
+          }
+        return z_val;
+      };
   // calculate z_0  (value of LSF at y=0)
     tdouble z_0, z_old;
     flxVec d(y.get_N());                // iHLRF direction vector
     flxVec y_new(y.get_N());        // iHLRF new position vector
     flxVec xhelp(DIM);
     d.set_zero();
-    tuint LSFcalls=0;
     RndBox.set_smp(d);
-    z_0 = LSF->calc(); ++LSFcalls;
+    z_0 = call_LSF(d);
     const bool isNeg_z_0 = (z_0<ZERO);
     GlobalVar.slogcout(4) << "  lsf(y=0)=" << std::format("{:9.2e}", z_0) << std::endl;
     // compute start-point
@@ -2937,7 +2948,7 @@ py::dict perform_FORM(py::object lsf, flxPySampler& sampler, py::dict config)
         z_old = z_0;
       } else {
         RndBox.set_smp(y);
-        z_old = LSF->calc(); ++LSFcalls;
+        z_old = call_LSF(y);
       }
     // make sure z_0 is large enough
       if (isNeg_z_0) z_0 = fabs(z_0);
@@ -3142,7 +3153,7 @@ py::dict perform_FORM(py::object lsf, flxPySampler& sampler, py::dict config)
             y_new = y;
             y_new.add(d,lambda);
             RndBox.set_smp(y_new);
-            z_next = LSF->calc()/z_0; ++LSFcalls;
+            z_next = call_LSF(y_new)/z_0;
             ssV2 << "  z     = " << GlobalVar.Double2String(z_next) << std::endl;
             m_n = (y_new.get_Norm2_NOroot())/2+c*fabs(z_next);
             ssV2 << "m_ne    = " << GlobalVar.Double2String(m_ne) << std::endl;
@@ -3180,7 +3191,7 @@ py::dict perform_FORM(py::object lsf, flxPySampler& sampler, py::dict config)
     RndBox.get_x_Vec(x.get_tmp_vptr());
     // calc LSF
       if (opt_method!=2 || !ok) {
-        z_old = LSF->calc()/z_0;        ++LSFcalls;        // actually this is z_new
+        z_old = call_LSF(y)/z_0;        // actually this is z_new
       }
 
     // check for maximum number of iterations

@@ -90,6 +90,7 @@ git push -u origin main
 
 ## common commit messages
 
+versioning: increase version number to 0.5.2
 versioning: increase patch number
 versioning: increase minor number
 versioning: increase major number

@@ -434,6 +434,7 @@ void flxGP_AKMCS::initialize_with_sample(const flxVec& y_vec, const tdouble lsf_
 
 akmcs_status flxGP_AKMCS::simulate()
 {
+    bool reached_iter_limit = false;
     // in case the number of surrogate samples are to be decreased
         if (last_state==akmcs_status::decrease_N_surrogate) {
             if (Nsmpls/2>Nsmpls_ini) {  // yes, we can decrease the number
@@ -468,10 +469,15 @@ akmcs_status flxGP_AKMCS::simulate()
             }
             case akmcs_status::increase_N_surrogate:
             {
-                Nsmpls *= 2;
-                if (NmaxSur>0 && Nsmpls>NmaxSur) Nsmpls = NmaxSur;
-                last_state = akmcs_status::defined;
-                break;
+                if (NmaxSur>0 && Nsmpls>=NmaxSur) {
+                    reached_iter_limit = true;
+                    break;
+                } else {
+                    Nsmpls *= 2;
+                    if (NmaxSur>0 && Nsmpls>NmaxSur) Nsmpls = NmaxSur;
+                    last_state = akmcs_status::defined;
+                    break;
+                }
             }
             case akmcs_status::stop_success:
             case akmcs_status::stop_iterLimit:
@@ -491,7 +497,7 @@ akmcs_status flxGP_AKMCS::simulate()
             last_state = akmcs_status::stop_success;
             return last_state;
         }
-        if (NmaxSur>0 && Nsmpls>=NmaxSur) {
+        if (reached_iter_limit) {
             last_state = akmcs_status::stop_iterLimit;
             return last_state;
         }

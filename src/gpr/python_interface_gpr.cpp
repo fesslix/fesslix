@@ -409,13 +409,13 @@ const bool flxGP_AKMCS::eval_model(flxVec& y_vec)
     return true;
 }
 
-void flxGP_AKMCS::initialize_with_LHS(tuint N)
+void flxGP_AKMCS::initialize_with_LHS(tuint N, const tdouble box_bounds)
 {
     // generate the set of samples
         const tuint M = RndBox->get_NRV();
         if (N==0) N = 2*M;
         flxVec lh_samples(N*M);
-        gp_mci->assemble_lh_samples(lh_samples);
+        gp_mci->assemble_lh_samples(lh_samples,box_bounds);
     // run the actual model for each sample
         for (tuint i=0;i<N;++i) {
             flxVec tv(lh_samples.get_tmp_vptr()+i*M,M,false,false);
@@ -613,7 +613,7 @@ PYBIND11_MODULE(gpr, m) {
             .export_values();
         py::class_<flxGP_AKMCS>(m, "akmcs")
             .def(py::init<py::dict>())
-            .def("initialize_with_LHS", &flxGP_AKMCS::initialize_with_LHS, pybind11::arg("N")=0, "Initialize AK-MCS using N Latin-hypercube samples.")
+            .def("initialize_with_LHS", &flxGP_AKMCS::initialize_with_LHS, pybind11::arg("N")=0, pybind11::arg("box_bounds")=3*ONE, "Initialize AK-MCS using N Latin-hypercube samples.")
             .def("simulate", &flxGP_AKMCS::simulate_, pybind11::arg("N")=0, "Perform a single simulation step using the surrogate model.")
             .def("get_GP", &flxGP_AKMCS::get_GP, "Retrieve a reference to the internal Gaussian process.")
             .def("get_N_model_calls", &flxGP_AKMCS::get_N_model_calls, pybind11::arg("only_from_current_run") = true, "Retrieve total number of calls of the actual limit-state function.")

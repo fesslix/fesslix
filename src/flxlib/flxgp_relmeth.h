@@ -69,7 +69,7 @@ class PYBIND11_EXPORT flxGP_MCI {
     flxGP_MCI(flxGPProj_base& gp, const tuint Nreserve, const tuint user_seed_int, const tuint user_init_calls, const tdouble tqi_val, const bool allow_decrease_of_N);
     virtual ~flxGP_MCI() {}
 
-    void assemble_lh_samples(flxVec& lh_samples);
+    void assemble_lh_samples(flxVec& lh_samples, const tdouble box_bounds);
     const bool is_point_unique(const flxVec& uvec_) const;
     void get_next_point(flxVec& uvec_);
     void register_sample(const tdouble lsfval, const flxVec& uvec_);

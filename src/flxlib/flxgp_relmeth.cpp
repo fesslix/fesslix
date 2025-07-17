@@ -69,7 +69,7 @@ void flxGP_MCI::generate_sample(flxVec &uvec_)
     rv_normal(uvec_,randgen_local);
 }
 
-void flxGP_MCI::assemble_lh_samples(flxVec& lh_samples)
+void flxGP_MCI::assemble_lh_samples(flxVec& lh_samples, const tdouble box_bounds)
 {
     init_RNG();
     FlxRndCreator rndc(&randgen_local);
@@ -78,8 +78,8 @@ void flxGP_MCI::assemble_lh_samples(flxVec& lh_samples)
         throw FlxException_Crude("flxGP_MCI::assemble_lh_samples");
     }
     rndc.latin_hypercube(lh_samples.get_tmp_vptr(),N_init,Ndim);
-    lh_samples *= 6.;
-    lh_samples -= 3.;
+    lh_samples *= 2*box_bounds;
+    lh_samples -= box_bounds;
 }
 
 void flxGP_MCI::get_next_point(flxVec& uvec_)

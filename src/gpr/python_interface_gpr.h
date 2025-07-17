@@ -139,7 +139,7 @@ class PYBIND11_EXPORT flxGP_AKMCS {
 
     flxGP_AKMCS& operator=(const flxGP_AKMCS& rhs) = delete;
 
-    void initialize_with_LHS(tuint N);
+    void initialize_with_LHS(tuint N, const tdouble box_bounds);
     void initialize_with_sample(const flxVec& y_vec, const tdouble lsf_val);
     akmcs_status simulate();
     akmcs_status simulate_(const tuint N);

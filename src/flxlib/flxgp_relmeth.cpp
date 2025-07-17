@@ -277,6 +277,7 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
     // conduct Monte Carlo simulation
         tdouble sum = ZERO;
         static_sum = ZERO;
+        tulong sum_no_Krig_unc = 0;
         tdouble vsum = ZERO;
         #if FLX_PARALLEL
             std::mutex mutex_smpling;
@@ -302,6 +303,9 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
                     // probability of value being smaller than zero
                         const tdouble y = smpl_mean/sqrt(smpl_var);
                         const tdouble p_i = rv_Phi(-y);
+                        if (smpl_mean<=ZERO) {
+                            ++sum_no_Krig_unc;
+                        }
                     {
                         std::lock_guard<std::mutex> guard(mutex_postp);
                         sum += p_i;
@@ -386,8 +390,9 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
         const tdouble af = (tqi_2N-tqi_1LSF)/tqi;
         err = tqi-ONE;
     // output
-        res["pf_mle"] = pf_mle;
         res["mean_pf_bayesian"] = mean_pf_bayesian;
+        res["pf_mle"] = pf_mle;
+        res["pf_no_Kriging_uncertainty"] = tdouble(sum_no_Krig_unc)/Nsmpls;
         res["err"] = err;
         res["af"] = af;
         res["r"] = tqi;

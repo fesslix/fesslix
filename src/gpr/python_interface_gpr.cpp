@@ -273,7 +273,8 @@ const std::string map_akmcs_status_to_string(akmcs_status status)
 
 flxGP_AKMCS::flxGP_AKMCS(py::dict config)
 : RndBox(nullptr), dBox_ptr(nullptr), lsf(nullptr), gp_ptr(nullptr), gp_mci(nullptr),
-    iterMax(500), NmaxSur(10000000), Nsmpls(1000000), Nsmpls_ini(0), last_state(akmcs_status::undefined), err_thresh(0.3), N_model_calls(0)
+    iterMax(500), NmaxSur(10000000), Nsmpls(1000000), Nsmpls_ini(0), last_state(akmcs_status::undefined), err_thresh(0.3), N_model_calls(0),
+    init_accept_only_unique(false)
 {
     try {
         // ====================================================
@@ -359,6 +360,7 @@ flxGP_AKMCS::flxGP_AKMCS(py::dict config)
         if (err_thresh_>ZERO) {
             err_thresh = err_thresh_;
         }
+        init_accept_only_unique = parse_py_para_as_bool("init_accept_only_unique",config,false,false);
 
     } catch (...) {
         free_mem();
@@ -426,7 +428,11 @@ void flxGP_AKMCS::initialize_with_sample(const flxVec& y_vec, const tdouble lsf_
 {
     // make sure point has not been considered before
         if (gp_mci->is_point_unique(y_vec)==false) {
-            throw FlxException("flxGP_AKMCS::initialize_with_sample_01", "Sample to add is not unique.");
+            if (init_accept_only_unique) {
+                throw FlxException("flxGP_AKMCS::initialize_with_sample_01", "Sample to add is not unique.");
+            } else {
+                return;
+            }
         }
     gp_mci->register_sample(lsf_val,y_vec);
     last_state = akmcs_status::undefined;

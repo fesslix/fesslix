@@ -123,6 +123,7 @@ class PYBIND11_EXPORT flxGP_AKMCS {
         tdouble err_thresh;
       // number of LSF-calls in the current instance
         tuint N_model_calls;
+      bool init_accept_only_unique;
 
     void free_mem();
     const bool eval_model(flxVec& y_vec);

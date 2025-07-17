@@ -477,6 +477,7 @@ akmcs_status flxGP_AKMCS::simulate()
             {
                 if (NmaxSur>0 && Nsmpls>=NmaxSur) {
                     reached_iter_limit = true;
+                    last_state = akmcs_status::defined;
                     break;
                 } else {
                     Nsmpls *= 2;

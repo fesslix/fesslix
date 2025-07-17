@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "fesslix"
-version = "0.5.8"
+version = "0.5.9"
 description = "stochastic analysis"
 readme = "README.md"
 license = {file = "LICENSE"}

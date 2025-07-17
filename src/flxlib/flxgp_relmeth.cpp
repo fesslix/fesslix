@@ -17,6 +17,7 @@
 
 #include "flxgp_relmeth.h"
 #include "flxdefault.h"
+#include "flxparse.h"
 
 #include <algorithm>
 #if FLX_PARALLEL
@@ -30,8 +31,8 @@ const tuint N_MCS_tqi = 1000;
 
 
 flxGP_MCI::flxGP_MCI(flxGPProj_base& gp, const tuint Nreserve, const tuint user_seed_int, const tuint user_init_calls, const tdouble tqi_val, const bool allow_decrease_of_N)
-: gp(gp), Ndim(gp.get_Ndim()), user_seed_int(user_seed_int), user_init_calls(user_init_calls), tqi_val(tqi_val), tqi_vec(N_MCS_tqi), tqi_vec_rv_u(N_MCS_tqi), id_next_point(0),
-  static_sum(ZERO),last_m(ZERO), last_n(ZERO), allow_decrease_of_N(allow_decrease_of_N)
+: gp(gp), Ndim(gp.get_Ndim()), user_seed_int(user_seed_int), user_init_calls(user_init_calls), tqi_val(tqi_val), allow_decrease_of_N(allow_decrease_of_N), tqi_vec(N_MCS_tqi), tqi_vec_rv_u(N_MCS_tqi), id_next_point(0),
+  static_sum(ZERO),last_m(ZERO), last_n(ZERO)
 {
     dmV.reserve(Ndim*Nreserve);
     doV.reserve(Nreserve);
@@ -272,6 +273,7 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
     tulong id_worst_mcspi = 0;
     const tdouble pi_TOL = 1e-8;
     tdouble Uval_worst_point = std::numeric_limits<tdouble>::infinity();
+    tdouble sd_worst_point = std::numeric_limits<tdouble>::infinity();
     // ensure that 'mcs_pi' is large engough
         mcs_pi.clear();
     // conduct Monte Carlo simulation
@@ -301,7 +303,8 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
                         tdouble smpl_mean, smpl_var;
                         gp.predict_mean_var(uvec,true,smpl_mean,smpl_var);
                     // probability of value being smaller than zero
-                        const tdouble y = smpl_mean/sqrt(smpl_var);
+                        const tdouble smpl_sd = sqrt(smpl_var);
+                        const tdouble y = smpl_mean/smpl_sd;
                         const tdouble p_i = rv_Phi(-y);
                         if (smpl_mean<=ZERO) {
                             ++sum_no_Krig_unc;
@@ -315,6 +318,7 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
                             id_worst_point = j;
                             id_worst_mcspi = mcs_pi.size();
                             Uval_worst_point = fabs(y);
+                            sd_worst_point = smpl_sd;
                         }
                     // append to mcs_pi
                         if (p_i<pi_TOL || p_i>ONE-pi_TOL) {
@@ -343,7 +347,8 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
                     tdouble smpl_mean, smpl_var;
                     gp.predict_mean_var(uvec,true,smpl_mean,smpl_var);
                 // probability of value being smaller than zero
-                    const tdouble y = smpl_mean/sqrt(smpl_var);
+                    const tdouble smpl_sd = sqrt(smpl_var);
+                    const tdouble y = smpl_mean/smpl_sd;
                     const tdouble p_i = rv_Phi(-y);
                     sum += p_i;
                     vsum += p_i*(ONE-p_i);
@@ -352,6 +357,7 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
                         id_worst_point = i;
                         id_worst_mcspi = mcs_pi.size();
                         Uval_worst_point = fabs(y);
+                        sd_worst_point = smpl_sd;
                     }
                 // append to mcs_pi
                     if (p_i<pi_TOL || p_i>ONE-pi_TOL) {
@@ -393,6 +399,7 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
         res["mean_pf_bayesian"] = mean_pf_bayesian;
         res["pf_mle"] = pf_mle;
         res["pf_no_Kriging_uncertainty"] = tdouble(sum_no_Krig_unc)/Nsmpls;
+        res["Pr_q_tqi"] = tqi*mean_pf_bayesian;  // Pr[pf<p]≈tqi=99%
         res["err"] = err;
         res["af"] = af;
         res["r"] = tqi;
@@ -403,7 +410,18 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
         res["N"] = Nsmpls;
         res["N_model_calls"] = get_N_model_calls();
         res["Uval_worst_point"] = Uval_worst_point;
-        res["Pr_q_tqi"] = tqi*mean_pf_bayesian;  // Pr[pf<p]≈tqi=99%
+        res["sd_worst_point"] = sd_worst_point;
+        // try to extract information about the kernel
+        {
+            py::dict gp_info = gp.info();
+            if (gp_info.contains("kernel")) {
+                py::dict kernel_info = gp_info["kernel"];
+                if (kernel_info.contains("kernel_sd")) {
+                    const tdouble kernel_sd = parse_py_para_as_float("kernel_sd",kernel_info,true);
+                    res["sd_kernel"] = kernel_sd;
+                }
+            }
+        }
     return res;
 }
 

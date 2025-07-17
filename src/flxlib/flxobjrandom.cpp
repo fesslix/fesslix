@@ -3290,6 +3290,7 @@ py::dict perform_FORM(py::object lsf, flxPySampler& sampler, py::dict config)
   res["FORM_u"] = convert_flxVec_to_pyArray(y);
   // Total number of LSF-calls
   res["N_lsf_calls"] = LSFcalls;
+  res["N_iter"] = loopc;
   } catch (FlxException& e) {
     delete LSF;
     throw;

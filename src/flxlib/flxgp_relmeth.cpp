@@ -277,7 +277,7 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
     // ensure that 'mcs_pi' is large engough
         mcs_pi.clear();
     // conduct Monte Carlo simulation
-        tdouble sum = ZERO;
+        pdouble sum;
         static_sum = ZERO;
         tulong sum_no_Krig_unc = 0;
         tdouble vsum = ZERO;
@@ -370,11 +370,11 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
     // set id_next_point
         id_next_point = id_worst_point;
     // quantify uncertainty about estimate
-        last_m = sum;
+        last_m = sum.cast2double();
         last_n = Nsmpls;
-        const tdouble pf_mle = sum/Nsmpls;      // MLE estimate of Pf
-        const tdouble mean_m = sum;             // sample mean of hits
-        const tdouble mean_pf_bayesian = (sum+ONE)/(Nsmpls+2);
+        const tdouble pf_mle = sum.cast2double()/Nsmpls;      // MLE estimate of Pf
+        const tdouble mean_m = sum.cast2double();             // sample mean of hits
+        const tdouble mean_pf_bayesian = (sum.cast2double()+ONE)/(Nsmpls+2);
         // E[tqi]: expected target quantity of interest
             const tdouble tqi = get_mean_tqi(mean_m,Nsmpls)/mean_pf_bayesian;
         // estimated E[tqi] if one more LSF call is invested

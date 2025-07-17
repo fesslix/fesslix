@@ -119,6 +119,16 @@ class PYBIND11_EXPORT post_proc_base {
     virtual py::dict eval() = 0;
 };
 
+class PYBIND11_EXPORT post_proc_counter : public post_proc_base {
+  private:
+    tulong N;  // total number of samples
+  public:
+    post_proc_counter(py::dict config, flxDataBox& dBox);
+
+    virtual void append_data(const flxVec& vec_full);
+    virtual py::dict eval();
+};
+
 class PYBIND11_EXPORT post_proc_mean_double : public post_proc_base {
   private:
     tdouble sum;

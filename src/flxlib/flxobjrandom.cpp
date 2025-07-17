@@ -36,6 +36,7 @@ FlxVoidBox<flx_sensi_s1o> sensi_s1o_box;
 
 void register_dataBox_post_processors()
 {
+  postProc_map["counter"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_counter(cfg, dBox); };
   postProc_map["mean_double"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_mean_double(cfg, dBox); };
   postProc_map["mean_pdouble"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_mean_pdouble(cfg, dBox); };
   postProc_map["mean_qdouble"] = [](const py::dict& cfg, flxDataBox& dBox) { return new post_proc_mean_qdouble(cfg, dBox); };
@@ -442,6 +443,24 @@ py::dict flxPyRV::info()
 // #################################################################################
 // post-processors
 // #################################################################################
+
+post_proc_counter::post_proc_counter(py::dict config, flxDataBox& dBox)
+: N(0)
+{
+
+}
+
+void post_proc_counter::append_data(const flxVec& vec_full)
+{
+  ++N;
+}
+
+py::dict post_proc_counter::eval()
+{
+    py::dict res;
+    res["N"] = N;
+    return res;
+}
 
 post_proc_mean_double::post_proc_mean_double(py::dict config, flxDataBox& dBox)
 : sum(ZERO), N(0), colID(dBox.extract_colID_(config))

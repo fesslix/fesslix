@@ -142,7 +142,7 @@ class PYBIND11_EXPORT flxGP_AKMCS {
     void initialize_with_LHS(tuint N, const tdouble box_bounds);
     void initialize_with_sample(const flxVec& y_vec, const tdouble lsf_val);
     akmcs_status simulate();
-    akmcs_status simulate_(const tuint N);
+    akmcs_status simulate_(const tuint N, const bool output_gp_info);
     flxPyGP get_GP();
 
     const tuint get_N_model_calls(const bool only_from_current_run) const;

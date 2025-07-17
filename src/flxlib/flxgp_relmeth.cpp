@@ -306,13 +306,13 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
                         const tdouble smpl_sd = sqrt(smpl_var);
                         const tdouble y = smpl_mean/smpl_sd;
                         const tdouble p_i = rv_Phi(-y);
-                        if (smpl_mean<=ZERO) {
-                            ++sum_no_Krig_unc;
-                        }
                     {
                         std::lock_guard<std::mutex> guard(mutex_postp);
                         sum += p_i;
                         vsum += p_i*(ONE-p_i);
+                        if (smpl_mean<=ZERO) {
+                            ++sum_no_Krig_unc;
+                        }
                     // learning function
                         if (fabs(y)<Uval_worst_point) {
                             id_worst_point = j;

@@ -473,6 +473,9 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
                     }
                 }
             }
+            if (gp_info.contains("noise")) {
+                res["kernel_noise"] = gp_info["noise"];
+            }
         }
     return res;
 }

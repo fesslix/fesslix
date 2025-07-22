@@ -274,7 +274,7 @@ const std::string map_akmcs_status_to_string(akmcs_status status)
 flxGP_AKMCS::flxGP_AKMCS(py::dict config)
 : RndBox(nullptr), dBox_ptr(nullptr), lsf(nullptr), gp_ptr(nullptr), gp_mci(nullptr),
     iterMax(500), NmaxSur(10000000), Nsmpls(1000000), Nsmpls_ini(0), last_state(akmcs_status::undefined), err_thresh(0.3), N_model_calls(0),
-    init_accept_only_unique(false)
+    init_accept_only_unique(false), optimize_after_N_calls(0), calls_since_last_opt(0)
 {
     try {
         // ====================================================
@@ -362,7 +362,7 @@ flxGP_AKMCS::flxGP_AKMCS(py::dict config)
             err_thresh = err_thresh_;
         }
         init_accept_only_unique = parse_py_para_as_bool("init_accept_only_unique",config,false,false);
-
+        optimize_after_N_calls = parse_py_para_as_tuint("optimize_after_N_calls",config,false,20);
     } catch (...) {
         free_mem();
         throw;
@@ -455,7 +455,7 @@ akmcs_status flxGP_AKMCS::simulate()
             {
                 // condition GP on data and set initial parameter values
                     gp_mci->condition_on_data(true);
-                    gp_mci->optimize_gp_para(iterMax);
+                    gp_mci->optimize_gp_para(iterMax); calls_since_last_opt=0;
                 last_state = akmcs_status::defined;
                 break;
             }
@@ -469,7 +469,11 @@ akmcs_status flxGP_AKMCS::simulate()
                 if (!eval_model(uvec)) {
                     throw FlxException_Crude("flxGP_AKMCS::simulate_01");
                 }
-                gp_mci->condition_on_data(false);
+                ++calls_since_last_opt;
+                if (calls_since_last_opt>=optimize_after_N_calls) {
+                    gp_mci->condition_on_data(false);
+                    calls_since_last_opt = 0;
+                }
                 gp_mci->optimize_gp_para(iterMax);
                 last_state = akmcs_status::defined;
                 break;

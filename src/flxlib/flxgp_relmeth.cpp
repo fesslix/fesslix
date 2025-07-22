@@ -134,7 +134,7 @@ struct tqi_struct {
 /**
 * @brief root-search-function for getting a specified quantile of the expected posterior probability of failure
 */
-double tqi_rsfun(const tdouble x, void *params)
+tdouble tqi_rsfun(const tdouble x, void *params)
 {
     tqi_struct *p = (tqi_struct *)params;
     flxVec& tqi_vec = *(p->tqi_vec);
@@ -143,6 +143,7 @@ double tqi_rsfun(const tdouble x, void *params)
     const tdouble q = p->q;
     tdouble s = ZERO;
     const tdouble pf = exp(x)*pf_ref;
+    GlobalVar.slogcout(1) << " Franz " << x << "  " << pf << "  " << pf_ref << std::endl;
     if (pf>=ONE) {
         throw FlxException_Crude("flxgp::tqi_rsfun");
     }
@@ -227,8 +228,12 @@ const tdouble flxGP_MCI::get_mean_tqi(const tdouble ref_m, const tulong n, const
         tqis.n = n*nrep;
         tqis.pf_ref = (ref_m+ONE)/(n*nrep+2*ONE);
         tqis.q = tqi_val;
-        const tdouble x_rs_res = flx_RootSearch_RegulaFalsi(tqi_rsfun,&tqis,log(1.),log(std::min(100.,(ONE-1e-7)/tqis.pf_ref)),1e-4,1e-4*tqis.pf_ref,NULL);  // &GlobalVar.slogcout(1)
-        return exp(x_rs_res)*tqis.pf_ref;
+        try {
+            const tdouble x_rs_res = flx_RootSearch_RegulaFalsi(tqi_rsfun,&tqis,log(1.),log(std::min(100.,(ONE-1e-7)/tqis.pf_ref)),1e-4,1e-4*tqis.pf_ref,nullptr);  // &GlobalVar.slogcout(1)
+            return exp(x_rs_res)*tqis.pf_ref;
+        } catch (FlxException& e) {
+            return ONE;
+        }
 
     // perform MCS to sample realizations of tqi
     //     tdouble s = ZERO;
@@ -511,8 +516,12 @@ void flxGP_MCI::output_summary()
             tqis.n = last_n;
             tqis.pf_ref = pf_bayes;
             tqis.q = parr[i];
-            const tdouble x_rs_res = flx_RootSearch_RegulaFalsi(tqi_rsfun,&tqis,log(0.5),log(std::min(100.,(ONE-1e-7)/tqis.pf_ref)),1e-4,1e-4*tqis.pf_ref,nullptr);  // &GlobalVar.slogcout(1)
-            t = exp(x_rs_res)*tqis.pf_ref;
+            try {
+                const tdouble x_rs_res = flx_RootSearch_RegulaFalsi(tqi_rsfun,&tqis,log(0.5),log(std::min(100.,(ONE-1e-7)/tqis.pf_ref)),1e-4,1e-4*tqis.pf_ref,nullptr);  // &GlobalVar.slogcout(1)
+                t = exp(x_rs_res)*tqis.pf_ref;
+            } catch (FlxException& e) {
+                t = ONE;
+            }
         logStream << "          Pr[ P_f < " << GlobalVar.Double2String(t,false,2,8) << " ] = ";
         GlobalVar.Double2String_setType(3);
         logStream << GlobalVar.Double2String(parr[i],false,2,5);

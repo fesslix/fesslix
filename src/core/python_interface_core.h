@@ -22,13 +22,6 @@
 #include "flxrbrv_rvs.h"
 #include "flxobjrandom.h"
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <pybind11/numpy.h>  // For NumPy support
-
-#define PYBIND11_DETAILED_ERROR_MESSAGES
-
-namespace py = pybind11;
 
 
 /**

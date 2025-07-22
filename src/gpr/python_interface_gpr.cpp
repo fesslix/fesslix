@@ -470,11 +470,11 @@ akmcs_status flxGP_AKMCS::simulate()
                     throw FlxException_Crude("flxGP_AKMCS::simulate_01");
                 }
                 ++calls_since_last_opt;
+                gp_mci->condition_on_data(false);
                 if (calls_since_last_opt>=optimize_after_N_calls) {
-                    gp_mci->condition_on_data(false);
+                    gp_mci->optimize_gp_para(iterMax);
                     calls_since_last_opt = 0;
                 }
-                gp_mci->optimize_gp_para(iterMax);
                 last_state = akmcs_status::defined;
                 break;
             }

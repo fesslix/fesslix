@@ -323,7 +323,7 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
                     }
                     // evaluate surrogate model
                         tdouble smpl_mean, smpl_var;
-                        gp.predict_mean_var(uvec,true,smpl_mean,smpl_var);
+                        gp.predict_mean_var(uvec,false,smpl_mean,smpl_var);
                     // probability of value being smaller than zero
                         const tdouble smpl_sd = sqrt(smpl_var);
                         const tdouble y = smpl_mean/smpl_sd;
@@ -368,7 +368,7 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
                 generate_sample(uvec);
                 // evaluate surrogate model
                     tdouble smpl_mean, smpl_var;
-                    gp.predict_mean_var(uvec,true,smpl_mean,smpl_var);
+                    gp.predict_mean_var(uvec,false,smpl_mean,smpl_var);
                 // probability of value being smaller than zero
                     const tdouble smpl_sd = sqrt(smpl_var);
                     const tdouble y = smpl_mean/smpl_sd;
@@ -451,6 +451,9 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
                         flxVec kernel_para_vec = parse_py_obj_as_flxVec(kernel_info["para_vec"],"kernel::para_vec");
                         flxVec kernel_n_vec = parse_py_obj_as_flxVec(kernel_info["n_vec"],"kernel::n_vec");
                         const tuint kernel_N = kernel_para_vec.get_N();
+                        if (kernel_N<=2) {
+                            throw FlxException_Crude("flxGP_MCI::simulate_GP_mci_80");
+                        }
                         // create Python-array
                             // Allocate memory for the return array
                             auto corrl_res_buf = py::array_t<tdouble>(kernel_N-1);

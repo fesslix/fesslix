@@ -226,7 +226,7 @@ class FLXLIB_EXPORT FunBaseFun_multPara : public FunBaseFun {
     FunBase** ParaListP;
     std::vector<FunBase*> *ParaList;
   public:
-    FunBaseFun_multPara (std::vector<FunBase*> *ParaListV) : ParaListP(&ParaListV->operator[](0)), ParaList(ParaListV) {};
+    FunBaseFun_multPara (std::vector<FunBase*> *ParaListV);
     virtual ~FunBaseFun_multPara();
     virtual const bool search_circref(FlxFunction* fcr);
     const std::string write();

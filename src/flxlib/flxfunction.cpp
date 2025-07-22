@@ -522,6 +522,13 @@ const bool FunBaseFun_onePara::optimize(FunBasePtr& optf, const Fun_OptimizeInfo
   }
 }
 
+FunBaseFun_multPara::FunBaseFun_multPara (std::vector<FunBase*> *ParaListV)
+: ParaListP(nullptr), ParaList(ParaListV)
+{
+  if (ParaList->size()) {
+    ParaListP = &ParaList->operator[](0);
+  }
+};
 FunBaseFun_multPara::~FunBaseFun_multPara() {
   for ( size_t i = 0; i < ParaList->size(); ++i ) 
     delete ParaList->operator[](i); 

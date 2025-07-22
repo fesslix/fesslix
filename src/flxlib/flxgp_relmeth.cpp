@@ -31,8 +31,9 @@ rng_type randgen_local;
 const tuint N_MCS_tqi = 1000;
 
 
-flxGP_MCI::flxGP_MCI(flxGPProj_base& gp, const tuint Nreserve, const tuint user_seed_int, const tuint user_init_calls, const tdouble tqi_val, const bool allow_decrease_of_N)
-: gp(gp), Ndim(gp.get_Ndim()), user_seed_int(user_seed_int), user_init_calls(user_init_calls), tqi_val(tqi_val), allow_decrease_of_N(allow_decrease_of_N), tqi_vec(N_MCS_tqi), tqi_vec_rv_u(N_MCS_tqi), id_next_point(0),
+flxGP_MCI::flxGP_MCI(flxGPProj_base& gp, const tuint Nreserve, const tuint user_seed_int, const tuint user_init_calls, const tdouble tqi_val, const bool allow_decrease_of_N, const bool account4noise)
+: gp(gp), Ndim(gp.get_Ndim()), user_seed_int(user_seed_int), user_init_calls(user_init_calls), tqi_val(tqi_val), allow_decrease_of_N(allow_decrease_of_N),account4noise(account4noise),
+  tqi_vec(N_MCS_tqi), tqi_vec_rv_u(N_MCS_tqi), id_next_point(0),
   static_sum(ZERO),last_m(ZERO), last_n(ZERO)
 {
     dmV.reserve(Ndim*Nreserve);
@@ -106,9 +107,9 @@ void flxGP_MCI::register_sample(const tdouble lsfval, const flxVec& uvec_)
     }
 }
 
-void flxGP_MCI::condition_on_data(const bool register_pvec, const bool learn_noise)
+void flxGP_MCI::condition_on_data(const bool register_pvec)
 {
-    gp.register_observation(flxGP_data_ptr(this),register_pvec,learn_noise);
+    gp.register_observation(flxGP_data_ptr(this),register_pvec,register_pvec&&account4noise);
 }
 
 void flxGP_MCI::optimize_gp_para(const tuint iterMax)
@@ -143,7 +144,6 @@ tdouble tqi_rsfun(const tdouble x, void *params)
     const tdouble q = p->q;
     tdouble s = ZERO;
     const tdouble pf = exp(x)*pf_ref;
-    GlobalVar.slogcout(1) << " Franz " << x << "  " << pf << "  " << pf_ref << std::endl;
     if (pf>=ONE) {
         throw FlxException_Crude("flxgp::tqi_rsfun");
     }

@@ -35,6 +35,7 @@ class PYBIND11_EXPORT flxGP_MCI {
     const tuint user_init_calls;  // number of initial calls to the random number generator
     const tdouble tqi_val;        // quantile value for evaluating stopping criterion (0.99 by default)
     const bool allow_decrease_of_N;
+    const bool account4noise;
     std::vector<tdouble> dmV;     // training set: X
     std::vector<tdouble> doV;     // training set: Y
     std::vector<tdouble> mcs_pi;  // vector of 0-1 probabilities in the Monte Carlo simulation
@@ -71,14 +72,14 @@ class PYBIND11_EXPORT flxGP_MCI {
     * @param Ndim number of uncertain model parameters
     * @param Nreserve intented (maximum) number of runs of the 'actual' model
     */
-    flxGP_MCI(flxGPProj_base& gp, const tuint Nreserve, const tuint user_seed_int, const tuint user_init_calls, const tdouble tqi_val, const bool allow_decrease_of_N);
+    flxGP_MCI(flxGPProj_base& gp, const tuint Nreserve, const tuint user_seed_int, const tuint user_init_calls, const tdouble tqi_val, const bool allow_decrease_of_N, const bool account4noise);
     virtual ~flxGP_MCI() {}
 
     void assemble_lh_samples(flxVec& lh_samples, const tdouble box_bounds);
     const bool is_point_unique(const flxVec& uvec_) const;
     void get_next_point(flxVec& uvec_);
     void register_sample(const tdouble lsfval, const flxVec& uvec_);
-    void condition_on_data(const bool register_pvec, const bool learn_noise);
+    void condition_on_data(const bool register_pvec);
     void optimize_gp_para(const tuint iterMax);
 
     const tuint get_N_model_calls() const { return doV.size(); }

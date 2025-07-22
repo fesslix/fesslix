@@ -350,7 +350,8 @@ flxGP_AKMCS::flxGP_AKMCS(py::dict config)
             throw FlxException("flxGP_AKMCS::flxGP_AKMCS_99", "'tqi_val' is not within the required bounds (0.5,1.0).");
         }
         const bool allow_decrease_of_N = parse_py_para_as_bool("allow_decrease_of_N",config,false,false);
-        gp_mci = new flxGP_MCI(*gp_ptr,N_reserve,seed_id,N_RNG_init,tqi_val,allow_decrease_of_N);
+        const bool account4noise = parse_py_para_as_bool("account4noise",config,false,false);
+        gp_mci = new flxGP_MCI(*gp_ptr,N_reserve,seed_id,N_RNG_init,tqi_val,allow_decrease_of_N,account4noise);
         iterMax = parse_py_para_as_tuintNo0("itermax",config,false,500);
         NmaxSur = parse_py_para_as_tulong("NmaxSur",config,false,10000000);
         Nsmpls = parse_py_para_as_tulong("Nsmpls",config,false,1000000);
@@ -453,7 +454,7 @@ akmcs_status flxGP_AKMCS::simulate()
             case akmcs_status::undefined:
             {
                 // condition GP on data and set initial parameter values
-                    gp_mci->condition_on_data(true,false);
+                    gp_mci->condition_on_data(true);
                     gp_mci->optimize_gp_para(iterMax);
                 last_state = akmcs_status::defined;
                 break;
@@ -468,7 +469,7 @@ akmcs_status flxGP_AKMCS::simulate()
                 if (!eval_model(uvec)) {
                     throw FlxException_Crude("flxGP_AKMCS::simulate_01");
                 }
-                gp_mci->condition_on_data(false,false);
+                gp_mci->condition_on_data(false);
                 gp_mci->optimize_gp_para(iterMax);
                 last_state = akmcs_status::defined;
                 break;

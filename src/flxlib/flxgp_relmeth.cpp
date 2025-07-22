@@ -61,7 +61,9 @@ const bool flxGP_MCI::is_point_unique(const flxVec& uvec_) const
     for (size_t i=0;i<N;++i) {
         const flxVec svec(&(dmV[c]),Ndim,false);
         const tdouble t = svec.get_Norm2_NOroot_of_distance(uvec_)/(2*Ndim);
-        if (t<=1e-6) return false;
+        if (t<=1e-8) {
+            return false;
+        }
         c += Ndim;
     }
     return true;

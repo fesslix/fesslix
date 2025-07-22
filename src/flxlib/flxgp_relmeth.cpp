@@ -146,7 +146,8 @@ double tqi_rsfun(const tdouble x, void *params)
         throw FlxException_Crude("flxgp::tqi_rsfun");
     }
     for (tuint i=0;i<N_MCS_tqi;++i) {
-        s += iBeta_reg(tqi_vec[i]+ONE,n-tqi_vec[i]+ONE,pf);
+        const tulong n_hits = min(tqi_vec[i],n);   // ensure that 'tqi_vec[i]' is not larger than 'n'
+        s += iBeta_reg(n_hits+ONE,n-n_hits+ONE,pf);
     }
     return s/N_MCS_tqi-q;
 }
@@ -468,7 +469,7 @@ void flxGP_MCI::output_summary()
     const tdouble pf_bayes = (last_m+ONE)/(last_n+2*ONE);
     logStream << "      Expectation for P_f                      = " << GlobalVar.Double2String(pf_bayes,false,2,8) << std::endl;
     GlobalVar.Double2String_setType(3);
-    get_mean_tqi(last_m,last_n);
+    get_mean_tqi(last_m,last_n);  // to assemble tqi_vec for the call of tqi_eval_covar()
     const tdouble CoV_bayes = tqi_eval_covar();
     logStream << "      C.o.V. for P_f                           = " << GlobalVar.Double2String(CoV_bayes*100,false,2,5) << "%" << std::endl;
     // reliability index :: 1st order approximation

@@ -514,7 +514,7 @@ endif()
 # if("${FLX_PARALLEL}" STREQUAL "ON")
 #     target_link_libraries(flxlib PRIVATE -fopenmp)
 # endif()
-if(UNIX)
+if(UNIX AND NOT APPLE)
   # if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   ## somehow Debug-builds required this library ...
   find_package(TBB REQUIRED)

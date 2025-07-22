@@ -23,6 +23,7 @@
 #if FLX_PARALLEL
     #include <thread>
     #include <mutex>
+    #include <execution>
 #endif
 
 rng_type randgen_local;
@@ -169,17 +170,31 @@ const tdouble flxGP_MCI::get_mean_tqi(const tdouble ref_m, const tulong n, const
     // perform MCS to sample realizations of m
         const size_t N_ = mcs_pi.size();
         tqi_vec = tqi_vec_rv_u;
-        std::for_each(tqi_vec.begin(),tqi_vec.end(),[&](auto&& val){
-            tdouble m = static_sum;
-            // assume maximum dependence
-                for (tulong j=0;j<N_;++j) {
-                    if (val<=mcs_pi[j]) {
-                        m += ONE;
+        #if FLX_PARALLEL
+            std::for_each(std::execution::par, tqi_vec.begin(),tqi_vec.end(),[&](auto&& val){
+                tdouble m = static_sum;
+                // assume maximum dependence
+                    for (tulong j=0;j<N_;++j) {
+                        if (val<=mcs_pi[j]) {
+                            m += ONE;
+                        }
                     }
-                }
-                m *= nrep;
-            val = m + skip_pr*nrep;
-        });
+                    m *= nrep;
+                val = m + skip_pr*nrep;
+            });
+        #else
+            std::for_each(tqi_vec.begin(),tqi_vec.end(),[&](auto&& val){
+                tdouble m = static_sum;
+                // assume maximum dependence
+                    for (tulong j=0;j<N_;++j) {
+                        if (val<=mcs_pi[j]) {
+                            m += ONE;
+                        }
+                    }
+                    m *= nrep;
+                val = m + skip_pr*nrep;
+            });
+        #endif
         // for (tuint i=0;i<N_MCS_tqi;++i) {
         //     tdouble m = static_sum;
         //     // assume full independence

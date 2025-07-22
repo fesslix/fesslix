@@ -23,6 +23,7 @@
 #include "flxMemoryManager.h"
 
 #include <format>
+#include <chrono>
 
 #include <valarray>
 typedef std::valarray<tdouble> tVec;
@@ -102,6 +103,8 @@ class FLXLIB_EXPORT strGlobalVar {
     */
     bool leak_check;
     flxLoggerBase* Logger_ptr;
+    // time of initialization
+    std::chrono::steady_clock::time_point time_of_start;
     
   public:
     tuint logLev_counter;
@@ -153,6 +156,10 @@ class FLXLIB_EXPORT strGlobalVar {
     * @returns the directory of the executable - must end with an '/' !!!
     */
     void set_exe_dir(const std::string& exe_dirV) { exe_dir = exe_dirV; }
+    /**
+    * @returns time in seconds since start-up of application
+    */
+    const tdouble get_time_since_start();
     /**
     * @brief returns the logging-stream
     * (1) alerts and errors are logged (ALERT)

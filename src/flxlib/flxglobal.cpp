@@ -318,6 +318,14 @@ const std::string strGlobalVar::D2S_totalPrec(const tdouble dv)
   return std::format("{:19.12e}", dv);
 }
 
+const tdouble strGlobalVar::get_time_since_start()
+{
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    std::chrono::duration<double> elapsed = end - time_of_start;
+    const double seconds_passed = elapsed.count();
+    return seconds_passed;
+}
+
 std::ostream& strGlobalVar::slog(const int logLevel_)
 {
   if (Logger_ptr) {
@@ -351,7 +359,9 @@ strGlobalVar::strGlobalVar()
   // NOTE this are not the default values - the default values are set in the settings of the configuration file
   D2S_Prec(DEFAULT_FPC_PREC), D2S_Type(DEFAULT_FPC_TYPE), D2S_BValU(DEFAULT_FPC_BVALU), D2S_BValL(DEFAULT_FPC_BVALL), D2S_Del0(DEFAULT_FPC_DEL0), D2S_DelP(DEFAULT_FPC_DELP),
   TOLval(DEFAULT_TOL),prelog_active(true),prelog_stream(""),
-  logLevel_strong(DEFAULT_LOG_LEVEL),leak_check(false),Logger_ptr(nullptr),logLev_counter(0),
+  logLevel_strong(DEFAULT_LOG_LEVEL),leak_check(false),Logger_ptr(nullptr),
+  time_of_start(std::chrono::steady_clock::now()),
+  logLev_counter(0),
   logLevel(DEFAULT_LOG_LEVEL),
   MT19937_init_calls(DEFAULT_MT19937_INIT_CALLS), MT19937_init_RAND(DEFAULT_MT19937_INIT_RAND), MT19937_init_seed(DEFAULT_MT19937_INIT_SEED), MT19937_init_seedvalue(DEFAULT_MT19937_INIT_SEEDVALUE),
   LegendrePolyH_init_numb(DEFAULT_LEGENDRE_NUMB), prgBar(DEFAULT_FLX_PRGBAR),

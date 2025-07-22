@@ -24,6 +24,7 @@
     #include <thread>
     #include <mutex>
     #include <execution>
+    #include <ranges>
 #endif
 
 rng_type randgen_local;
@@ -174,7 +175,10 @@ const tdouble flxGP_MCI::get_mean_tqi(const tdouble ref_m, const tulong n, const
         const size_t N_ = mcs_pi.size();
         tqi_vec = tqi_vec_rv_u;
         #if FLX_PARALLEL
-            std::for_each(std::execution::par, tqi_vec.begin(),tqi_vec.end(),[&](auto&& val){
+            std::vector<size_t> indices(tqi_vec.get_N());
+            std::iota(indices.begin(), indices.end(), 0);
+            std::for_each(std::execution::par, indices.begin(), indices.end(), [&](size_t i) {
+                auto& val = tqi_vec[i];
                 tdouble m = static_sum;
                 // assume maximum dependence
                     for (tulong j=0;j<N_;++j) {

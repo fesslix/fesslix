@@ -873,6 +873,24 @@ double gp_likeli_f(const gsl_vector *v, void *params)
   return -res;
 }
 
+#if FLX_USE_NLOPT
+const char* nlopt_result_name(nlopt::result r) {
+    switch (r) {
+        case nlopt::FAILURE: return "FAILURE";
+        case nlopt::SUCCESS: return "SUCCESS";
+        case nlopt::STOPVAL_REACHED: return "STOPVAL_REACHED";
+        case nlopt::FTOL_REACHED: return "FTOL_REACHED";
+        case nlopt::XTOL_REACHED: return "XTOL_REACHED";
+        case nlopt::MAXEVAL_REACHED: return "MAXEVAL_REACHED";
+        case nlopt::MAXTIME_REACHED: return "MAXTIME_REACHED";
+        case nlopt::FORCED_STOP: return "FORCED_STOP";
+        case nlopt::INVALID_ARGS: return "INVALID_ARGS";
+        case nlopt::OUT_OF_MEMORY: return "OUT_OF_MEMORY";
+        case nlopt::ROUNDOFF_LIMITED: return "ROUNDOFF_LIMITED";
+        default: return "UNKNOWN_RESULT";
+    }
+}
+#endif
 
 const tdouble flxGPProj::optimize_help(const tdouble step_size, const tuint iterMax, const bool opt_noise, const bool output_ini, std::ostream& ostrm)
 {
@@ -965,16 +983,16 @@ const tdouble flxGPProj::optimize_help(const tdouble step_size, const tuint iter
           keep_LSE_results = true;
           const tdouble res_err = fabs(gp_likeli_f(Npara,&x[0],NULL,this)+lres)/max(ONE,fabs(lres));
           if (res_err>=1e-6) {
-            std::ostringstream ssV;
-            ssV << GlobalVar.Double2String(lpr_obsv) << "  " << GlobalVar.Double2String(lres) << "  " << GlobalVar.Double2String(res_err);
-            throw FlxException("flxGPProj::optimize_help_NLopt_02", ssV.str());
+            GlobalVar.slogcout(1) << "flxGPProj::optimize_help_NLopt_02:" << nlopt_result_name(result) << "   " << GlobalVar.Double2String(lpr_obsv) << "  " << GlobalVar.Double2String(lres) << "  " << GlobalVar.Double2String(res_err) << std::endl;
+            if (result!=nlopt::MAXEVAL_REACHED) {
+              throw FlxException("flxGPProj::optimize_help_NLopt_02");
+            }
           }
 
       } catch(...) {
         // re-run evaluation for initial model
           keep_LSE_results = true;
           lres = -gp_likeli_f(Npara,&x_ini[0],NULL,this);
-        throw;
       }
 
   #else
@@ -1108,7 +1126,6 @@ const tdouble flxGPProj::optimize_help(const tdouble step_size, const tuint iter
         gsl_vector_free(x);
         gsl_vector_free(ss);
         gsl_multimin_fminimizer_free (s);
-      throw;
     }
 
     gsl_vector_free(x);

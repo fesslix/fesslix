@@ -1181,7 +1181,7 @@ PYBIND11_MODULE(core, m) {
         m.def("cdfn_inv", &rv_InvPhi, "inverse of the CDF of the standard Normal distribution");
 
         m.def("randStr", &generate_randStr, "returns a random string of length N");
-        m.def("get_time_since_start", []() {return GlobalVar.get_time_since_start(); }, "returns time since start-up in seconds");
+        m.def("get_time_since_start", []() {return GlobalVar.get_time_since_start(); }, "returns the time since start-up in seconds");
 
     // ====================================================
     // random variables

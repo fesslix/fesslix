@@ -27,7 +27,6 @@ Issues = "https://github.com/fesslix/fesslix/issues"
 wheel.expand-macos-universal-tags = true
 minimum-version = "build-system.requires"
 
-
 [tool.cibuildwheel]
 build = "cp312-* cp313-* cp314-*"   # cp39-* cp310-* cp311-* cp312-*
 build-verbosity = 1
@@ -111,8 +110,7 @@ before-all = [ "apk add --no-cache gsl gsl-dev boost-dev",
                ]
 ## NOTE: do not run "source ./.github/linux_install_dependencies.sh"
 ##       musllinux does not officially support 'vcpkg'.
-environment = "Boost_skip_search=1  NLOPT_INCLUDE_DIR=/project/nlopt/install/include/ NLOPT_LIBRARY=/project/nlopt/install/lib/libnlopt.a"
-
+environment = "Boost_skip_search=1  NLOPT_INCLUDE_DIR=/project/nlopt/install/include/ NLOPT_LIBRARY=/project/nlopt/install/lib/libnlopt.a TBB_INCLUDE_DIR=/project/oneTBB/install/include/ TBB_LIBRARY=/project/oneTBB/install/lib/libtbb.a"
 
 #################################################################################
 # Windows

@@ -39,11 +39,20 @@ jobs:
         run: |
           import json
           import os
-
+          
+          print("Starting matrix setup...", file=sys.stderr)
+          
+          # ===================================
+          # Load input
+          # ===================================
           event = os.environ.get("GITHUB_EVENT_NAME")
           os_input = os.environ.get("INPUT_OS", "")
           python_input = os.environ.get("INPUT_PYTHON", "")
+          print(f"   INPUT: {event} {os_input} {python_input}", file=sys.stderr)
 
+          # ===================================
+          # Assemble the matrix
+          # ===================================
           if event == "workflow_dispatch" and os_input and python_input:
               matrix = [{"os": os_input, "python": python_input}]
           else:
@@ -53,8 +62,16 @@ jobs:
                   {"os": "macos-14", "python": "3.13"},
                   {"os": "macos-13", "python": "3.13"}
               ]
+          matrix = [
+                  {"os": "ubuntu-latest", "python": "3.13"}
+          ]
 
-          print(f"::set-output name=matrix::{json.dumps(matrix)}")
+          # ===================================
+          # Write output using environment file
+          # ===================================
+          print(f"matrix<<EOF")
+          print(json.dumps(matrix))
+          print("EOF")
         shell: python
         
   wait-for-pypi:

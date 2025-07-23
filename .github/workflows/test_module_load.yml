@@ -36,6 +36,9 @@ jobs:
       matrix: ${{ steps.setmatrix.outputs.matrix }}
     steps:
       - id: setmatrix
+        env:
+          INPUT_OS: ${{ github.event.inputs.os }}
+          INPUT_PYTHON: ${{ github.event.inputs.python }}
         run: |
           import json
           import os
@@ -43,6 +46,9 @@ jobs:
           
           print("Starting matrix setup...", file=sys.stderr)
           
+          for key in sorted(os.environ):
+             print(f'{key}={os.environ[key]}')
+    
           # ===================================
           # Load input
           # ===================================

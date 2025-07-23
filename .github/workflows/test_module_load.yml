@@ -75,6 +75,9 @@ jobs:
           print("EOF")
         shell: python
         
+      - name: Some other step
+        run: echo hello
+
       - name: Debug matrix output
         run: echo "Matrix: $MATRIX"
         env:

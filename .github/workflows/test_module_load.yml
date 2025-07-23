@@ -45,16 +45,15 @@ jobs:
           import sys
           
           print("Starting matrix setup...", file=sys.stderr)
-          
-          for key in sorted(os.environ):
-             print(f'{key}={os.environ[key]}')
     
           # ===================================
           # Load input
           # ===================================
+          #for key in sorted(os.environ):
+          #   print(f'{key}={os.environ[key]}')
           event = os.environ.get("GITHUB_EVENT_NAME")
-          os_input = os.environ.get("INPUT_OS", "")
-          python_input = os.environ.get("INPUT_PYTHON", "")
+          os_input = os.environ.get("INPUT_OS")
+          python_input = os.environ.get("INPUT_PYTHON")
           print(f"   INPUT: {event} {os_input} {python_input}", file=sys.stderr)
 
           # ===================================

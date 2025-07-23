@@ -30,6 +30,33 @@ on:
           - '3.12'
 
 jobs:
+  set-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - id: set
+        run: |
+          import json
+          import os
+
+          event = os.environ.get("GITHUB_EVENT_NAME")
+          os_input = os.environ.get("INPUT_OS", "")
+          python_input = os.environ.get("INPUT_PYTHON", "")
+
+          if event == "workflow_dispatch" and os_input and python_input:
+              matrix = [{"os": os_input, "python": python_input}]
+          else:
+              matrix = [
+                  {"os": "ubuntu-latest", "python": "3.13"},
+                  {"os": "windows-latest", "python": "3.13"},
+                  {"os": "macos-14", "python": "3.13"},
+                  {"os": "macos-13", "python": "3.13"}
+              ]
+
+          print(f"::set-output name=matrix::{json.dumps(matrix)}")
+        shell: python
+        
   wait-for-pypi:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
@@ -43,20 +70,17 @@ jobs:
   test-module-load:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ${{ matrix.os }}
-    needs: [wait-for-pypi]
+    needs: [set-matrix, wait-for-pypi]
     strategy:
       matrix:
-        include: ${{ fromJson(
-            github.event_name == 'workflow_dispatch' && inputs.os != '' && inputs.python != ''
-            ? format(
-                '[{{"os":"{0}", "python":"{1}"}}]', 
-                inputs.os != '' && inputs.os || 'ubuntu-latest', 
-                inputs.python != '' && inputs.python || '3.13'
-              )
-            : '[{"os":"ubuntu-latest","python":"3.13"}, {"os":"windows-latest","python":"3.13"}, {"os":"macos-14","python":"3.13"}, {"os":"macos-13","python":"3.13"}]'
-          ) }}
+        include: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
 
     steps:
+      - name: Show system info
+        run: |
+          echo "Running on OS: ${{ matrix.os }}"
+          echo "Python version: ${{ matrix.python }}"
+
       - name: Checkout repository
         uses: actions/checkout@v4  # Get the code from the repository
       

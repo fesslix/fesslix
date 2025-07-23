@@ -399,9 +399,9 @@ option ( FLX_PARALLEL "use multithreading" ON )
 message(STATUS "FLX_PARALLEL » ${FLX_PARALLEL}")
 
 if("${FLX_PARALLEL}" STREQUAL "ON")
-set ( FLX_PARALLELb 1 )
+  set ( FLX_PARALLELb 1 )
 else("${FLX_PARALLEL}" STREQUAL "ON")
-set ( FLX_PARALLELb 0 )
+  set ( FLX_PARALLELb 0 )
 endif("${FLX_PARALLEL}" STREQUAL "ON")
 
 
@@ -527,6 +527,12 @@ endif()
 
 target_compile_definitions(flxlib PRIVATE VERSION_INFO=${PROJECT_VERSION})
 target_compile_definitions(flxlib PRIVATE GSL_STATIC)
+
+if("${FLX_PARALLEL}" STREQUAL "ON")
+  if(NOT APPLE)
+    target_compile_definitions(flxlib PRIVATE HAS_STD_EXECUTION_PAR)
+  endif()
+endif("${FLX_PARALLEL}" STREQUAL "ON")
 
 #==========================================================
 # core » main interface of Fesslix

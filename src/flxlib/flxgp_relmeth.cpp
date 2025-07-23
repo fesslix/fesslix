@@ -23,7 +23,9 @@
 #if FLX_PARALLEL
     #include <thread>
     #include <mutex>
-    #include <execution>
+    #ifdef HAS_STD_EXECUTION_PAR
+        #include <execution>
+    #endif
     #include <ranges>
 #endif
 
@@ -174,7 +176,7 @@ const tdouble flxGP_MCI::get_mean_tqi(const tdouble ref_m, const tulong n, const
     // perform MCS to sample realizations of m
         const size_t N_ = mcs_pi.size();
         tqi_vec = tqi_vec_rv_u;
-        #if FLX_PARALLEL
+        #ifdef HAS_STD_EXECUTION_PAR
             std::vector<size_t> indices(tqi_vec.get_N());
             std::iota(indices.begin(), indices.end(), 0);
             std::for_each(std::execution::par, indices.begin(), indices.end(), [&](size_t i) {

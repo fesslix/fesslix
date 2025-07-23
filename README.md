@@ -16,6 +16,10 @@ Fesslix can be installed via `pip`:
 ```bash
 pip install fesslix
 ```
+## 📦 Python packages
+
+[![Package build](https://github.com/fesslix/fesslix/actions/workflows/publish.yml/badge.svg)](https://github.com/fesslix/fesslix/actions/workflows/publish.yml)
+[![Package build](https://github.com/fesslix/fesslix/actions/workflows/test_module_load.yml/badge.svg)](https://github.com/fesslix/fesslix/actions/workflows/test_module_load.yml)
 
 ## 📚 Documentation
 

@@ -359,6 +359,36 @@ else()
   message(STATUS "NLopt » not using nlopt")
 endif()
 
+#==========================================================
+# TBB library
+#==========================================================
+
+if(UNIX)
+  if(DEFINED ENV{TBB_INCLUDE_DIR})
+      set(TBB_INCLUDE_DIR "$ENV{TBB_INCLUDE_DIR}")
+      set(TBB_LIBRARY "$ENV{TBB_LIBRARY}")
+      set(TBB_STATIC_LIB "$ENV{TBB_LIBRARY}")
+  else()
+      set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+      find_library(TBB_STATIC_LIB tbb)
+      set(CMAKE_FIND_LIBRARY_SUFFIXES ".dylib" ".so" ".a")
+      find_path(TBB_INCLUDE_DIR tbb/tbb.h
+          HINTS /opt/homebrew/include /usr/local/include
+      )
+  endif()
+  if(TBB_STATIC_LIB)
+      message(STATUS "TBB » Found static TBB: ${TBB_STATIC_LIB}")
+      message(STATUS "TBB » TBB_INCLUDE_DIR: ${TBB_INCLUDE_DIR}")
+      set(TBB_FOUND_STATIC TRUE)
+      if(DEFINED TBB_INCLUDE_DIR)
+          include_directories(${TBB_INCLUDE_DIR})
+      endif()
+  else()
+      message(STATUS "TBB » WARNING: NOT found static TBB")
+      FIND_PACKAGE(TBB REQUIRED CONFIG)
+  endif()
+endif(UNIX)
+
 
 #==========================================================
 # ARPACK library
@@ -514,11 +544,13 @@ endif()
 # if("${FLX_PARALLEL}" STREQUAL "ON")
 #     target_link_libraries(flxlib PRIVATE -fopenmp)
 # endif()
-if(UNIX AND NOT APPLE)
-  # if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  ## somehow Debug-builds required this library ...
-  find_package(TBB REQUIRED)
-  target_link_libraries(flxlib PRIVATE TBB::tbb)
+if(UNIX)
+  if(TBB_FOUND_STATIC)
+      message(STATUS "TBB: static linking: ${TBB_STATIC_LIB}")
+      target_link_libraries(flxlib PRIVATE ${TBB_STATIC_LIB})
+  else()
+      target_link_libraries(flxlib PRIVATE TBB::tbb)
+  endif()
 endif()
 target_link_libraries(flxlib PRIVATE pybind11::module )   # pybind11::headers
 if(DEFINED RPATH_STRING)

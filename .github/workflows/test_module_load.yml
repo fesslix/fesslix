@@ -93,7 +93,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: [set-matrix, wait-for-pypi]
     strategy:
-      matrix: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
+      matrix: 
+        include: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
 
     steps:
       - name: Show system info

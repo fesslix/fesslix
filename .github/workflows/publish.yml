@@ -34,7 +34,6 @@ on:
           - windows-latest
           - macos-14
           - macos-13
-          - windows-2025
 
 jobs:
 

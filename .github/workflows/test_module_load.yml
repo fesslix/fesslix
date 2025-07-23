@@ -1,10 +1,10 @@
 name: Test loading of the Python module
 
 on:
-  workflow_run:
-    workflows: ["Build and publish Fesslix as Python module"]
-    types:
-      - completed
+  #workflow_run:
+  #  workflows: ["Build and publish Fesslix as Python module"]
+  #  types:
+  #    - completed
   workflow_dispatch:  # manually trigger workflow
     inputs:
       os:

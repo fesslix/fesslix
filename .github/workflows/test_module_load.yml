@@ -28,6 +28,9 @@ jobs:
         python: ['3.13']
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4  # Get the code from the repository
+      
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -45,3 +48,5 @@ jobs:
         run: |
           run: python test_module_load.py
         working-directory: tests
+        
+        

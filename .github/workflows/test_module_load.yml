@@ -46,7 +46,7 @@ jobs:
 
       - name: Run test script
         run: |
-          run: python test_module_load.py
+          python test_module_load.py
         working-directory: tests
         
         

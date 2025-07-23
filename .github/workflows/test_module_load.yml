@@ -33,9 +33,9 @@ jobs:
   set-matrix:
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.set.outputs.matrix }}
+      matrix: ${{ steps.setmatrix.outputs.matrix }}
     steps:
-      - id: set
+      - id: setmatrix
         run: |
           import json
           import os
@@ -70,9 +70,11 @@ jobs:
           # ===================================
           # Write output using environment file
           # ===================================
-          print(f"matrix<<EOF")
-          print(json.dumps(matrix))
-          print("EOF")
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+              fh.write(f"matrix<<EOF\n")
+              fh.write(json.dumps(matrix))
+              fh.write("\nEOF\n")
+              
         shell: python
         
       - name: Some other step
@@ -81,7 +83,7 @@ jobs:
       - name: Debug matrix output
         run: echo "Matrix: $MATRIX"
         env:
-          MATRIX: ${{ steps.set.outputs.matrix }}
+          MATRIX: ${{ steps.setmatrix.outputs.matrix }}
         
   wait-for-pypi:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}

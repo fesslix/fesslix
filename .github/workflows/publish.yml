@@ -2,22 +2,26 @@ name: Build and publish Fesslix as Python module
 
 
 on:
-  ## =======================
+  ## =========================
   ## Execute after each push
-  ## =======================
+  ## =========================
   # Trigger the workflow on push and pull request events to the main branch
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-  ## =======================
-  ## Execute commiting a tag
-  ## =======================  
   #push:
-  #  tags:
-  #    - 'v*'  # Trigger only on version tags
+  #  branches:
+  #    - main
+  #pull_request:
+  #  branches:
+  #    - main
+  ## =========================
+  ## Execute commiting a tag
+  ## =========================  
+  push:
+    tags:
+      - 'v*'  # Trigger only on version tags
+  ## =========================
+  ## Manually trigger workflow
+  ## =========================
+  workflow_dispatch:
 
 jobs:
   build:

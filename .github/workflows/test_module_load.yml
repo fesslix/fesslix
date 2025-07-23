@@ -46,8 +46,6 @@ jobs:
     needs: [wait-for-pypi]
     strategy:
       matrix:
-        #os: [ ubuntu-latest, windows-latest, macos-14, macos-13 ]  # List of OS to build on »  ubuntu-latest, windows-latest, macos-14, macos-13
-        #python: ['3.13']
         include: ${{ fromJson(
             github.event_name == 'workflow_dispatch' && inputs.os != '' && inputs.python != ''
             ? format(

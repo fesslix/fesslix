@@ -28,7 +28,7 @@ wheel.expand-macos-universal-tags = true
 minimum-version = "build-system.requires"
 
 [tool.cibuildwheel]
-build = "cp312-* cp313-* cp314-*"   # cp39-* cp310-* cp311-* cp312-*
+build = "cp312-* cp313-*"   # cp314-*
 build-verbosity = 1
 test-skip = "*-win_arm64"
 

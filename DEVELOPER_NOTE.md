@@ -27,6 +27,11 @@ twine upload dist/*
 
 ## GitHub Actions
 
+### Python version
+
+once in a while, check if a new Python vesion is to be supported:
+https://devguide.python.org/versions/
+
 ### cibuildwheel 
 https://cibuildwheel.pypa.io/en/stable/faq/
 https://cibuildwheel.pypa.io/en/stable/working-examples/
@@ -94,8 +99,9 @@ versioning: increase version number to 0.5.2
 versioning: increase patch number
 versioning: increase minor number
 versioning: increase major number
-attempt package build
-change CI-build trigger from 'push' to 'tag'
+package build » change OS to ubuntu-latest
+package build » change trigger from 'push' to 'tag'
+
 
 ## work on features in a separate branch
 

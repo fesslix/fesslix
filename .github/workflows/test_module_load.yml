@@ -41,7 +41,7 @@ jobs:
           import os
           import sys
           
-          print("Starting matrix setup...", file=sys.stderr)
+          #print("Starting matrix setup...", file=sys.stderr)
           
           # ===================================
           # Load input
@@ -49,7 +49,7 @@ jobs:
           event = os.environ.get("GITHUB_EVENT_NAME")
           os_input = os.environ.get("INPUT_OS", "")
           python_input = os.environ.get("INPUT_PYTHON", "")
-          print(f"   INPUT: {event} {os_input} {python_input}", file=sys.stderr)
+          #print(f"   INPUT: {event} {os_input} {python_input}", file=sys.stderr)
 
           # ===================================
           # Assemble the matrix

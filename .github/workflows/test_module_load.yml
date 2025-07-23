@@ -76,7 +76,9 @@ jobs:
         shell: python
         
       - name: Debug matrix output
-        run: echo "Matrix: ${{ steps.set.outputs.matrix }}"
+        run: echo "Matrix: $MATRIX"
+        env:
+          MATRIX: ${{ steps.set.outputs.matrix }}
         
   wait-for-pypi:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}

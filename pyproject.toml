@@ -47,6 +47,7 @@ before-all = [ #"yum install -y gsl-devel",
                #"yum install -y curl epel-release",
                #"yum install python3-devel",
                "yum install -y ninja-build",
+               #"yum install -y tbb-devel",
                "source ./.github/linux_install_dependencies.sh",
                "source ./.github/linux_build_nlopt.sh",
                ]
@@ -142,7 +143,7 @@ environment = "TRIPLET=arm64-windows-static-md Boost_DIR=D:/a/fesslix/fesslix/vc
 #################################################################################
 
 [tool.cibuildwheel.macos]
-before-all= [ "brew install gsl boost",
+before-all= [ "brew install gsl boost tbb",
               "brew --prefix boost",
               "ls -l $(brew --prefix gsl)/lib",  # list installed libgsl.*
               "source ./.github/macOS_install_dependencies.sh",

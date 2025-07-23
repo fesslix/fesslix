@@ -72,10 +72,6 @@ jobs:
                   if python_input=="":
                       python_input = "3.13"
                   matrix = [{"os": os_input, "python": python_input}]
-              
-          matrix = [
-                  {"os": "ubuntu-latest", "python": "3.13"}
-          ]
 
           # ===================================
           # Write output using environment file

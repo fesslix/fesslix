@@ -22,16 +22,70 @@ on:
   ## Manually trigger workflow
   ## =========================
   workflow_dispatch:
+    inputs:
+      os:
+        description: 'Target OS (leave blank to use default)'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - ubuntu-latest
+          - windows-latest
+          - macos-14
+          - macos-13
+          - windows-2025
 
 jobs:
+
+  set-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.setmatrix.outputs.matrix }}
+    steps:
+      - id: setmatrix
+        env:
+          INPUT_OS: ${{ github.event.inputs.os }}
+        run: |
+          import json
+          import os
+          import sys
+          
+          print("Starting matrix setup...", file=sys.stderr)
+    
+          # ===================================
+          # Load input
+          # ===================================
+          #for key in sorted(os.environ):
+          #   print(f'{key}={os.environ[key]}')
+          event = os.environ.get("GITHUB_EVENT_NAME")
+          os_input = os.environ.get("INPUT_OS")
+          print(f"   INPUT: {event} {os_input}", file=sys.stderr)
+
+          # ===================================
+          # Assemble the matrix
+          # ===================================
+          matrix = {"os": ["ubuntu-latest", "windows-latest", "macos-14", "macos-13"]}
+          if event == "workflow_dispatch" and os_input!="":
+              matrix = {"os": [os_input]}
+
+          # ===================================
+          # Write output using environment file
+          # ===================================
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+              fh.write(f"matrix<<EOF\n")
+              fh.write(json.dumps(matrix))
+              fh.write("\nEOF\n")
+              
+        shell: python
+        
   build:
     # Run this job on multiple operating systems (Linux, Windows, macOS)
     runs-on: ${{ matrix.os }}
+    needs: [set-matrix]
 
     strategy:
-      matrix:
-        os: [ macos-14 ]  # List of OS to build on »  ubuntu-latest, windows-latest, macos-14, macos-13
-        ## do not use » , macos-latest
+      matrix: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
 
     permissions:
       id-token: write

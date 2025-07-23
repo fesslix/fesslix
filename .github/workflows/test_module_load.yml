@@ -39,6 +39,7 @@ jobs:
         run: |
           import json
           import os
+          import sys
           
           print("Starting matrix setup...", file=sys.stderr)
           

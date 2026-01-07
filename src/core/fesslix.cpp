@@ -25,6 +25,7 @@
 #include "flxobjects.h"
 #include "flxstringfun_fun.h"
 #include "flxMtx_Eigen.h"
+#include "flxphys.h"
 
 #include <fstream>
 #include <limits>
@@ -84,6 +85,8 @@ FesslixMain::FesslixMain() : initialized(false)
       load_FlxReaders( new FlxCreateObjReaders_RBRV() );
     // FlxString Objects
       load_FlxReaders( new FlxCreateObjReaders_FlxString() );
+    // FlxPhys Objects
+      load_FlxReaders( new FlxCreateObjReaders_FlxPhys() );
 
 }
 

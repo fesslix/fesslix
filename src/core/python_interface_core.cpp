@@ -22,6 +22,7 @@
 #include "flxstringfun_fun.h"
 #include "flxobjrbrv.h"
 #include "flxobjrandom.h"
+#include "flxphys.h"
 
 
 #include <iostream>
@@ -1272,6 +1273,13 @@ PYBIND11_MODULE(core, m) {
     // ====================================================
             m.def("perform_Line_Sampling", &perform_Line_Sampling, "Perform Line Sampling (structural reliability analysis)");
             m.def("perform_FORM", &perform_FORM, "Perform FORM (First Order Reliability Method)");
+
+    // ====================================================
+    // physical analysis
+    // ====================================================
+        m.def("phys_dewpoint", &flxPhys_dewpoint, "evaluates the dew point as a function of temperature and humidity");
+        m.def("phys_tauphi2temp", &flxPhys_tauphi2temp, "evaluates the temperature associated with a given dew point and humidity");
+        m.def("phys_tauptemp2phi", &flxPhys_tautemp2phi, "evaluates the humidity associated with a given dew point and temperature");
 
     // ====================================================
     // Advanced features

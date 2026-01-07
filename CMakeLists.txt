@@ -517,6 +517,7 @@ add_library(flxlib SHARED   # python_add_library add_library
   src/flxlib/flxStatBox.cpp
   src/flxlib/flxgp_kernel.cpp
   src/flxlib/flxgp_relmeth.cpp
+  src/flxlib/flxphys.cpp
 )
 if(MSVC)
   generate_export_header(flxlib)

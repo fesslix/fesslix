@@ -80,6 +80,9 @@ class FunReadPhys_tautemp2phi : public FunReadFunBase {
     FunBase* read ( bool errSerious );
 };
 
+// -------------------------- absolut humidity ----------------------------------------------------------------------
+
+FLXLIB_EXPORT const tdouble flxPhys_abs_humidity(const tdouble temp,  const tdouble phi);
 
 
 #endif // fesslix_phys_H

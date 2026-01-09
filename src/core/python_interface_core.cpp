@@ -1280,6 +1280,7 @@ PYBIND11_MODULE(core, m) {
         m.def("phys_dewpoint", &flxPhys_dewpoint, "evaluates the dew point as a function of temperature and humidity");
         m.def("phys_tauphi2temp", &flxPhys_tauphi2temp, "evaluates the temperature associated with a given dew point and humidity");
         m.def("phys_tauptemp2phi", &flxPhys_tautemp2phi, "evaluates the humidity associated with a given dew point and temperature");
+        m.def("phys_abs_humidity", &flxPhys_abs_humidity, "evaluates the absolute humidity as a function of temperature and humidity");
 
     // ====================================================
     // Advanced features

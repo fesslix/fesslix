@@ -145,3 +145,24 @@ FunBase* FunReadPhys_tautemp2phi::read(bool errSerious)
   return new FunPhys_tautemp2phi( read_parameters(2,errSerious) );
 }
 
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * @brief Berechnet die absolute Feuchte [g/m³]
+ *        aus Temperatur (temp, °C) und relativer Feuchte (phi, 0..1)
+ */
+const tdouble flxPhys_abs_humidity(const tdouble temp,  const tdouble phi)
+{
+    if (phi <= ZERO) return ZERO;
+
+    // Sättigungsdampfdruck nach Magnus [hPa]
+    const tdouble es =  (*magnus_k1) * exp( ((*magnus_k2) * temp) / ((*magnus_k3) + temp) );
+
+    // Tatsächlicher Dampfdruck [hPa]
+    const tdouble e = phi * es;
+
+    // Absolute Feuchte [g/m³]
+    return 216.7 * e / (temp + 273.15);
+}
+
+

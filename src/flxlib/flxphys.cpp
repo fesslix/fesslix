@@ -52,32 +52,34 @@ inline tdouble flx_fun_magnus(const tdouble temp, const tdouble phi) {
   return (*magnus_k3)*(help*temp+lphi)/(help*(*magnus_k3)-lphi);
 }
 
-/**
-* @brief Datenkontainer für flx_fun_magnus_rh
-*/
-struct flx_fun_magnus_data {
-  const tdouble d1;
-  const tdouble d2;
-  flx_fun_magnus_data(const tdouble d1, const tdouble d2) : d1(d1), d2(d2) {}
-};
 
-/**
-* @brief Hilfsfunktion um von Taupunkt und Luftfeuchtigkeit auf Temperatur zu schließen
-*/
-inline tdouble flx_fun_magnus_rh(const tdouble temp, void *dp) {
-  flx_fun_magnus_data *p = (flx_fun_magnus_data *)dp;
-  return flx_fun_magnus(temp,p->d2)-p->d1;
-}
-
-/**
-* @brief Hilfsfunktion um von Taupunkt und Temperatur auf Luftfeuchtigkeit zu schließen
-*/
-inline tdouble flx_fun_magnus_tp(const tdouble phi, void *dp) {
-  flx_fun_magnus_data *p = (flx_fun_magnus_data *)dp;
-  return flx_fun_magnus(p->d2,phi)-p->d1;
-}
-
-
+// ********************************************
+// OBSOLETE IMPLEMENTATION
+// /**
+// * @brief Datenkontainer für flx_fun_magnus_rh
+// */
+// struct flx_fun_magnus_data {
+//   const tdouble d1;
+//   const tdouble d2;
+//   flx_fun_magnus_data(const tdouble d1, const tdouble d2) : d1(d1), d2(d2) {}
+// };
+//
+// /**
+// * @brief Hilfsfunktion um von Taupunkt und Luftfeuchtigkeit auf Temperatur zu schließen
+// */
+// inline tdouble flx_fun_magnus_rh(const tdouble temp, void *dp) {
+//   flx_fun_magnus_data *p = (flx_fun_magnus_data *)dp;
+//   return flx_fun_magnus(temp,p->d2)-p->d1;
+// }
+//
+// /**
+// * @brief Hilfsfunktion um von Taupunkt und Temperatur auf Luftfeuchtigkeit zu schließen
+// */
+// inline tdouble flx_fun_magnus_tp(const tdouble phi, void *dp) {
+//   flx_fun_magnus_data *p = (flx_fun_magnus_data *)dp;
+//   return flx_fun_magnus(p->d2,phi)-p->d1;
+// }
+// ********************************************
 
 // ------------------------------------------------------------------------------------------------
 
@@ -127,8 +129,14 @@ FunBase* FunReadPhys_dewpoint::read(bool errSerious)
 
 const tdouble flxPhys_tauphi2temp(const tdouble temp_dewp, const tdouble phi)
 {
-  flx_fun_magnus_data dp(temp_dewp,phi);
-  return flx_RootSearch_RegulaFalsi(&flx_fun_magnus_rh,&dp,ONE,30*ONE);
+  // ********************************************
+  // OBSOLETE IMPLEMENTATION
+  // flx_fun_magnus_data dp(temp_dewp,phi);
+  // return flx_RootSearch_RegulaFalsi(&flx_fun_magnus_rh,&dp,ONE,30*ONE);
+  // ********************************************
+  const tdouble vp = flx_fun_magnus_base(temp_dewp);
+  const tdouble gamma = log(vp/((*magnus_k1)*phi));
+  return (*magnus_k3)*gamma/((*magnus_k2)-gamma);
 }
 
 const tdouble FunPhys_tauphi2temp::calc()
@@ -145,8 +153,14 @@ FunBase* FunReadPhys_tauphi2temp::read(bool errSerious)
 
 const tdouble flxPhys_tautemp2phi(const tdouble temp_dewp, const tdouble temp)
 {
-  flx_fun_magnus_data dp(temp_dewp,temp);
-  return flx_RootSearch_RegulaFalsi(&flx_fun_magnus_tp,&dp,ONE,30*ONE);
+  // ********************************************
+  // OBSOLETE IMPLEMENTATION
+  // flx_fun_magnus_data dp(temp_dewp,temp);
+  // return flx_RootSearch_RegulaFalsi(&flx_fun_magnus_tp,&dp,ONE,30*ONE);
+  // ********************************************
+  const tdouble vp = flx_fun_magnus_base(temp_dewp);
+  const tdouble svp = flx_fun_magnus_base(temp);
+  return vp/svp;
 }
 
 const tdouble FunPhys_tautemp2phi::calc()

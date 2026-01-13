@@ -28,14 +28,22 @@
   #pragma comment(lib, "flxlib")
 #endif
 
-const tdouble* magnus_k1 = NULL;
-const tdouble* magnus_k2 = NULL;
-const tdouble* magnus_k3 = NULL;
+const tdouble* magnus_k1 = NULL;  // = 6.112 hPa
+const tdouble* magnus_k2 = NULL;  // = 17.62
+const tdouble* magnus_k3 = NULL;  // = 243.12 °C
 
 const tdouble t_absolut_ZERO = -273.15;
 
 /**
-* @brief Berechnet den Taupunkt abhängig von Temperatur (temp) und relativer Luftfeuchtigkeit (phi)
+* @brief Berechnet den Sättigungsdampfdruck abhängig von der Temperatur (temp)
+*/
+inline tdouble flx_fun_magnus_base(const tdouble temp) {
+  const tdouble es =  (*magnus_k1) * exp( ((*magnus_k2) * temp) / ((*magnus_k3) + temp) );
+  return es;  // in [hPa]
+}
+
+/**
+* @brief Berechnet den Taupunkt abhängig von der Temperatur (temp) und relativer Luftfeuchtigkeit (phi)
 */
 inline tdouble flx_fun_magnus(const tdouble temp, const tdouble phi) {
   if (phi<=ZERO) return t_absolut_ZERO;
@@ -89,6 +97,12 @@ void FlxCreateObjReaders_FlxPhys::createFunReaders(FlxData* dataBox)
     magnus_k3 = dataBox->ConstantBox.insert("phys_magnus_k3",243.12);	// [°C]
 }
 
+// ------------------------------------------------------------------------------------------------
+
+const tdouble phys_temp2svp(const tdouble temp)
+{
+  return flx_fun_magnus_base(temp);
+}
 
 // ------------------------------------------------------------------------------------------------
 
@@ -156,7 +170,7 @@ const tdouble flxPhys_abs_humidity(const tdouble temp,  const tdouble phi)
     if (phi <= ZERO) return ZERO;
 
     // Sättigungsdampfdruck nach Magnus [hPa]
-    const tdouble es =  (*magnus_k1) * exp( ((*magnus_k2) * temp) / ((*magnus_k3) + temp) );
+    const tdouble es =  flx_fun_magnus_base(temp);
 
     // Tatsächlicher Dampfdruck [hPa]
     const tdouble e = phi * es;

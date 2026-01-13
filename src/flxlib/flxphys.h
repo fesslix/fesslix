@@ -29,6 +29,10 @@ class FLXLIB_EXPORT FlxCreateObjReaders_FlxPhys : public FlxCreateObjReaders {
 };
 
 
+// -------------------------- saturation vapor pressure ----------------------------------------------------------------------
+
+FLXLIB_EXPORT const tdouble phys_temp2svp(const tdouble temp);
+
 // -------------------------- phys_dewpoint ----------------------------------------------------------------------
 
 FLXLIB_EXPORT const tdouble flxPhys_dewpoint(const tdouble temp, const tdouble phi);

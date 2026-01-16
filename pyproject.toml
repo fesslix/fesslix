@@ -37,7 +37,7 @@ test-skip = "*-win_arm64"
 #################################################################################
 
 [tool.cibuildwheel.linux]
-archs = ["auto64", "aarch64"]
+archs = ["auto64"]   ## , "aarch64" ## NOTE aarch64 takes VERY long
 manylinux-x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
 before-all = [ #"yum install -y gsl-devel",

@@ -18,16 +18,6 @@
 #include "flxphys.h"
 
 
-#if defined(_MSC_VER)
-  #include "flxlibphys_export.h"
-#else
-  #define FLXLIBPHYS_EXPORT
-#endif
-
-#ifdef __WINDOWS__
-  #pragma comment(lib, "flxlib")
-#endif
-
 const tdouble* magnus_k1 = NULL;  // = 6.112 hPa
 const tdouble* magnus_k2 = NULL;  // = 17.62
 const tdouble* magnus_k3 = NULL;  // = 243.12 °C

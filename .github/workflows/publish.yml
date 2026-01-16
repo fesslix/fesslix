@@ -33,7 +33,7 @@ on:
           - ubuntu-latest
           - windows-latest
           - macos-14
-          - macos-13
+          #- macos-13   ## deprecated on GitHub
 
 jobs:
 
@@ -64,7 +64,7 @@ jobs:
           # ===================================
           # Assemble the matrix
           # ===================================
-          matrix = {"os": ["ubuntu-latest", "windows-latest", "macos-14", "macos-13"]}
+          matrix = {"os": ["ubuntu-latest", "windows-latest", "macos-14"]}
           if event == "workflow_dispatch" and os_input!="":
               matrix = {"os": [os_input]}
 

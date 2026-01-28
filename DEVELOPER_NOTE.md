@@ -161,7 +161,18 @@ git branch -d GPR
 # Check for memory leaks
 
 
+# Code maintenance
 
+## Update copyright-year
+
+dry-run the search for all occurrences of:
+
+    grep -R "2025 Wolfgang" **/*
+
+perform the replace-operation:
+
+    find . -type f -exec sed -i 's/2025 Wolfgang/2026 Wolfgang/g' {} +
+    
 
 # Documentation
 

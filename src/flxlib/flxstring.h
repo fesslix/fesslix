@@ -21,7 +21,7 @@
 
 #include <list>
 
-FLXLIB_EXPORT const std::string trim(std::string& str);
+FLXLIB_EXPORT const std::string trim(const std::string& str);
 FLXLIB_EXPORT const std::string& find_and_replace_all(std::string& source_str, const std::string& find_str, const std::string& replace_str);
 
 

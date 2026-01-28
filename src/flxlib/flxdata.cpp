@@ -223,7 +223,7 @@ FlxMtxFun_base * FlxReadManager::parse_FlxMtxFun(const tuint N, py::object pyobj
       std::size_t pos = val.find('=');
       if (pos != std::string::npos) {
           mtxConstName = val.substr(0, pos);
-          trim(mtxConstName);
+          mtxConstName = trim(mtxConstName);
           blockStr = val.substr(pos + 1);
       } else {
           throw FlxException("FlxReadManager::parse_FlxMtxFun_31", "'=' not found in the string.");

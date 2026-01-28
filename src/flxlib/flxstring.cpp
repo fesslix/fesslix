@@ -28,7 +28,7 @@ FlxStringFunBox* FlxString::StrFunBox = NULL;
 
 
 
-const string trim(string& str)
+const string trim(const string& str)
 {
   auto start = std::find_if_not(str.begin(), str.end(), ::isspace);
   auto end   = std::find_if_not(str.rbegin(), str.rend(), ::isspace).base();

@@ -1059,7 +1059,7 @@ void FlxObjRBRV_vec_get::task()
     }
   
   // get the vector
-    tdouble* vp = data->ConstMtxBox.get_Vec(vecName,(gType==y)?NRV:NOX);
+    tdouble* vp = data->ConstMtxBox.get_Vec(vecName,(gType==y)?NRV:NOX,false);
     if (only_this) {
       switch(gType) {
         case x:

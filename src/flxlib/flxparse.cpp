@@ -271,7 +271,7 @@ std::vector<std::string> parse_strseq_as_vec(const std::string& strseq, const ch
     pos = strseq.find(',',posLast);
     // extract the set
       std::string sn = strseq.substr(posLast,pos-posLast);
-      trim(sn);
+      sn = trim(sn);
     // add it to the list
       res.push_back(sn);
     // get the next position

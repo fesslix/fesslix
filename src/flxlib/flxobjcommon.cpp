@@ -549,7 +549,7 @@ void FlxObjForEach::task()
       npos = iter.find(sep_char,cpos);
       loop_var = iter.substr(cpos, (npos==std::string::npos)?npos:(npos-cpos) );
       cpos = npos + sep_len;
-      trim(loop_var);
+      loop_var = trim(loop_var);
       InternListLoop->exec();
     } while (npos!=std::string::npos);
   } catch (FlxBreakE &e) { }

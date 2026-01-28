@@ -1,3 +1,7 @@
+# TODO
+
+- reactivate 'aarch64'-builds in pyproject.toml » maybe in a different run?
+
 # Building the package
 
 ## Environment & Dependencies
@@ -101,7 +105,7 @@ versioning: increase minor number
 versioning: increase major number
 package build » change OS to ubuntu-latest
 package build » change trigger from 'push' to 'tag'
-
+package build » add support for Python 3.14
 
 ## work on features in a separate branch
 

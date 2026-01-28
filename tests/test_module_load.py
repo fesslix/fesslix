@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Python script to test if the Fesslix module can be imported
 
-Copyright (C) 2010-2025 Wolfgang Betz
+Copyright (C) 2010-2026 Wolfgang Betz
 
 Copying and distribution of this file, with or without modification,
 are permitted in any medium without royalty provided the copyright

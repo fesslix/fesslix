@@ -3,7 +3,7 @@
 """
 
 # Fesslix - Stochastic Analysis
-# Copyright (C) 2010-2025 Wolfgang Betz
+# Copyright (C) 2010-2026 Wolfgang Betz
 #
 # Fesslix is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ __all__ = (
     "__copyright__",
 )
 
-__copyright__ = "Copyright (C) 2010-2025 Wolfgang Betz"
+__copyright__ = "Copyright (C) 2010-2026 Wolfgang Betz"
 
 try:
     from importlib.metadata import metadata as _metadata  # Python 3.8+

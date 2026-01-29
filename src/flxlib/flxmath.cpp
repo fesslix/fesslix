@@ -509,6 +509,11 @@ const tdouble flx_RootSearch_RegulaFalsi(flx_math_fun_ptr fun, void* dp, tdouble
   if (!found) {
     tuint c = 0;
     while (fabs(end-start)>dx && c<NMAX) {
+      if (fabs(f1-f2)<=GlobalVar.TOL()) {
+        std::ostringstream ssV;
+        ssV << "Function value is the same at both root-search boundaries: " << GlobalVar.Double2String(f1);
+        throw FlxException("FlxFun_RootSearch_RegulaFalsi_5", ssV.str() );
+      }
       ++c;
       tdouble f3;
       if (f1*f2<=ZERO) {        // Pegasus-algorithm
@@ -544,7 +549,7 @@ const tdouble flx_RootSearch_RegulaFalsi(flx_math_fun_ptr fun, void* dp, tdouble
         break;
       }
       #if FLX_DEBUG
-        if (std::isnan(start) || std::isnan(end) ) throw FlxException_Crude("FlxFun_RootSearch_RegulaFalsi_5");
+        if (std::isnan(start) || std::isnan(end) ) throw FlxException_Crude("FlxFun_RootSearch_RegulaFalsi_6");
       #endif
     }
     if (c>=NMAX) {
@@ -564,7 +569,7 @@ const tdouble flx_RootSearch_RegulaFalsi(flx_math_fun_ptr fun, void* dp, tdouble
   }
   #if FLX_DEBUG
     if (std::isnan(res)) {
-      throw FlxException_Crude("FlxFun_RootSearch_RegulaFalsi_6");
+      throw FlxException_Crude("FlxFun_RootSearch_RegulaFalsi_7");
     }
   #endif
   return res;

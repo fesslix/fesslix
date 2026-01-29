@@ -402,6 +402,13 @@ py::dict flxGP_MCI::simulate_GP_mci(const tulong Nsmpls, tdouble& err, int& prop
                     }
             }
         #endif
+        // check variance of mcs_pi ===» must not be zero!
+        {
+            const flxVec mcs_pi_vec(&(mcs_pi[0]),mcs_pi.size(),false);
+            if (fabs(mcs_pi_vec.get_max()-mcs_pi_vec.get_min())<=GlobalVar.TOL()) {
+                throw FlxException("flxGP_MCI::simulate_GP_mci_40", "Gaussian Process model is corrupt", "The underlying Gaussian process seems to be independent of the input.");
+            }
+        }
     // set id_next_point
         id_next_point = id_worst_point;
     // quantify uncertainty about estimate

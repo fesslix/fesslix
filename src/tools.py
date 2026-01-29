@@ -735,7 +735,7 @@ def fit_pdf_based_on_qvec(data, config):
     # constraint: integral over PDF = 1
     def integral_constraint(p):
         pdf_vec[i_start:i_end] = p
-        return np.trapz(pdf_vec, x_vec) - Pr_in
+        return np.trapezoid(pdf_vec, x_vec) - Pr_in
     constraints = ({
         'type': 'eq',
         'fun': integral_constraint
